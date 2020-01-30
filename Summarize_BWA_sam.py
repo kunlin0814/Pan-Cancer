@@ -1,7 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jan 15 10:53:35 2020
 
-## This script accept sam file with header '@' removed
-## It returns an uniq mapped file, a rep mapped file and a summmy file
+@author: kun-linho
+"""
 
 import sys
 
@@ -14,20 +17,18 @@ output_name=sys.argv[2]
 
 summary=open(output_name+'_Mapping_summary.txt','w')
 
-#file_lst=file.split('\n')[:-1]
-
 unique = 0 #3
 duplicate = 0 #3
 Onemapped = 0 #5,9
 incorrect = 0 #1
 unmapped = 0 #13
-
-for line in f:
-        file_list = line.split('\t')
-        if '@' in file_list[0]:
+with open(sam_file,'r') as f:
+    for line in f:
+        file_lst = line.split('\t')
+        if '@' in file_lst[0]:
             pass
         else :
-		    status = int(file_lst[1])%16
+            status = int(file_lst[1])%16
             if status == 5 or status == 9:
                 Onemapped += 1
             elif status == 1:
