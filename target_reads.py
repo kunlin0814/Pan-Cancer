@@ -10,17 +10,39 @@ from collections import Counter
 # for each chromosome
 # min = 23840680 
 # max = 123780325
-
 #import sys
 ## use 50 million bp as a cut off
 
 
+def binarySearch (arr, left, right, reads_position): 
+  
+    # Check base case 
+    if right >= left: 
+  
+        mid = int(left + (right - left)/2)
+  
+        # If element is present at the middle itself 
+        if arr[mid] == reads_position: 
+            return mid 
+          
+        # If element is smaller than mid, then it can only 
+        # be present in left subarray 
+        elif arr[mid] > reads_position: 
+            return binarySearch(arr, left, mid-1, reads_position) 
+  
+        # Else the element can only be present in right subarray 
+        else: 
+            return binarySearch(arr, mid+1, right, reads_position) 
+  
+    else: 
+        # Element is not present in the array 
+        return -1
 
 read_length = 101
 small_interval_dict ={}
 large_interval_dict ={}
 interval_size ={}
-with open('G:/Pan_cancer/Mapping_source/Canis_familiaris.CanFam3.1.81.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list', 'r') as f:
+with open('/Volumes/Research_Data/Pan_cancer/Mapping_source/uniq_Canis_familiaris.CanFam3.1.81.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list', 'r') as f:
     file = f.read()
 
 
@@ -40,6 +62,12 @@ for i in range(len(CDS)):
             small_interval_dict[chrom]=[(start, end)]
          else:
             small_interval_dict[chrom].append((start, end))
+
+for i in small_interval_dict.keys():
+    small_interval_dict[i].sort()
+    large_interval_dict[i].sort()
+
+
         
 #for i in small_interval_dict.keys():
 #    chrom_end = max(small_interval_dict[i])[1]
