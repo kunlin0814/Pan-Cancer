@@ -8,15 +8,15 @@ Created on Wed Jan 15 10:53:35 2020
 
 import sys
 
-#sam_file=sys.argv[1]
-sam_file= '/Volumes/Research_Data/Pan_cancer/Mapping_source/Canis_familiaris.CanFam3.1.81.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list'
-#output_name=sys.argv[2]
+sam_file=sys.argv[1]
+#sam_file= '/Volumes/Research_Data/Pan_cancer/Mapping_source/Canis_familiaris.CanFam3.1.81.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list'
+output_name=sys.argv[2]
 
 
 #with open(sam_file,'r') as f:
 #	file=f.read()
 
-#summary=open(output_name+'_Mapping_summary.txt','w')
+summary=open(output_name+'_Mapping_summary.txt','w')
 
 unique = 0 #3
 duplicate = 0 #3
