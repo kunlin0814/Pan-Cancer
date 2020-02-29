@@ -95,7 +95,7 @@ unmapped = 0 #13
 transcript_list =[]    
 total = 0 
 pass_line =0
-with open('C:/Users/abc73_000/Desktop/test.sam','r') as f1:   
+with open('/Volumes/Research_Data/Pan_cancer/CMT-SRR7780976-test2.sam','r') as f1:   
     for line in f1:
         file_lst = line.split('\t')
         if '@' in file_lst[0]:
