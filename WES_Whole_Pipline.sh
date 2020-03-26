@@ -184,7 +184,7 @@ samtools index $result/SRR7780923_rg_added_sorted_dedupped_removed.realigned.bam
 
 # Variant calling
 time java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T HaplotypeCaller -R $reference/canFam3.fa -I $result/SRR7780922_rg_added_sorted_dedupped_removed.realigned.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -o $result/SRR7780922_rg_added_sorted_dedupped_removed.realigned.bam.vcf
-time java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T HaplotypeCaller -R $reference/canFam3.fa -I $result/SRR7780922_rg_added_sorted_dedupped_removed.realigned.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -o $result/SRR7780923_rg_added_sorted_dedupped_removed.realigned.bam.vcf
+time java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T HaplotypeCaller -R $reference/canFam3.fa -I $result/SRR7780923_rg_added_sorted_dedupped_removed.realigned.bam -dontUseSoftClippedBases -stand_call_conf 20.0 -o $result/SRR7780923_rg_added_sorted_dedupped_removed.realigned.bam.vcf
 
 # Variant filtering
 time java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T VariantFiltration -R $reference/canFam3.fa -V $result/SRR7780922_rg_added_sorted_dedupped_removed.realigned.bam.vcf -filterName FS -filter "FS > 30.0" -filterName QD -filter "QD < 2.0" -o $result/SRR7780922_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf
