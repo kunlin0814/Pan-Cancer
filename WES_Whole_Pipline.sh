@@ -4,7 +4,8 @@
 #PBS -l nodes=1:ppn=1
 #PBS -l mem=40gb
 #PBS -q batch
-
+#PBS -M kh31516@uga.edu 
+#PBS -m ae
 ###### complete pipeline (including callable base) ##########
 
 
