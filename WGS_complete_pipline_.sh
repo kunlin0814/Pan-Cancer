@@ -139,7 +139,8 @@ module load MuTect/1.1.7-Java-1.7.0_80
 time java -jar /usr/local/apps/eb/MuTect/1.1.7-Java-1.7.0_80/mutect-1.1.7.jar --analysis_type MuTect \
 --reference_sequence $reference/canFam3.fa \
 --dbsnp $reference/dbsnp_9615.vcf \
---intervals $reference/Canis_familiaris.CanFam3.interval_list \  # the intervals are for WGS  
+--intervals $reference/Canis_familiaris.CanFam3.interval_list \
+# the intervals are for WGS  
 --input_file:normal $result/SAMEA4672967_rg_added_sorted_dedupped_removed.realigned.bam \
 --input_file:tumor $result/SAMEA4672969_rg_added_sorted_dedupped_removed.realigned.bam \
 --out $result/LAB4_dam_SAMEA4672969_rg_added_sorted_dedupped_removed.bam_call_stats.txt \
