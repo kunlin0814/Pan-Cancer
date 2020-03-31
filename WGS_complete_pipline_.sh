@@ -30,10 +30,10 @@ mkdir $result
 mkdir $dataN
 mkdir $dataT
 #cd $dataN
-#fastq-dump --split-files --gzip SAMEA4672967
+fastq-dump --split-files --gzip SAMEA4672967
 #/scratch/szhao/PanCancer/BI/PRJNA247493/source/download_sra_sample.sh SAMEA4672967 $sraRunTable
 cd $dataT
-#fastq-dump --split-files --gzip SAMEA4672969
+fastq-dump --split-files --gzip SAMEA4672969
 #/scratch/szhao/PanCancer/BI/PRJNA247493/source/download_sra_sample.sh SAMEA4672969 $sraRunTable
 
 
@@ -171,14 +171,10 @@ perl $reference/annovar/convert2annovar.pl -format vcf4old $result/LAB4_dam_SAME
 perl $reference/annovar/annotate_variation.pl --buildver canFam3 $result/LAB4_dam_SAMEA4672969_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput $reference
 
 
-
-
-
-
 ####### remove unneeded files #######
-#rm $result/*_sorted_dedupped_removed.bam
-#rm $result/LAB4_dam_SAMEA4672969_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS $result/LAB4_dam_SAMEA4672969_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
-#rm $result/*.bai
+rm $result/*_sorted_dedupped_removed.bam
+rm $result/LAB4_dam_SAMEA4672969_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS $result/LAB4_dam_SAMEA4672969_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
+rm $result/*.bai
 
 ### Do GATK analysis with coverage condition ###
 
