@@ -10,10 +10,10 @@
 
 
 result='/scratch/kh31516/Original_Mammary/results/CMT-2' #
-reference='/scratch/kh31516/Melanoma/Melanoma_source' 
+reference='/work/szlab/Lab_shared_PanCancer/source' 
 dataN='/scratch/kh31516/Original_Mammary/data/SRR7780922'
 dataT='/scratch/kh31516/Original_Mammary/data/SRR7780923'
-annovar_index='/scratch/kh31516/Melanoma/Melanoma_source/annovar'
+annovar_index='/work/szlab/Lab_shared_PanCancer/source/annovar_CanFam3.1.99.gtf'
 script='/scratch/kh31516/variant_calling/scripts'
 ###sraRunTable='/scratch/kh31516/Pan_cancer/PRJNA247493/source/PRJNA247493_SraRunTable.txt'# path
 
