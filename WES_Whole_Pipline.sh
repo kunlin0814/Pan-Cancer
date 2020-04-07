@@ -14,7 +14,7 @@ reference='/work/szlab/Lab_shared_PanCancer/source'
 dataN='/scratch/kh31516/Original_Mammary/data/SRR7780922'
 dataT='/scratch/kh31516/Original_Mammary/data/SRR7780923'
 annovar_index='/work/szlab/Lab_shared_PanCancer/source/annovar_CanFam3.1.99.gtf'
-script='/scratch/kh31516/variant_calling/scripts'
+script='/work/szlab/Lab_shared_PanCancer/script'
 ###sraRunTable='/scratch/kh31516/Pan_cancer/PRJNA247493/source/PRJNA247493_SraRunTable.txt'# path
 
 
