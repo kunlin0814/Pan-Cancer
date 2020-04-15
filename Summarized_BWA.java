@@ -25,10 +25,10 @@ public class Summarized_BWA {
 		double incorrect = 0 ;//1
 		double unmapped = 0 ;//13
 		
-		BufferedReader objReader_samfile = null;
-		objReader_samfile = new BufferedReader(new FileReader(SamFile));
+		try(FileReader fileReader = new FileReader(SamFile)){
+		try(BufferedReader bufferedReader= new BufferedReader(fileReader)){
 		String strCurrentLine_sam;
-		while ((strCurrentLine_sam = objReader_samfile.readLine()) != null) {
+		while ((strCurrentLine_sam = bufferedReader.readLine()) != null) {
 			
 		if(strCurrentLine_sam.startsWith("@")) {
 			 ;
@@ -58,7 +58,7 @@ public class Summarized_BWA {
             }        
 		    }
 	}      
-		objReader_samfile.close();
+		bufferedReader.close();
 		double pairs = total / 2 ;
 
 		String unique_rate = Double.toString(unique/total) ;
@@ -77,5 +77,6 @@ public class Summarized_BWA {
 		bw.close();	
 	}
 		
-	 
+		} 
+}
 }
