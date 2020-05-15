@@ -141,7 +141,7 @@ time java -Xmx32g -jar /usr/local/apps/eb/MuTect/1.1.7-Java-1.7.0_80/mutect-1.1.
 --reference_sequence $reference/canFam3.fa \
 --dbsnp $reference/DbSNP_canFam3_version151-DogSD_Feb2020_V4.vcf \
 --defaultBaseQualities 30 \
---intervals $reference/Canis_familiaris.CanFam3.interval_list \
+--intervals $reference/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list \
 --input_file:normal ${result}/SRR7780922_rg_added_sorted_dedupped_removed.realigned.bam \
 --input_file:tumor ${result}/SRR7780923_rg_added_sorted_dedupped_removed.realigned.bam \
 --out ${result}/CMT-2_rg_added_sorted_dedupped_removed.bam_call_stats.txt \
@@ -186,7 +186,7 @@ gatk Mutect2 \
 -normal $Normal_sample \
 --panel-of-normals  $MuTect2_source/pon.vcf.gz \
 --initial-tumor-lod 2.0 --normal-lod 2.2 --tumor-lod-to-emit 3.0 --pcr-indel-model CONSERVATIVE \
--L $reference/Canis_familiaris.CanFam3.interval_list \
+-L $reference/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list \
 -O ${result}/CMT-2_MuTect2_GATK4_noDBSNP.vcf
 
 
