@@ -55,8 +55,8 @@ for i in range(len(lst)):
     nRef = int(normal_info.split(':')[1].split(',')[0])
     nAlt = int(normal_info.split(':')[1].split(',')[1])
     total_tumor_depth = tRef + tAlt # total tumor read depth
-    vaf = float(tumor_info.split(":")[2])
-    #vaf = float(tAlt) / total_tumor_depth # VAF for tumor
+    
+    vaf = float(tAlt) / total_tumor_depth # VAF for tumor
     if total_tumor_depth < 10:
         failed.append(i)
     else:
