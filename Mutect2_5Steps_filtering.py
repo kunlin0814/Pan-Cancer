@@ -24,16 +24,12 @@ file0 = sys.argv[1]
 #'C:\\Users\\abc73_000\\Desktop\\Mutect1_Test\\Mutect2PASS.txt'
 
 #'sys.argv[1]'
-
 pass0 = sys.argv[2]
 #'C:\\Users\\abc73_000\\Desktop\\Mutect1_Test\\Mutect2PASS.txt'
 
-
-
 with open(file0,'r') as f:
 	file = f.read()
-    
-    
+        
 with open(pass0,'r') as f:
 	pas = f.read()
 	
@@ -42,6 +38,14 @@ lst2 = pas.split('\n')[:-1]
 	# output
     
 out = open(pass0 + '_filteredMut','w')
+
+VAF_before= sys.argv[3]
+VAF_after = sys.argv[4]
+
+
+VAF_out_before = open(VAF_before,'w')
+VAF_out_after = open(VAF_after,'w')
+
 
 dic = {}
 failed = []
@@ -55,8 +59,10 @@ for i in range(len(lst)):
     nRef = int(normal_info.split(':')[1].split(',')[0])
     nAlt = int(normal_info.split(':')[1].split(',')[1])
     total_tumor_depth = tRef + tAlt # total tumor read depth
-    
-    vaf = float(tAlt) / total_tumor_depth # VAF for tumor
+    vaf = float(tumor_info.split(":")[2])
+    #vaf = float(tAlt / total_tumor_depth) # VAF for tumor
+    VAF_out_before.write(str(chrom)+'\t'+str(pos)+'\t'+str(vaf)+'\n')
+
     if total_tumor_depth < 10:
         failed.append(i)
     else:
@@ -76,17 +82,29 @@ for i in range(len(lst)):
                             dic[chrom] = []
                         dic[chrom].append(pos)
                         
-                        
-                        
+
 for i in range(len(lst2)):
     info = lst2[i].split('\t')
     chrom = info[0]
     pos = info[1]
+    normal_info = info[10]
+    tumor_info = info[9]
+    tRef = int(tumor_info.split(':')[1].split(',')[0])
+    tAlt = int(tumor_info.split(':')[1].split(',')[1])
+    nRef = int(normal_info.split(':')[1].split(',')[0])
+    nAlt = int(normal_info.split(':')[1].split(',')[1])
+    total_tumor_depth = tRef + tAlt # total tumor read depth
+    vaf = float(tumor_info.split(":")[2])
+    #vaf = float(tAlt / total_tumor_depth)
     if chrom in dic.keys():
         if pos in dic[chrom]:
             string = lst2[i] + '\n'
             out.write(string)
+            VAF_out_after.write(str(chrom)+'\t'+str(pos)+'\t'+str(vaf)+'\n')
+            
 out.close()
+VAF_out_after.close()
+VAF_out_before.close()
 
     
     
