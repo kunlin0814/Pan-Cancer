@@ -5,6 +5,8 @@ import sys
 if __name__ == '__main__':
 	file0 = sys.argv[1]
 	pass0 = sys.argv[2]
+	whyout = sys.argv[3]
+
 	with open(file0,'r') as f:
 		file = f.read()
 	with open(pass0,'r') as f:
@@ -13,6 +15,7 @@ if __name__ == '__main__':
 	lst2 = pas.split('\n')[:-1]
 	# output
 	out = open(pass0 + '_filteredMut','w')
+	whyout_output = open(whyout,'w')
 	dic = {}
 	failed = []
 	for i in range(len(lst)):
@@ -27,18 +30,25 @@ if __name__ == '__main__':
 		vaf = float(tAlt) / total_tumor_depth # VAF for tumor
 		if total_tumor_depth < 10:
 			failed.append(i)
+			whyout_output.write(str(chrom)+'_'+str(pos)+'\t'+ "total_tumor_depth < 10 and the death is ," + str(total_tumor_depth)+"\n")
+			
 		else:
 			if vaf < 0.05:
 				failed.append(i)
+				whyout_output.write(str(chrom)+'_'+str(pos)+'\t'+"VAF < 0.05 and the VAF is ,"+ str(vaf)+ '\n')
+
 			else:
 				if tAlt <= 5 and vaf < 0.15:
 					failed.append(i)
+					whyout_output.write(str(chrom)+'_'+str(pos)+'\t'+"tAlt <= 5 and vaf < 0.15, and tAlt and vaf is "+ str(tAlt)+','+str(vaf)+"\n")
 				else:
 					if total_tumor_depth < 20 and vaf < 0.2:
 						failed.append(i)
+						whyout_output.write(str(chrom)+'_'+str(pos)+'\t'+"total_tumor_depth < 20 and vaf < 0.2 and total_tumor_depth and vaf is "+ str(total_tumor_depth)+","+str(vaf)+"\n")
 					else:
 						if nAlt >= 3:
 							failed.append(i)
+							whyout_output.write(str(chrom)+'_'+str(pos)+'\t'+"nAlt >= 3 and nAlt is "+ str(nAlt)+'\n')
 						else:
 							if chrom not in dic.keys():
 								dic[chrom] = []
