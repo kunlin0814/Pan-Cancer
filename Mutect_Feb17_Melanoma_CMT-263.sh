@@ -33,17 +33,17 @@ time java -jar /usr/local/apps/eb/MuTect/1.1.7-Java-1.7.0_80/mutect-1.1.7.jar --
 
 ####### Annovar #######
 # Extract PASS records from vcf
-#awk '$7 == "PASS" {print $0}' $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf > $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
+awk '$7 == "PASS" {print $0}' $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf > $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
 
-# 5 Steps filtering
+5 Steps filtering
 #grep -w KEEP $result/CMT-263_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,26,27,38,39 > $result/CMT-263_PASS.stat
 #python $script/Filter_MutectStat_5steps.py $result/CMT-263_PASS.stat $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
 
 # annovar input preparation
-#perl $reference/annovar_CanFam3.1.99.gtf/convert2annovar.pl -format vcf4old $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut > $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput
+perl $reference/annovar_CanFam3.1.99.gtf/convert2annovar.pl -format vcf4old $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut > $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput
 
 # annovar annotate
-#perl $reference/annovar_CanFam3.1.99.gtf/annotate_variation.pl --buildver canFam3 $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $reference/annovar_CanFam3.1.99.gtf
+perl $reference/annovar_CanFam3.1.99.gtf/annotate_variation.pl --buildver canFam3 $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $reference/annovar_CanFam3.1.99.gtf
 
 # add gene name
 python $script/Add_GeneName_N_Signature.py $result/CMT-263_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function $reference/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
