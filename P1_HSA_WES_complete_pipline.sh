@@ -364,6 +364,14 @@ ${script}/strelka-2.9.2.centos6_x86_64/bin/configureStrelkaSomaticWorkflow.py \
 # your result will be generated in demo_somatic/results/variants
 $strelka_out/P1/runWorkflow.py -m local -j 20
 
+
+## limit strelka result into CDS region
+
+python $script/Limit_vcf_to_CDS.py $strelka_out/results/variants/somatic.indels.vcf.gz $reference/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list
+
+
+
+
 : "
 ####### remove unneeded files #######
 rm ${results}/*_sorted_dedupped_removed.bam
