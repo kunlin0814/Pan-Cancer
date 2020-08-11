@@ -1,0 +1,32 @@
+pwd
+/scratch/kh31516/Mammary/results/CMT-99
+
+
+ samtools view SRR7780974.bam |awk '{print $2%16}' |head -1000000 |sort |uniq -c
+   4092 1
+  14207 13
+ 967190 3
+   7256 5
+   7255 9
+
+
+1:  not correctly mapped (on different chromosome or with wrong orientation)
+13:  Neither read is mapped
+3: correctly mappped pair
+5 or 9: only read is mappped
+
+samtools view SRR7780974.bam |awk 'BEGIN{FS="\t";OFS="\t"}{if ($2%16==3){print $12}}' |head -1000000 |sort |uniq -c
+  28602 XT:A:M
+   9529 XT:A:R
+ 961869 XT:A:U
+
+unique mappped:  A:M or A:U
+dupplicated:  A:R
+
+samtools view SRR7780974.bam |head -1000000 |awk 'BEGIN{FS="\t";OFS="\t"}{if ($2%16==3 && $5>20){print $5}}'  |wc -l
+957539
+
+
+$5 is Phred-scaled mapping quality
+
+
