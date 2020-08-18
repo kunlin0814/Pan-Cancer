@@ -5,10 +5,10 @@ library(gridExtra)
 
 #"C:\\Users\\abc73_000\\Desktop\\Bioproject_check"
 #"G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Grant_table\\Cancer_Sample\\MC\\WXS\\"
-pdf("C:/Users/abc73_000/Desktop/GLM_Coverage/GLM_Coverage.plot.pdf"
+pdf("/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/GLM_Coverage/GLM_Coverage.plot.pdf"
     , height=4.98, width=6.5);
-location <- "C:/Users/abc73_000/Desktop/GLM_Coverage/"
-Samples <- list.dirs("C:/Users/abc73_000/Desktop/GLM_Coverage/")
+location <- "/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/GLM_Coverage"
+Samples <- list.dirs("/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/GLM_Coverage")
 length(Samples)
 for (i in 2:length(Samples)){
 dir <- Samples[i]
