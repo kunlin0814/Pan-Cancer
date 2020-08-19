@@ -9,13 +9,16 @@ import os
 import sys
 import numpy as np
 
-with open("/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/CMT-2/SRR7780922_Normal_Coverage_distribution.txt", 'r')as f:
+NormalFile=sys.argv[1]
+TumorFile=sys.argv[2]
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/CoverageTest/MC_Coverage/CMT-2/SRR7780922_Normal_Coverage_distribution.txt"
+with open(NormalFile, 'r')as f:
     Normal = f.read().split("\n")[:-1]
 
-with open("/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/CMT-2/SRR7780923_Tumor_Coverage_distribution.txt", 'r')as f:
+with open(TumorFile, 'r')as f:
     Tumor = f.read().split("\n")[:-1]
 
-output = open("/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/CMT-2/testlog2.txt",'w')
+output = open(sys.argv[3],'w')
 
 Normallocation = []
 normalCoverage=[]
@@ -28,10 +31,9 @@ for eachLine  in Normal:
 
 normalCoverage = np.array(normalCoverage)
 normalMean = np.mean(normalCoverage)
-normalStd = np.std(normalCoverage)
 
-normalizedNormal = (normalCoverage-np.min(normalCoverage))/(np.max(normalCoverage)-np.min(normalCoverage))
-#normalCoverage/normalMean
+normalizedNormal = normalCoverage/normalMean
+#
 #(normalCoverage-np.min(normalCoverage))/(np.max(normalCoverage)-np.min(normalCoverage))
     
         
@@ -49,10 +51,10 @@ for eachLine in Tumor:
 
 tumorCoverage = np.array(tumorCoverage)
 tumorMean = np.mean(tumorCoverage)
-tumorStd = np.std(tumorCoverage)
 
-normalizedTumor = (tumorCoverage-np.min(tumorCoverage))/(np.max(tumorCoverage)-np.min(tumorCoverage))
-#normalizedTumor/tumorMean
+
+normalizedTumor = tumorCoverage/tumorMean
+#
 #(tumorCoverage-np.min(tumorCoverage))/(np.max(tumorCoverage)-np.min(tumorCoverage))
 
 
@@ -60,7 +62,7 @@ normalizedNormal = normalizedNormal+0.001
 normalizedTumor = normalizedTumor+0.001
 
 
-log2Ration = np.log2(normalizedNormal/normalizedTumor)
+log2Ration = np.log2(normalizedTumor/normalizedNormal)
 
 for i in range(len(Normallocation)):
     interval = Normallocation[i]
