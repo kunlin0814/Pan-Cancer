@@ -3,27 +3,50 @@ library(data.table)
 library(readxl)
 library(gridExtra)
 
-file <- fread("/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/CMT-2/testlog2.txt",
+file <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/CMT-13_CoverageLog2Ratio.txt",
               header = F)
+chrom_pos <- strsplit(file$V1,split = ":")
+newLable <- c()
+for (i in 1:length(file$V1)){
+  newLable <- c(newLable,chrom_pos[[i]][1])
 
-pdf("/Volumes/Research_Data/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/MC_Log2Ratio.plot.pdf"
+}
+file$V3 <- newLable
+chrom <- c()
+for (i in 1:38){
+  chrom <- c(chrom,paste("chr",i,sep = ""))
+}
+chrom <- c(chrom, "chrX")
+
+regular.text <- element_text(colour="black",size=20);
+
+pdf("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/V3MC_Log2Ratio.plot.pdf"
     , height=4.98, width=6.5);
 
-ggplot(data=file[1:100000, ], aes(x=V1[1:100000], y=V2[1:100000])) +
+
+#factor(file$V1, levels = file$V1)
+for (each in chrom){
+eachChrom <- file[V3==each,]
+
+p <- ggplot(data=eachChrom, aes(x=factor(eachChrom$V1, levels = eachChrom$V1), y=V2)) +
   geom_bar(stat="identity", fill="steelblue")+
   xlab("Chrom Position")+
-  ylab("log2 Ratio")+
-  ggtitle("test")+
+  ylab("log2 Ratio (Tumor/Normal)")+
+  ggtitle(each)+
+  theme_minimal()+
   theme(
-    axis.title.x =element_blank(),
-    axis.text.x = element_blank())+
-  #coord_cartesian(ylim=c(0,500))+
-  theme_minimal()
+    title = regular.text,
+    axis.title.x = regular.text,
+    axis.title.y = regular.text,
+    axis.text.x = element_blank(),
+    axis.text.y = regular.text,
+    panel.background=element_blank(), 
+    axis.line=element_line(color="black"))
+print(p)
+}
 
 dev.off()
 
-
-file[V2<100,]
 
 
 
