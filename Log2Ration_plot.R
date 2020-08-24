@@ -3,6 +3,111 @@ library(data.table)
 library(readxl)
 library(gridExtra)
 
+regular.text <- element_text(colour="black",size=20);
+GeneCoverage <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/MDM2.xlsx",
+                           sheet = "Interval")
+
+GeneCoverage <- data.table(GeneCoverage)
+Median <- GeneCoverage[, .(MedianMDM2 = median(MDM2), MdeidanCDK2A = median(CDKN2A), MEdianCDKN2B = median(CDKN2B)),by = .(CancerType)]
+
+Mean <- GeneCoverage[, .(MeanMDM2 = mean(MDM2), MeanCDK2A = mean(CDKN2A), MeanCDKN2B = mean(CDKN2B)),by = .(CancerType)]
+GeneCoverage[, .(.N),by = .(CancerType)]
+Gene <- "MDM2"
+GeneCoverage[with(GeneCoverage,Gene >1),]
+
+
+GeneCoverage %>% 
+  group_by(CancerType) %>% 
+  summarise(Median = median(MDM2))
+
+x <- factor(GeneCoverage$CancerType, levels=c( "OM", "OSA"));
+fill <- factor(GeneCoverage$CancerType, levels=c( "OM", "OSA")); # how do you want to seperate the data, here use Noraml tumor to seperate
+y <- as.numeric(GeneCoverage$MDM2)
+data <- data.frame(x=x, y=y, fill=fill);
+fill.colors <- c("#103B78", "#A0111A");
+ylab <- "Shared Mutations Proportion";
+
+a <- data[x=="OSA",][,c("y")]
+b <- data[x=="OM",][,c("y")]
+
+wilcox.test(a,b)
+
+
+p <- get_jitter(data, x, y, fill, fill.colors=fill.colors, ylab=ylab, y_cutoffs = 10, 
+                show.legend=F, xangle=30, compare_fills=FALSE, show.median=TRUE, dot_size=1.6);
+p
+
+pdf("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/Interval_OM_OSALog2Ration.pdf"
+    , height=4.98, width=6.5);
+
+GeneCoverage %>% 
+  ggplot(aes(x=factor(CancerType,levels = c("OM", "OSA")),
+             y=as.numeric(MDM2),color='black')) +
+  geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.28)) +
+  ylab("MDM2 Depth Coverage Log2 Ratio")+
+  theme(axis.text=regular.text, 
+        axis.title.y=element_text(colour="black",size=20, margin = margin(t = 0, r = 0, b = 0, l = 0)),
+        axis.title.x =element_blank(),
+        axis.text.x = element_text(angle=30, hjust=1), 
+        panel.background=element_blank(), 
+        axis.line=element_line(color="black"),
+        legend.title=regular.text, 
+        legend.position="none", 
+        legend.text=regular.text, 
+        legend.key=element_blank())+
+  stat_summary(fun = median, fun.min = median, fun.max = median,position = "dodge",
+               geom = "crossbar",size=0.4, width = .7,colour = "black")+
+  #scale_shape_manual(values = 19)+
+  scale_color_manual(values = 'black')+
+  theme(plot.margin = unit(c(0.5,0.3,1,0.5), "cm"))
+GeneCoverage %>% 
+  ggplot(aes(x=factor(CancerType,levels = c("OM", "OSA")),
+             y=as.numeric(CDKN2A),color='black')) +
+  geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.28)) +
+  ylab("CDKN2A Depth Coverage Log2 Ratio")+
+  theme(axis.text=regular.text, 
+        axis.title.y=element_text(colour="black",size=20, margin = margin(t = 0, r = 0, b = 0, l = 0)),
+        axis.title.x =element_blank(),
+        axis.text.x = element_text(angle=30, hjust=1), 
+        panel.background=element_blank(), 
+        axis.line=element_line(color="black"),
+        legend.title=regular.text, 
+        legend.position="none", 
+        legend.text=regular.text, 
+        legend.key=element_blank())+
+  stat_summary(fun = median, fun.min = median, fun.max = median,position = "dodge",
+               geom = "crossbar",size=0.4, width = .7,colour = "black")+
+  #scale_shape_manual(values = 19)+
+  scale_color_manual(values = 'black')+
+  theme(plot.margin = unit(c(0.5,0.3,1,0.5), "cm"))
+GeneCoverage %>% 
+  ggplot(aes(x=factor(CancerType,levels = c("OM", "OSA")),
+             y=as.numeric(CDKN2B),color='black')) +
+  geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.28)) +
+  ylab("CDKN2B Depth Coverage Log2 Ratio")+
+  theme(axis.text=regular.text, 
+        axis.title.y=element_text(colour="black",size=20, margin = margin(t = 0, r = 0, b = 0, l = 0)),
+        axis.title.x =element_blank(),
+        axis.text.x = element_text(angle=30, hjust=1), 
+        panel.background=element_blank(), 
+        axis.line=element_line(color="black"),
+        legend.title=regular.text, 
+        legend.position="none", 
+        legend.text=regular.text, 
+        legend.key=element_blank())+
+  stat_summary(fun = median, fun.min = median, fun.max = median,position = "dodge",
+               geom = "crossbar",size=0.4, width = .7,colour = "black")+
+  #scale_shape_manual(values = 19)+
+  scale_color_manual(values = 'black')+
+  theme(plot.margin = unit(c(0.5,0.3,1,0.5), "cm"))
+dev.off()
+
+
+
+
+
+### Whole Region of Log2 Ratio ###
+
 file <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/PanCancerCoverage/MC_Coverage/CMT-13_CoverageLog2Ratio.txt",
               header = F)
 chrom_pos <- strsplit(file$V1,split = ":")
