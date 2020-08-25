@@ -4,13 +4,41 @@ library(readxl)
 library(gridExtra)
 
 regular.text <- element_text(colour="black",size=20);
-GeneCoverage <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/MDM2.xlsx",
-                           sheet = "Interval")
+GeneCoverage <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/Interval_Log2_MDM2_CDKN2_DepthOfCoverage.xlsx",
+                           sheet = "Log2Ratio_Interval")
+GeneCoverage <- data.table(GeneCoverage)
+
+geneName <- unique(GeneCoverage$GeneName)
+sampleName <- unique(GeneCoverage$SampleName)
+MDM2 <- c()
+CDKN2A <- c()
+CDKN2B <- c()
+totalSummary <- NULL
+for (sample in sampleName){
+  MDM2log2 <- mean(GeneCoverage[(sampleName ==  sample) & (GeneName=="MDM2"),Log2Ratio])
+  CDK2Alog2 <- mean(GeneCoverage[sampleName == sample & GeneName=="CDKN2A",Log2Ratio])
+  CDK2Blog2 <- mean(GeneCoverage[sampleName == sample & GeneName=="CDKN2B",Log2Ratio])
+  eachCol <- c(sample,MDM2log2, CDK2Alog2,CDK2Blog2)
+  totalSummary <- rbind(totalSummary,eachCol)
+}
+totalSummary <- as.data.frame(totalSummary) 
+# %>% 
+#   write.table(file='C:\\Users\\abc73_000\\Desktop\\MDM2_mean.txt',
+#               sep ='\t',row.names = F,quote = F, col.names = F)
+
+
+
+GeneCoverage$SampleName
+
+mean(GeneCoverage[SampleName == "DD0001" & GeneName=="MDM2",Log2Ratio])
 
 GeneCoverage <- data.table(GeneCoverage)
-Median <- GeneCoverage[, .(MedianMDM2 = median(MDM2), MdeidanCDK2A = median(CDKN2A), MEdianCDKN2B = median(CDKN2B)),by = .(CancerType)]
 
-Mean <- GeneCoverage[, .(MeanMDM2 = mean(MDM2), MeanCDK2A = mean(CDKN2A), MeanCDKN2B = mean(CDKN2B)),by = .(CancerType)]
+
+#Median <- GeneCoverage[, .(MedianMDM2 = median(MDM2), MdeidanCDK2A = median(CDKN2A), MEdianCDKN2B = median(CDKN2B)),by = .(CancerType)]
+#Mean <- GeneCoverage[, .(MeanMDM2 = mean(MDM2), MeanCDK2A = mean(CDKN2A), MeanCDKN2B = mean(CDKN2B)),by = .(CancerType)]
+
+
 GeneCoverage[, .(.N),by = .(CancerType)]
 Gene <- "MDM2"
 GeneCoverage[with(GeneCoverage,Gene >1),]
@@ -25,12 +53,8 @@ fill <- factor(GeneCoverage$CancerType, levels=c( "OM", "OSA")); # how do you wa
 y <- as.numeric(GeneCoverage$MDM2)
 data <- data.frame(x=x, y=y, fill=fill);
 fill.colors <- c("#103B78", "#A0111A");
-ylab <- "Shared Mutations Proportion";
+ylab <- "Log2 (Tumor/Normal)";
 
-a <- data[x=="OSA",][,c("y")]
-b <- data[x=="OM",][,c("y")]
-
-wilcox.test(a,b)
 
 
 p <- get_jitter(data, x, y, fill, fill.colors=fill.colors, ylab=ylab, y_cutoffs = 10, 
