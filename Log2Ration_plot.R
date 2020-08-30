@@ -7,46 +7,110 @@ regular.text <- element_text(colour="black",size=20);
 GeneCoverage <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/Interval_Log2_MDM2_CDKN2_DepthOfCoverage.xlsx",
                            sheet = "Log2Ratio_Interval")
 GeneCoverage <- data.table(GeneCoverage)
+OMSampleName <- unique(GeneCoverage[TumorType == "OM", c(SampleName)])
+OSASampleName <- unique(GeneCoverage[TumorType == "OSA", c(SampleName)])
 
-geneName <- unique(GeneCoverage$GeneName)
-sampleName <- unique(GeneCoverage$SampleName)
-MDM2 <- c()
-CDKN2A <- c()
-CDKN2B <- c()
-totalSummary <- NULL
-for (sample in sampleName){
-  MDM2log2 <- mean(GeneCoverage[(sampleName ==  sample) & (GeneName=="MDM2"),Log2Ratio])
-  CDK2Alog2 <- mean(GeneCoverage[sampleName == sample & GeneName=="CDKN2A",Log2Ratio])
-  CDK2Blog2 <- mean(GeneCoverage[sampleName == sample & GeneName=="CDKN2B",Log2Ratio])
-  eachCol <- c(sample,MDM2log2, CDK2Alog2,CDK2Blog2)
-  totalSummary <- rbind(totalSummary,eachCol)
+MDM2Interval <- unique(GeneCoverage[GeneName =='MDM2',c("CDS_Interval"),])
+MDM2Interval <- MDM2Interval$CDS_Interval
+CDKN2AInterval <- unique(GeneCoverage[GeneName =='CDKN2A',c("CDS_Interval"),])
+CDKN2AInterval <- CDKN2AInterval$CDS_Interval
+CDKN2BInterval <- unique(GeneCoverage[GeneName =='CDKN2B',c("CDS_Interval"),])
+CDKN2BInterval <- CDKN2BInterval$CDS_Interval
+
+# output <- NULL
+# for (interval in CDKN2BInterval){
+# data <- GeneCoverage[CDS_Interval==interval,]
+# final <- data[,.(Interval =interval , Median = median(Log2Ratio)), keyby= .(TumorType)]
+# output <- rbind(output, final)
+# }
+# output$gene <- "CDKN2B"
+# write.table(output,"C:\\Users\\abc73_000\\Desktop\\CDK2B_summary.txt",
+#             sep ='\t',row.names = F,quote = F)
+
+
+
+pdf("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/CDKN2BInterval_OM_OSALog2Ration.pdf"
+    , height=4.98, width=6.5);
+
+for (interval in CDKN2BInterval){
+data <- GeneCoverage[CDS_Interval==interval,]
+p <- data %>% 
+  ggplot(aes(x=factor(TumorType,levels = c("OM", "OSA")),
+             y=as.numeric(Log2Ratio),color='black')) +
+  geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.28)) +
+  ggtitle(interval)+
+  ylab("CDKN2B Depth Coverage Log2 Ratio")+
+  theme(axis.text=regular.text, 
+        axis.title.y=element_text(colour="black",size=20, margin = margin(t = 0, r = 0, b = 0, l = 0)),
+        axis.title.x =element_blank(),
+        axis.text.x = element_text(angle=30, hjust=1), 
+        panel.background=element_blank(), 
+        axis.line=element_line(color="black"),
+        legend.title=regular.text, 
+        legend.position="none", 
+        legend.text=regular.text, 
+        legend.key=element_blank())+
+  stat_summary(fun = median, fun.min = median, fun.max = median,position = "dodge",
+               geom = "crossbar",size=0.4, width = .7,colour = "black")+
+  #scale_shape_manual(values = 19)+
+  scale_color_manual(values = 'black')+
+  theme(plot.margin = unit(c(0.5,0.3,1,0.5), "cm"))
+
+print(p)
 }
-totalSummary <- as.data.frame(totalSummary) 
-# %>% 
-#   write.table(file='C:\\Users\\abc73_000\\Desktop\\MDM2_mean.txt',
-#               sep ='\t',row.names = F,quote = F, col.names = F)
+
+dev.off()
+
+
+# 
+# geneName <- unique(GeneCoverage$GeneName)
+# sampleName <- unique(GeneCoverage$SampleName)
+# MDM2 <- c()
+# CDKN2A <- c()
+# CDKN2B <- c()
+# totalSummary <- NULL
+# for (sample in sampleName){
+#   MDM2log2 <- mean(GeneCoverage[(sampleName ==  sample) & (GeneName=="MDM2"),Log2Ratio])
+#   CDK2Alog2 <- mean(GeneCoverage[sampleName == sample & GeneName=="CDKN2A",Log2Ratio])
+#   CDK2Blog2 <- mean(GeneCoverage[sampleName == sample & GeneName=="CDKN2B",Log2Ratio])
+#   eachCol <- c(sample,MDM2log2, CDK2Alog2,CDK2Blog2)
+#   totalSummary <- rbind(totalSummary,eachCol)
+# }
+# totalSummary <- as.data.frame(totalSummary) 
+# # %>% 
+# #   write.table(file='C:\\Users\\abc73_000\\Desktop\\MDM2_mean.txt',
+# #               sep ='\t',row.names = F,quote = F, col.names = F)
 
 
 
-GeneCoverage$SampleName
 
-mean(GeneCoverage[SampleName == "DD0001" & GeneName=="MDM2",Log2Ratio])
-
-GeneCoverage <- data.table(GeneCoverage)
 
 
 #Median <- GeneCoverage[, .(MedianMDM2 = median(MDM2), MdeidanCDK2A = median(CDKN2A), MEdianCDKN2B = median(CDKN2B)),by = .(CancerType)]
 #Mean <- GeneCoverage[, .(MeanMDM2 = mean(MDM2), MeanCDK2A = mean(CDKN2A), MeanCDKN2B = mean(CDKN2B)),by = .(CancerType)]
 
 
-GeneCoverage[, .(.N),by = .(CancerType)]
-Gene <- "MDM2"
-GeneCoverage[with(GeneCoverage,Gene >1),]
+
+MedianMDM2 <- GeneCoverage %>% 
+  group_by(TumorType) %>%
+  summarise(Median = median(MDM2)) %>% 
+  write.table("C:\\Users\\abc73_000\\Desktop\\MDM2.txt",
+              sep ='\t',row.names = F,quote = F)
+  
+ 
+MedianCA <- GeneCoverage %>% 
+  group_by(TumorType) %>% 
+  summarise(Median = median(CDKN2A)) %>% 
+write.table("C:\\Users\\abc73_000\\Desktop\\CDK2A.txt",
+            sep ='\t',row.names = F,quote = F)
+MedianCB <- GeneCoverage %>% 
+  group_by(TumorType) %>% 
+  summarise(Median = median(CDKN2B)) %>% 
+  write.table("C:\\Users\\abc73_000\\Desktop\\CDK2B.txt",
+              sep ='\t',row.names = F,quote = F)
 
 
-GeneCoverage %>% 
-  group_by(CancerType) %>% 
-  summarise(Median = median(MDM2))
+
 
 x <- factor(GeneCoverage$CancerType, levels=c( "OM", "OSA"));
 fill <- factor(GeneCoverage$CancerType, levels=c( "OM", "OSA")); # how do you want to seperate the data, here use Noraml tumor to seperate
@@ -61,11 +125,11 @@ p <- get_jitter(data, x, y, fill, fill.colors=fill.colors, ylab=ylab, y_cutoffs 
                 show.legend=F, xangle=30, compare_fills=FALSE, show.median=TRUE, dot_size=1.6);
 p
 
-pdf("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/Interval_OM_OSALog2Ration.pdf"
+pdf("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/IntervalMeanCoverage/Interval_Mean_OM_OSALog2Ration.pdf"
     , height=4.98, width=6.5);
 
 GeneCoverage %>% 
-  ggplot(aes(x=factor(CancerType,levels = c("OM", "OSA")),
+  ggplot(aes(x=factor(TumorType,levels = c("OM", "OSA")),
              y=as.numeric(MDM2),color='black')) +
   geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.28)) +
   ylab("MDM2 Depth Coverage Log2 Ratio")+
@@ -84,8 +148,9 @@ GeneCoverage %>%
   #scale_shape_manual(values = 19)+
   scale_color_manual(values = 'black')+
   theme(plot.margin = unit(c(0.5,0.3,1,0.5), "cm"))
+
 GeneCoverage %>% 
-  ggplot(aes(x=factor(CancerType,levels = c("OM", "OSA")),
+  ggplot(aes(x=factor(TumorType,levels = c("OM", "OSA")),
              y=as.numeric(CDKN2A),color='black')) +
   geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.28)) +
   ylab("CDKN2A Depth Coverage Log2 Ratio")+
@@ -105,7 +170,7 @@ GeneCoverage %>%
   scale_color_manual(values = 'black')+
   theme(plot.margin = unit(c(0.5,0.3,1,0.5), "cm"))
 GeneCoverage %>% 
-  ggplot(aes(x=factor(CancerType,levels = c("OM", "OSA")),
+  ggplot(aes(x=factor(TumorType,levels = c("OM", "OSA")),
              y=as.numeric(CDKN2B),color='black')) +
   geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.28)) +
   ylab("CDKN2B Depth Coverage Log2 Ratio")+
