@@ -31,7 +31,7 @@ strelka_out='/scratch/kh31516/Original_Mammary/store/'${Bioproject}'/strelka/'${
 
 
 ####### Download #######
-module load SRA-Toolkit/2.9.1-centos_linux64
+module load SRA-Toolkit/2.9.6-1-centos_linux64
 
 mkdir -p $dataT
 mkdir -p $dataN
@@ -54,7 +54,7 @@ fastq-dump --split-files --gzip ${Tumor_Run}
 
 ####### BWA Mapping #######
 cd ${results}
-module load BWA/0.7.17-foss-2016b
+ml BWA/0.7.17-GCC-8.3.0
 
 # Tumor
 time bwa aln -t 4 ${reference}/canFam3.fa $dataT/${Tumor_Run}_1.fastq.gz > ${results}/${Tumor_Run}_1.sai
@@ -82,7 +82,7 @@ $dataN/${Normal_Run}_2.fastq.gz \
 ####### Convert sam to bam file #######
 
 cd ${results}
-module load SAMtools/1.9-foss-2016b
+module load SAMtools/1.9-GCC-8.3.0
 
 samtools view -bS ${results}/${Tumor_Run}.sam > ${results}/${Tumor_Run}.bam
 samtools view -bS ${results}/${Normal_Run}.sam > ${results}/${Normal_Run}.bam
@@ -105,7 +105,7 @@ mv ${results}/fooT ${results}/${Tumor_Run}-cleaned.sam
 ####### Picard #######
 # picard sort
 cd ${results}
-module load picard/2.16.0-Java-1.8.0_144
+module load picard/2.21.6-Java-11
 
 java -jar /usr/local/apps/eb/picard/2.16.0-Java-1.8.0_144/picard.jar AddOrReplaceReadGroups I=${results}/${Normal_Run}-cleaned.sam \
 O=${results}/${Normal_Run}_rg_added_sorted.bam SO=coordinate RGID=4 RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=${Normal_Run}_normal
@@ -299,8 +299,8 @@ java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T DepthOfCoverage \
 ####### Mutect2 #######
 
 cd ${MuTect2_out}
-module load SAMtools/1.9-foss-2016b
-module load GATK/4.1.6.0-GCCcore-8.2.0-Java-1.8
+module load SAMtools/1.9-GCC-8.3.0
+module load GATK/4.1.6.0-GCCcore-8.3.0-Java-1.8
 
 Normal_sample=$(samtools view -H ${results}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam | grep '@RG' |awk -F "SM:" '{print $2}' | cut -f1)
 Tumor_sample=$(samtools view -H ${results}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam | grep '@RG' |awk -F "SM:" '{print $2}' | cut -f1)
@@ -351,8 +351,8 @@ ${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf
 
 cd ${MuTect2_out}
 
-module load Anaconda3/2018.12
-source activate py35
+ml Anaconda3/2020.02
+#source activate py35
 
 #awk '$7 == "PASS" {print $0}' ${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf > ${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf-PASS
 
@@ -366,7 +366,7 @@ ${MuTect2_out}/'${SampleName}'_VAF_After.txt
 
 ## Strelka
 cd ${results}
-module load SAMtools/1.9-foss-2016b 
+module load SAMtools/1.9-GCC-8.3.0
 #samtools index ${results}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam
 #samtools index ${results}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam
 
