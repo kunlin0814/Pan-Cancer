@@ -1,9 +1,13 @@
 #!/bin/bash
-#PBS -N 004
-#PBS -l walltime=250:00:00
-#PBS -l nodes=1:ppn=4
-#PBS -l mem=90gb
-#PBS -q batch
+#SBATCH --job-name=004_WES         # Job name (004_WES)
+#SBATCH --partition=batch           # Queue name (batch)
+#SBATCH --nodes=1                   # Run all processes on a single node
+#SBATCH --ntasks=1                  # Run in a single task on a single node
+#SBATCH --cpus-per-task=4           # Number of CPU cores per task (4)
+#SBATCH --mem=40G                   # Job memory limit (10 GB)
+#SBATCH --time=40:00:00              # Time limit hrs:min:sec or days-hours:minutes:seconds
+#SBATCH --output=004_WES.%j.out    # Standard output log
+#SBATCH --error=004_WES.%j.err     # Standard error log
 
 
 ################################################################################################################################
@@ -125,7 +129,7 @@ VALIDATION_STRINGENCY=SILENT M=${results}/${Tumor_Run}-output.metrics REMOVE_SEQ
 
 ####### GATK Realign #######
 # Generating interval file for sort.bam
-module load GATK/3.8-1-Java-1.8.0_144
+ml GATK/3.8-1-Java-1.8.0_144
 
 java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R ${reference}/canFam3.fa \
 -I ${results}/${Normal_Run}_rg_added_sorted_dedupped_removed.bam \
@@ -200,7 +204,7 @@ python $script/Add_GeneName_N_Signature.py ${MuTect_out}/'${SampleName}'_rg_adde
 
 ############################## Germline mutation preparation Start ######################################
 # GATK 3 
-module load GATK/3.8-1-Java-1.8.0_144
+ml GATK/3.8-1-Java-1.8.0_144
 
 cd $Germline_out
 
@@ -258,7 +262,7 @@ ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 #### GATK callable ####
 cd ${Germline_out}
-module load GATK/3.8-1-Java-1.8.0_144
+ml GATK/3.8-1-Java-1.8.0_144
 
 java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T CallableLoci \
 -R ${reference}/canFam3.fa \
@@ -277,7 +281,7 @@ java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T CallableLoci \
 
 #### GATK DepthofCoverage ####
 cd ${DepthOfCoverage}
-module load GATK/3.8-1-Java-1.8.0_144
+ml GATK/3.8-1-Java-1.8.0_144
 
 java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T DepthOfCoverage \
 -R ${reference}/canFam3.fa \
