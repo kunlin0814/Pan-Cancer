@@ -165,41 +165,41 @@ time java -jar /usr/local/apps/eb/MuTect/1.1.7-Java-1.7.0_80/mutect-1.1.7.jar --
 --intervals ${reference}/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list \
 --input_file:normal ${results}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam \
 --input_file:tumor ${results}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam \
---out ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.bam_call_stats.txt \
---coverage_file ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.bam_coverage.wig.txt \
---vcf ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf
+--out ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.bam_call_stats.txt \
+--coverage_file ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.bam_coverage.wig.txt \
+--vcf ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf
 
 ####### Annovar #######
 # Extract PASS records from vcf
 module load Perl/5.26.1-GCCcore-6.4.0
 
-awk '$7 == "PASS" {print $0}' ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf > ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
+awk '$7 == "PASS" {print $0}' ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf > ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
 
 # annovar input preparation
-perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS > ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
+perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS > ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
 
 # annovar annotate
-perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
+perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
 
 # add gene name
-python $script/Add_GeneName_N_Signature.py ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 
 ### Sanger 5 steps filtering ###
 # 5 Steps filtering
-grep -w KEEP ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,26,27,38,39 > ${MuTect_out}/'${SampleName}'_PASS.stat
+grep -w KEEP ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,26,27,38,39 > ${MuTect_out}/${SampleName}_PASS.stat
 
-python $script/Filter_MutectStat_5steps.py ${MuTect_out}/'${SampleName}'_PASS.stat ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
+python $script/Filter_MutectStat_5steps.py ${MuTect_out}/${SampleName}_PASS.stat ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
 
 # annovar input preparation
-perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut > ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput
+perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut > ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput
 
 # annovar annotate
-perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
+perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
 
 # add gene name
-python $script/Add_GeneName_N_Signature.py ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 ############################## Germline mutation preparation Start ######################################
@@ -318,20 +318,20 @@ gatk Mutect2 \
 --callable-depth 8 \
 --panel-of-normals  $MuTect2_source/pon.vcf.gz \
 --initial-tumor-lod 2.0 --normal-lod 2.2 --tumor-lod-to-emit 3.0 --pcr-indel-model CONSERVATIVE \
---f1r2-tar-gz ${MuTect2_out}/'${SampleName}'-f1r2.tar.gz \
+--f1r2-tar-gz ${MuTect2_out}/${SampleName}-f1r2.tar.gz \
 -L ${MuTect2_source}/Uniq-Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval.list \
--O ${MuTect2_out}/'${SampleName}'_MuTect2_GATK4_noDBSNP.vcf
+-O ${MuTect2_out}/${SampleName}_MuTect2_GATK4_noDBSNP.vcf
 
 
 ## pass this raw data to LearnReadOrientationModel:
-gatk LearnReadOrientationModel -I ${MuTect2_out}/'${SampleName}'-f1r2.tar.gz -O ${MuTect2_out}/read-orientation-model.tar.gz
+gatk LearnReadOrientationModel -I ${MuTect2_out}/${SampleName}-f1r2.tar.gz -O ${MuTect2_out}/read-orientation-model.tar.gz
 
 # filtered Mutect2 files
 
 gatk FilterMutectCalls -R ${reference}/canFam3.fa \
 -ob-priors ${MuTect2_out}/read-orientation-model.tar.gz \
--V ${MuTect2_out}/'${SampleName}'_MuTect2_GATK4_noDBSNP.vcf \
--O ${MuTect2_out}/filtered-'${SampleName}'_MuTect2_GATK4_noDBSNP.vcf
+-V ${MuTect2_out}/${SampleName}_MuTect2_GATK4_noDBSNP.vcf \
+-O ${MuTect2_out}/filtered-${SampleName}_MuTect2_GATK4_noDBSNP.vcf
 
 cd ${MuTect2_out}
 
@@ -340,15 +340,15 @@ cd ${MuTect2_out}
 ## with DbSNP
 java -cp  $script/ DbSNP_filtering \
 ${reference}/DbSNP_canFam3_version151-DogSD_Feb2020_V4.vcf \
-${MuTect2_out}/filtered-'${SampleName}'_MuTect2_GATK4_noDBSNP.vcf \
-${MuTect2_out}/DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf
+${MuTect2_out}/filtered-${SampleName}_MuTect2_GATK4_noDBSNP.vcf \
+${MuTect2_out}/DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf
 
 
 ## with PON
 java -cp  $script/ DbSNP_filtering \
 ${reference}/DbSNP_canFam3_version151-DogSD_Feb2020_V4.vcf \
-${MuTect2_out}/DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf \
-${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf
+${MuTect2_out}/DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf \
+${MuTect2_out}/PON_DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf
 
 
 ### Mutect2 5 steps filtering
@@ -358,14 +358,14 @@ cd ${MuTect2_out}
 ml Anaconda3/2020.02
 #source activate py35
 
-#awk '$7 == "PASS" {print $0}' ${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf > ${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf-PASS
+#awk '$7 == "PASS" {print $0}' ${MuTect2_out}/PON_DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf > ${MuTect2_out}/PON_DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf-PASS
 
 # 5 Steps filtering
 python $script/Mutect2_5Steps_filtering.py \
-${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf \
-${MuTect2_out}/PON_DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf \
-${MuTect2_out}/'${SampleName}'_VAF_Before.txt \
-${MuTect2_out}/'${SampleName}'_VAF_After.txt
+${MuTect2_out}/PON_DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf \
+${MuTect2_out}/PON_DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf \
+${MuTect2_out}/${SampleName}_VAF_Before.txt \
+${MuTect2_out}/${SampleName}_VAF_After.txt
 
 
 ## Strelka
@@ -412,7 +412,7 @@ $reference/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 : "
 ####### remove unneeded files #######
 rm ${results}/*_sorted_dedupped_removed.bam
-rm ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS ${MuTect_out}/'${SampleName}'_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
+rm ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
 rm ${results}/*.bai
 rm ${Germline_out}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS ${Germline_out}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput
 rm ${Germline_out}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS ${Germline_out}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput
@@ -422,7 +422,7 @@ rm ${results}/${Normal_Run}_rg_added_sorted.bam ${results}/${Tumor_Run}_rg_added
 rm ${results}/${Normal_Run}-cleaned.sam ${results}/${Tumor_Run}-cleaned.sam
 rm $dataN/*.fastq.gz $dataT/*.fastq.gz
 rm ${results}/*.sai
-rm ${MuTect2_out}/DbSNP_filtered-'${SampleName}'_MuTect2_GATK4.vcf
+rm ${MuTect2_out}/DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf
 rm ${MuTect2_out}/read-orientation-model.tar.gz
-rm ${MuTect2_out}/'${SampleName}'-f1r2.tar.gz
+rm ${MuTect2_out}/${SampleName}-f1r2.tar.gz
 "
