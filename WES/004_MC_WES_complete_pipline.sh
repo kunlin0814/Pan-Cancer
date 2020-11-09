@@ -158,7 +158,7 @@ java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T IndelRealigner -R ${reference}/can
 cd ${MuTect_out}
 module load MuTect/1.1.7-Java-1.7.0_80
 
-time java -jar /usr/local/apps/eb/MuTect/1.1.7-Java-1.7.0_80/mutect-1.1.7.jar --analysis_type MuTect \
+time java -jar $EBROOTMUTECT/mutect-1.1.7.jar --analysis_type MuTect \
 --reference_sequence ${reference}/canFam3.fa \
 --dbsnp ${reference}/DbSNP_canFam3_version151-DogSD_Feb2020_V4.vcf \
 --defaultBaseQualities 30 \
