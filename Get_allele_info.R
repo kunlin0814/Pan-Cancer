@@ -17,7 +17,7 @@ p1 <- ggplot(data= before5steps,aes(x=0, y = as.numeric(before5steps$V3),color='
   geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.05))+
   ylab("VAF")+
   ylim(0,yscale)+
-  ggtitle("Before 5 steps Mutect")+
+  ggtitle("Before 5 steps Mutect1")+
   theme(axis.text=regular.text, 
         axis.title.y=regular.text,
         axis.title.x =element_blank(),
@@ -28,14 +28,14 @@ p1 <- ggplot(data= before5steps,aes(x=0, y = as.numeric(before5steps$V3),color='
         legend.position="none", 
         legend.text=regular.text, 
         legend.key=element_blank())+
-   stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median,position = "dodge",
+   stat_summary(fun = median, fun.min = median, fun.max = median,position = "dodge",
                 geom = "crossbar",size=0.5, width = .7,colour = "black")
 
 p2 <- ggplot(data= after5steps,aes(x=0, y = as.numeric(after5steps$V3),color='black'))+
   geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.05))+
   ylab("VAF")+
   ylim(0,yscale)+
-  ggtitle("After 5 steps Mutect")+
+  ggtitle("After 5 steps Mutect1")+
   theme(axis.text=regular.text, 
         axis.title.y=regular.text,
         axis.title.x =element_blank(),
@@ -46,20 +46,20 @@ p2 <- ggplot(data= after5steps,aes(x=0, y = as.numeric(after5steps$V3),color='bl
         legend.position="none", 
         legend.text=regular.text, 
         legend.key=element_blank())+
-  stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median,position = "dodge",
+  stat_summary(fun = median, fun.min = median, fun.max = median,position = "dodge",
                geom = "crossbar",size=0.5, width = .7,colour = "black")
 
 grid.arrange(p1, p2, nrow = 1, top = title)
 }
 
 ### Mutect 2 ####
-file <- list.files (path = "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate/VAF/Mutect2/Unclassified/")
+file <- list.files (path = "C:/Users/abc73_000/Desktop/HSA_VAF/Mutect2/")
 
-# pdf("G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Figure1\\Unclassified_VAF_Mutect2.pdf"
-#     , height=4.8, width=6.2);
+pdf("/Users/abc73_000/Desktop/HSA_VAF/HSA_VAF_Mutect2.pdf"
+     , height=4.8, width=6.2);
 
 for (i in file){
-  path <- paste("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate/VAF/Mutect2/Unclassified/",i,sep="")
+  path <- paste("C:/Users/abc73_000/Desktop/HSA_VAF/Mutect2/",i,sep="")
   before_file <- paste(i,"_VAF_Before.txt",sep="")
   after_file <- paste(i,"_VAF_After.txt",sep="")
   if (file.size(paste(path,before_file,sep="/"))> 0 & file.size(paste(path,after_file,sep="/")) > 0){
@@ -69,16 +69,16 @@ for (i in file){
   }
   
 }
-
+dev.off()
 
 ### Mutect 1 ####
-file <- list.files (path = "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate/VAF/Mutect1/TCELL/")
+file <- list.files (path = "C:/Users/abc73_000/Desktop/HSA_VAF/Mutect1/")
 
-pdf("G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Figure1\\TCELL_VAF_Mutect1.pdf"
+pdf("C:/Users/abc73_000/Desktop/HSA_VAF/HSA_VAF_Mutect1.pdf"
     , height=4.8, width=6.2);
 
 for (i in file){
-  path <- paste("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate/VAF/Mutect1/TCELL/",i,sep="")
+  path <- paste("C:/Users/abc73_000/Desktop/HSA_VAF/Mutect1/",i,sep="")
   before_file <- paste(i,"_VAF_Before.txt",sep="")
   after_file <- paste(i,"_VAF_After.txt",sep="")
   
