@@ -14,7 +14,7 @@ yscale <- max(before5steps$V3,after5steps$V3)
 regular.text <- element_text(colour="black",size=14);
   
 p1 <- ggplot(data= before5steps,aes(x=0, y = as.numeric(before5steps$V3),color='black'))+
-  geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.05))+
+  geom_point(size=1.0,shape=20,position = position_jitterdodge(jitter.width = 0.05))+
   ylab("VAF")+
   ylim(0,yscale)+
   ggtitle("Before 5 steps Mutect1")+
@@ -32,7 +32,7 @@ p1 <- ggplot(data= before5steps,aes(x=0, y = as.numeric(before5steps$V3),color='
                 geom = "crossbar",size=0.5, width = .7,colour = "black")
 
 p2 <- ggplot(data= after5steps,aes(x=0, y = as.numeric(after5steps$V3),color='black'))+
-  geom_point(size=1.6,shape=20,position = position_jitterdodge(jitter.width = 0.05))+
+  geom_point(size=1.0,shape=20,position = position_jitterdodge(jitter.width = 0.05))+
   ylab("VAF")+
   ylim(0,yscale)+
   ggtitle("After 5 steps Mutect1")+
