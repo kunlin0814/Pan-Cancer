@@ -9,9 +9,12 @@ import re
 ### create a Dict of Alt allele frequency from tumor samples
 ### Before five steps filtering
 
-before5_VAF_info = sys.argv[1]
-after5stepsVCF= sys.argv[2]
-after5stepsVAF_info = sys.argv[3]
+before5_VAF_info = "C:\\Users\\abc73_000\\Desktop\\Mutect1_test\\HSA_3_PASS.stat"
+#sys.argv[1]
+after5stepsVCF= "C:\\Users\\abc73_000\\Desktop\\Mutect1_test\\HSA_3_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut"
+#sys.argv[2]
+after5stepsVAF_info = "C:\\Users\\abc73_000\\Desktop\\Mutect1_test\\test_after.txt"
+#sys.argv[3]
 
 after_filtering = open(after5stepsVAF_info,'w')
 
@@ -43,6 +46,7 @@ for i in after5steps:
         #print(allelDict[vcf_key])
         after_filtering.write(chrom+'\t'+ str(pos)+'\t')
         after_filtering.write(allelDict[vcf_key])
+        after_filtering.write("\n")
     
         
 after_filtering.close()    
