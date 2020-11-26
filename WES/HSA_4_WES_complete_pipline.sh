@@ -306,6 +306,7 @@ java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T DepthOfCoverage \
 ####### Mutect2 #######
 
 cd ${MuTect2_out}
+
 module load SAMtools/1.9-GCC-8.3.0
 module load GATK/4.1.6.0-GCCcore-8.3.0-Java-1.8
 
