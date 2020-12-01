@@ -1,9 +1,13 @@
 #!/bin/bash
-#PBS -N i_51A5
-#PBS -l walltime=650:00:00
-#PBS -l nodes=1:ppn=4
-#PBS -l mem=90gb
-#PBS -q batch
+#SBATCH --job-name=i_51A5         # Job name (i_03A6)
+#SBATCH --partition=batch           # Queue name (batch)
+#SBATCH --nodes=1                   # Run all processes on a single node
+#SBATCH --ntasks=1                  # Run in a single task on a single node
+#SBATCH --cpus-per-task=1           # Number of CPU co4es per task (4)
+#SBATCH --mem=70G                   # Job memory limit (10 GB)
+#SBATCH --time=600:00:00              # Time 1it hrs:min:sec or days-hours:minutes:seconds
+#SBATCH --output=i_03A6.%j.out    # Standard output log
+#SBATCH --error=i_03A6.%j.err     # Standard1ror4log
 
 
 ################################################################################################################################
@@ -166,13 +170,19 @@ time java -jar /usr/local/apps/eb/MuTect/1.1.7-Java-1.7.0_80/mutect-1.1.7.jar --
 # Extract PASS records from vcf
 module load Perl/5.26.1-GCCcore-6.4.0
 
+ml Anaconda3/2020.02
 awk '$7 == "PASS" {print $0}' ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf > ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
 
 ### Sanger 5 steps filtering ###
 # 5 Steps filtering
 grep -w KEEP ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,26,27,38,39 > ${MuTect_out}/i_51A5_PASS.stat
 
-python $script/Filter_MutectStat_5steps.py ${MuTect_out}/i_51A5_PASS.stat ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
+python $script/Mutect2_5Steps_filtering.py \
+${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS \
+${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS \
+${MuTect2_out}/${sample_name}_VAF_Before.txt \
+${MuTect2_out}/${sample_name}_VAF_After.txt \
+${MuTect2_out}/${sample_name}_whyout.txt
 # annovar input preparation
 perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS > ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
 
@@ -180,7 +190,7 @@ perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/i_51A5_rg_a
 perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
 
 # add gene name
-python $script/Add_GeneName_N_Signature.py ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/i_51A5_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 ############################## Germline mutation preparation Start ######################################
@@ -234,10 +244,10 @@ perl $annovar_index/annotate_variation.pl --buildver canFam3 ${Germline_out}/${T
 # add gene names to annovar output
 
 cd ${Germline_out}
-python $script/Add_GeneName_N_Signature.py ${Germline_out}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
+python2 $script/Add_GeneName_N_Signature.py ${Germline_out}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
 ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
-python $script/Add_GeneName_N_Signature.py ${Germline_out}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
+python2 $script/Add_GeneName_N_Signature.py ${Germline_out}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
 ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
@@ -269,7 +279,7 @@ java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T DepthOfCoverage \
 -I ${results}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam \
 --minBaseQuality 10 \
 --minMappingQuality 10 \
--L ${reference}/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list \
+-L ${reference}/Canis_familiaris.CanFam3.interval.list \
 -o ${DepthOfCoverage}/${Normal_Run}_DepthofCoverage_CDS.bed 
 
 java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T DepthOfCoverage \
@@ -277,7 +287,7 @@ java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T DepthOfCoverage \
 -I ${results}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam \
 --minBaseQuality 10 \
 --minMappingQuality 10 \
--L ${reference}/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list \
+-L ${reference}/Canis_familiaris.CanFam3.interval_list \
 -o ${DepthOfCoverage}/${Tumor_Run}_DepthofCoverage_CDS.bed 
 
 
@@ -300,7 +310,7 @@ gatk Mutect2 \
 --panel-of-normals  $MuTect2_source/pon.vcf.gz \
 --initial-tumor-lod 2.0 --normal-lod 2.2 --tumor-lod-to-emit 3.0 --pcr-indel-model CONSERVATIVE \
 --f1r2-tar-gz ${MuTect2_out}/i_51A5-f1r2.tar.gz \
--L ${MuTect2_source}/Uniq-Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval.list \
+-L ${MuTect2_source}/Canis_familiaris.CanFam3.interval.list \
 -O ${MuTect2_out}/i_51A5_MuTect2_GATK4_noDBSNP.vcf
 
 
@@ -367,7 +377,7 @@ $strelka_out/i_51A5/runWorkflow.py -m local -j 20
 
 ## limit strelka result into CDS region
 
-python $script/Limit_vcf_to_CDS.py $strelka_out/results/variants/somatic.indels.vcf.gz ${reference}/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list
+python2 $script/Limit_vcf_to_CDS.py $strelka_out/results/variants/somatic.indels.vcf.gz ${reference}/Canis_familiaris.CanFam3.interval.list
 
 
 

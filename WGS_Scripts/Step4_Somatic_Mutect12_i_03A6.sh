@@ -18,7 +18,7 @@ reference='/work/szlab/Lab_shared_PanCancer/source'
 dataN='/scratch/kh31516/Pan_cancer/glioma/results/store/WGS/data/'${sample_name}/${Normal_Run}
 dataT='/scratch/kh31516/Pan_cancer/glioma/results/store/WGS/data/'${sample_name}/${Tumor_Run}
 annovar_index='/work/szlab/Lab_shared_PanCancer/source/annovar_CanFam3.1.99.gtf'
-script='/home/kh31516/kh31516_Lab_Share_script'
+script='/work/szlab/kh31516_Lab_Share_script'
 MuTect2_source='/work/szlab/Lab_shared_PanCancer/source/Mutect2'
 MuTect_out='/scratch/kh31516/Pan_cancer/glioma/results/store/WGS/Mutect/'${sample_name}
 MuTect2_out='/scratch/kh31516/Pan_cancer/glioma/results/store/WGS/Mutect2/'${sample_name}
@@ -48,6 +48,8 @@ java -jar $EBROOTMUTECT/mutect-1.1.7.jar --analysis_type MuTect \
 awk '$7 == "PASS" {print $0}' ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf > ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
 
 
+ml Anaconda3/2020.02
+
 python $script/Filter_MutectStat_5steps.py \
 ${MuTect_out}/${sample_name}_PASS.stat \
 ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
@@ -65,7 +67,7 @@ perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${sample_na
 perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput $annovar_index
 
 # add gene name
-python $script/Add_GeneName_N_Signature.py ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 ## With 5 steps filtering 
@@ -83,7 +85,7 @@ perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${sample_na
 perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
 
 # add gene name
-python $script/Add_GeneName_N_Signature.py ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${sample_name}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 ####### Mutect2 #######
