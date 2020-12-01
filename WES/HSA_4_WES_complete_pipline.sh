@@ -30,14 +30,14 @@ Germline_out='/scratch/kh31516/Pan_cancer/HSA/store/'${Bioproject}'/Germline/'${
 DepthOfCoverage='/scratch/kh31516/Pan_cancer/HSA/store/'${Bioproject}'/DepthOfCoverage/'${SampleName}''
 strelka_out='/scratch/kh31516/Pan_cancer/HSA/store/'${Bioproject}'/strelka/'${SampleName}''
 annovar_index='/work/szlab/Lab_shared_PanCancer/source/annovar_CanFam3.1.99.gtf'
-script='/work/szlab/kh31516_Lab_Share_script'
+script='/home/kh31516/kh31516_Lab_Share_script'
 
 ###sraRunTable='/scratch/kh31516/Pan_cancer/PRJNA247493/source/PRJNA247493_SraRunTable.txt'# path
 
 
 ####### Download #######
 module load SRA-Toolkit/2.9.6-1-centos_linux64
-
+ml Anaconda3/2020.02
 mkdir -p $dataT
 mkdir -p $dataN
 mkdir -p ${results}
@@ -182,10 +182,10 @@ awk '$7 == "PASS" {print $0}' ${MuTect_out}/${SampleName}_rg_added_sorted_dedupp
 perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS > ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput
 
 # annovar annotate
-perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
+perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput $annovar_index
 
 # add gene name
-python $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 
@@ -193,7 +193,13 @@ python $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_
 # 5 Steps filtering
 grep -w KEEP ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,26,27,38,39 > ${MuTect_out}/${SampleName}_PASS.stat
 
-python $script/Filter_MutectStat_5steps.py ${MuTect_out}/${SampleName}_PASS.stat ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS
+python $script/Filter_MutectStat_5steps.py \
+${MuTect_out}/${SampleName}_PASS.stat \
+${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
+${MuTect_out}/${SampleName}_vaf_before.txt \
+${MuTect_out}/${SampleName}_vaf_after.txt \
+${MuTect_out}/${SampleName}_whyout.txt 
+
 
 # annovar input preparation
 perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut > ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput
@@ -202,7 +208,7 @@ perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${SampleNam
 perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput $annovar_index
 
 # add gene name
-python $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 ############################## Germline mutation preparation Start ######################################
@@ -256,10 +262,10 @@ perl $annovar_index/annotate_variation.pl --buildver canFam3 ${Germline_out}/${T
 # add gene names to annovar output
 
 cd ${Germline_out}
-python $script/Add_GeneName_N_Signature.py ${Germline_out}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
+python2 $script/Add_GeneName_N_Signature.py ${Germline_out}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
 ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
-python $script/Add_GeneName_N_Signature.py ${Germline_out}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
+python2 $script/Add_GeneName_N_Signature.py ${Germline_out}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam.filter.vcf-PASS-avinput.exonic_variant_function \
 ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
