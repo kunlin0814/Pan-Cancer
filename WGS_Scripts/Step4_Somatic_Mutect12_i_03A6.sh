@@ -91,6 +91,32 @@ python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${sample_name}_rg_adde
 ####### Mutect2 #######
 
 cd ${MuTect2_out}
+
+ml SAMtools/1.9-GCC-8.3.0
+
+### Change Bam file Read groups ###
+## if you need to re-header and re-index , the output re-alignment file must be in the different location and can't overwrite
+##
+samtools view -H ${results}/SRR10362478_rg_added_sorted_dedupped_removed.realigned.bam | sed -e "s/SM:20/SM:SRR10362478_normal/" | \
+samtools reheader - ${results}/SRR10362478_rg_added_sorted_dedupped_removed.realigned.bam > ${MuTect2_out}/SRR10362478_rg_added_sorted_dedupped_removed.realigned.bam
+
+samtools view -H ${results}/SRR10362479_rg_added_sorted_dedupped_removed.realigned.bam | sed -e "s/SM:20/SM:SRR10362479_tumor/" | \
+samtools reheader - ${results}/SRR10362479_rg_added_sorted_dedupped_removed.realigned.bam > ${MuTect2_out}/SRR10362479_rg_added_sorted_dedupped_removed.realigned.bam
+
+
+mv ${MuTect2_out}/SRR10362478_rg_added_sorted_dedupped_removed.realigned.bam ${results}
+mv ${MuTect2_out}/SRR10362479_rg_added_sorted_dedupped_removed.realigned.bam ${results}
+
+## GATK re index 
+module load picard/2.16.0-Java-1.8.0_144
+
+java -jar $EBROOTPICARD/picard.jar BuildBamIndex \
+I=${results}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam
+
+java -jar $EBROOTPICARD/picard.jar BuildBamIndex \
+I=${results}/${Tumor_Run}_rg_added_sorted_dedupped_removed.realigned.bam
+
+cd ${MuTect2_out}
 ml SAMtools/1.9-GCC-8.3.0
 ml GATK/4.1.6.0-GCCcore-8.3.0-Java-1.8
 
@@ -104,7 +130,7 @@ gatk Mutect2 \
 -I ${results}/${Normal_Run}_rg_added_sorted_dedupped_removed.realigned.bam \
 -normal $Normal_sample \
 --callable-depth 8 \
---dontUseSoftClippedBases true \
+--dont-use-soft-clipped-bases true \
 --panel-of-normals  $MuTect2_source/pon.vcf.gz \
 --initial-tumor-lod 2.0 --normal-lod 2.2 --tumor-lod-to-emit 3.0 --pcr-indel-model CONSERVATIVE \
 --f1r2-tar-gz ${MuTect2_out}/${sample_name}-f1r2.tar.gz \
