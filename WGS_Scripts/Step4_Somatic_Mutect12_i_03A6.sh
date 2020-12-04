@@ -173,12 +173,10 @@ ml Anaconda3/2020.02
 
 #awk '$7 == "PASS" {print $0}' ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf > ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS
 
-awk '$7 == "PASS" {print $0}' ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf > ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS
-
 # 5 Steps filtering
 python $script/Mutect2_5Steps_filtering.py \
-${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS \
-${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS \
+${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf \
+${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf \
 ${MuTect2_out}/${sample_name}_VAF_Before.txt \
 ${MuTect2_out}/${sample_name}_VAF_After.txt \
 ${MuTect2_out}/${sample_name}_whyout.txt
@@ -188,13 +186,13 @@ ${MuTect2_out}/${sample_name}_whyout.txt
 module load Perl/5.26.1-GCCcore-6.4.0
 
 # annovar input preparation
-perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS_filteredMut > ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS_filteredMut-avinput
+perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf_filteredMut > ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf_filteredMut-avinput
 
 # annovar annotate
-perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS_filteredMut-avinput $annovar_index
+perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf_filteredMut-avinput $annovar_index
 
 # add gene name
-python2 $script/Add_GeneName_N_Signature.py ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+python2 $script/Add_GeneName_N_Signature.py ${MuTect2_out}/PON_DbSNP_filtered-${sample_name}_MuTect2_GATK4.vcf_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
 
 
 
