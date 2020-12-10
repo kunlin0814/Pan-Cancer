@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1                  # Run in a single task on a single node
 #SBATCH --cpus-per-task=4           # Number of CPU cores per task (4)
 #SBATCH --mem=40G                   # Job memory limit (10 GB)
-#SBATCH --time=70:00:00              # Time limit hrs:min:sec or days-hours:minutes:seconds
+#SBATCH --time=90:00:00              # Time limit hrs:min:sec or days-hours:minutes:seconds
 #SBATCH --output=lab5_WES.%j.out    # Standard output log
 #SBATCH --error=lab5_WES.%j.err     # Standard error log
 
