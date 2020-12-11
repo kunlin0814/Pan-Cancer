@@ -241,7 +241,7 @@ gatk Mutect2 \
 --panel-of-normals  $MuTect2_source/pon.vcf.gz \
 --initial-tumor-lod 2.0 --normal-lod 2.2 --tumor-lod-to-emit 3.0 --pcr-indel-model CONSERVATIVE \
 --f1r2-tar-gz ${MuTect2_out}/${SampleName}-f1r2.tar.gz \
---dontUseSoftClippedBases true \
+--dont-use-soft-clipped-bases true \
 -L ${MuTect2_source}/Uniq-Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval.list \
 -O ${MuTect2_out}/${SampleName}_MuTect2_GATK4_noDBSNP.vcf
 
