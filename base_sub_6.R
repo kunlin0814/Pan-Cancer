@@ -186,8 +186,8 @@ col_name <- c("number","ref","alt")
 base <- "C:\\Users\\abc73_000\\Desktop\\bases_sub"
 
 Cancer_type <- "OM"
-OM_sample <-  list.files (path = "C:\\Users\\abc73_000\\Desktop\\bases_sub\\OM\\Mutect1")
-MC_sample <- list.files (path = "C:\\Users\\abc73_000\\Desktop\\bases_sub\\MC\\Mutect1")
+OM_sample <-  sort(list.files (path = "C:\\Users\\abc73_000\\Desktop\\bases_sub\\OM\\Mutect1"))
+MC_sample <- sort(list.files (path = "C:\\Users\\abc73_000\\Desktop\\bases_sub\\MC\\Mutect1"))
 MC_sample <- MC_sample[-match('CMT-33', MC_sample)]
 
 col_name <- c("number","ref","alt")
