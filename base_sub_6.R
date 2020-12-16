@@ -104,7 +104,9 @@ my_barplot <- function(dataframe, fill_colors, abs_text_size=12, xangle=30) {
     scale_fill_manual(values=fill_colors);
   p <- p + theme(axis.text=regular.text, axis.title=regular.text, axis.text.x = element_text(angle=xangle, hjust=xaxis_just),
                  panel.background=element_blank(), axis.line=element_line(color="black"),
-                 legend.title=regular.text, legend.position="top", legend.text=regular.text,
+                 legend.title=regular.text, 
+                 legend.position="top", 
+                 legend.text=regular.text,
                  plot.title=element_text(face="plain", size=abs_text_size, hjust=0.5));
   return(p);
 }
@@ -290,3 +292,55 @@ p4 <- sample_signature(mut2_after_count_sum,fill_colors = signature_colors, titl
 
 dev.off()
 
+# Sanger Data comparison
+sanger_data <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Mutation_rate\\OM_mutation_compare_with_Sanger\\Sanger_mutation.xlsx",
+                          sheet ="Canine", skip = 29)
+
+sanger_data <- setDT(sanger_data)
+
+pure_sig_data <- sanger_data[,.(Ref,Alt,Sample)]
+colnames(pure_sig_data) <- c("ref","alt","sample")
+clean_sanger <- clean_table(pure_sig_data)
+clean_sanger$conver_mut_type <- sapply(clean_sanger$mut_type, convert_mutation_type)
+
+a <- clean_sanger[sample=="DD0001a",]
+b <- data.frame(table(a$conver_mut_type))
+b <- setDT(b)
+colnames(b) <- c("conver_mut_type","number")
+c <- count_mutation_number(b,signature_levels )
+prepare_bar_plot_from_table(c,)
+find_six_base(b,rate =F,sample_name=sample);
+
+result <- rep(0, length(signature_levels));
+names(result) <- signature_levels;
+df <- setNames(data.frame(matrix(ncol = 6, nrow = 1)), signature_levels)
+
+summary <- NULL
+for (samp in total_sample){
+  
+  a <- clean_sanger[sample==samp,]
+  b <- data.frame(table(a$conver_mut_type))
+  #b$sample_name <- samp
+  b <- setDT(b)
+  colnames(b) <- c("conver_mut_type","number")
+  c <- count_mutation_number(b,signature_levels )
+  d <- prepare_bar_plot_from_table(c,samp)
+  summary <- rbind(summary, d)
+}
+
+
+pdf(paste("C:\\Users\\abc73_000\\Desktop\\bases_sub\\","Sanger","_samples_data_6bases_count.pdf",sep="")
+    , height=12.94, width=12.94);
+
+
+
+
+sanger <- sample_signature(summary,fill_colors = signature_colors, title = "Sanger_Data")
+grid.arrange(p2,sanger,
+             nrow = 2, top = textGrob(Cancer_type,gp=gpar(fontsize=24,font=3)))
+
+grid.arrange(p4,sanger,
+             nrow = 2, top = textGrob(Cancer_type,gp=gpar(fontsize=24,font=3)))
+
+dev.off()
+# sanger compaiosn end 

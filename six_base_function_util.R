@@ -6,7 +6,24 @@ library(readxl)
 library(ggpubr)
 library(grid)
 
+
 regular.text <- element_text(colour="black",size=20)
+
+
+convert_sample <- function(sample){
+  if(grepl("-1",sample)){
+    split_words <- str_split(sample,'-')[[1]][1]
+    sanger_sample <- paste(split_words,'c',sep = "")
+  }else if(grepl("-2",sample)){
+    split_words <- str_split(sample,'-')[[1]][1]
+    sanger_sample <- paste(split_words,'d',sep = "")
+  }
+  else{
+    sanger_sample <- paste(sample,'a',sep = "")
+  }
+  return (sanger_sample)
+  
+}
 
 clean_table <- function(table){
   ref_snp <- which(nchar(table$ref)==1)
@@ -101,7 +118,9 @@ my_barplot <- function(dataframe, fill_colors, abs_text_size=12, xangle=30) {
     scale_fill_manual(values=fill_colors);
   p <- p + theme(axis.text=regular.text, axis.title=regular.text, axis.text.x = element_text(angle=xangle, hjust=xaxis_just),
                  panel.background=element_blank(), axis.line=element_line(color="black"),
-                 legend.title=regular.text, legend.position="top", legend.text=regular.text,
+                 legend.title=regular.text, 
+                 legend.position="top", 
+                 legend.text=regular.text,
                  plot.title=element_text(face="plain", size=abs_text_size, hjust=0.5));
   return(p);
 }
