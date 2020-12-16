@@ -9,6 +9,15 @@ library(grid)
 
 regular.text <- element_text(colour="black",size=20)
 
+convert_MT_sample <- function(MT_sample){
+  each <- str_split(MT_sample,"-")
+  while (nchar(each[[1]][2])<3){
+    each[[1]][2] <- paste("0",each[[1]][2], sep="")
+  }
+  return (paste(each[[1]][1],each[[1]][2],sep = "-"))
+}
+
+
 
 convert_sample <- function(sample){
   if(grepl("-1",sample)){
