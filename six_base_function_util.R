@@ -190,12 +190,12 @@ conver_to_six_bases_basedon_mutation <- function(data_frame, sample,cancer_type,
   if (rates){
     data_info <- count_mutation_rates(data_info,signature_levels)
     data_info <- prepare_bar_plot_from_table(data_info,sample)
-    data_info$tumor_type <- "OM"
+    data_info$tumor_type <- cancer_type
     rownames(data_info) <- NULL
   }else{
     data_info <- count_mutation_number(data_info,signature_levels)
     data_info <- prepare_bar_plot_from_table(data_info,sample)
-    data_info$tumor_type <- "OM"
+    data_info$tumor_type <- cancer_type
     rownames(data_info) <- NULL  
   }  
   
