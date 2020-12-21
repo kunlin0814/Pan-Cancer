@@ -176,6 +176,35 @@ find_six_base <- function(data,rate = T,sample_name){
   return(data)
 }
 
+conver_to_six_bases_basedon_mutation <- function(data_frame, sample,cancer_type,rates = T){
+  fontsize <- 20;
+  signature_colors <- c("cyan","black","red","gray","green","pink");
+  signature_levels <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G");
+  
+  data_frame$mut_type <- paste(data_frame$ref,data_frame$alt,sep = ">")
+  data_frame$conver_mut_type <- sapply(data_frame$mut_type, convert_mutation_type)
+  data_frame <- setDT(data_frame)
+  data_info <- as.data.frame(table(data_frame[sample_name == sample,.(conver_mut_type)]))
+  colnames(data_info) <- c("conver_mut_type","number")
+  data_info <- setDT(data_info)
+  if (rates){
+    data_info <- count_mutation_rates(data_info,signature_levels)
+    data_info <- prepare_bar_plot_from_table(data_info,sample)
+    data_info$tumor_type <- "OM"
+    rownames(data_info) <- NULL
+  }else{
+    data_info <- count_mutation_number(data_info,signature_levels)
+    data_info <- prepare_bar_plot_from_table(data_info,sample)
+    data_info$tumor_type <- "OM"
+    rownames(data_info) <- NULL  
+  }  
+  
+  return (data_info)
+}
+
+
+
+
 sample_signature <- function(data,fill_colors,title){
   x <- data$x
   y <- data$y;
@@ -196,7 +225,8 @@ sample_signature <- function(data,fill_colors,title){
       #element_text(face="plain",colour="black",size=fontsize),
       axis.title.y = element_blank(),
       #element_text(face="plain",colour="black",size=fontsize),
-      axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+      axis.text.x = element_blank(), 
+      axis.ticks.x = element_blank(),
       axis.text.y = element_text(size=fontsize,face="plain",colour="black"),
       legend.title= element_blank(), legend.text = element_text(size=fontsize,face="plain",colour="black"));
   return(p)
