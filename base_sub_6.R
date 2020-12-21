@@ -17,11 +17,11 @@ signature_colors <- c("cyan","black","red","gray","green","pink");
 signature_levels <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G");
 col_name <- c("number","ref","alt")
 
-base <- "C:\\Users\\abc73_000\\Desktop\\bases_sub"
+base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\bases_sub"
 
-Cancer_type <- "OM"
-OM_sample <-  sort(list.files (path = "C:\\Users\\abc73_000\\Desktop\\bases_sub\\OM\\Mutect1"))
-MC_sample <- sort(list.files (path = "C:\\Users\\abc73_000\\Desktop\\bases_sub\\MC\\Mutect1"))
+Cancer_type <- "MT"
+OM_sample <-  sort(list.files (path = "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\bases_sub\\OM\\Mutect1"))
+MC_sample <- sort(list.files (path = "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\bases_sub\\MT\\Mutect1"))
 MC_sample <- MC_sample[-match('CMT-33', MC_sample)]
 
 col_name <- c("number","ref","alt")
@@ -105,6 +105,93 @@ answer <- ex[, .(total=sum(y)),keyby = .(x)][order(-total)]
 
 
 # dev.off()
+## All the sample together with the same sample order
+
+library(ggforce)
+library(tidyr) 
+library(dplyr)
+library(ggplot2)
+library(ggforce)
+pdf(paste(base,"same_order_MT_samples_data_6bases_count.pdf",sep="\\")
+    , height=12.94, width=12.94);
+xangle = 90
+fill_colors = signature_colors
+
+
+## Mutect1 Before
+x <- mut_before_count_sum$x
+y <- mut_before_count_sum$y;
+mutation_types <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G");
+fill <- mut_before_count_sum$fill
+fill <- factor(fill, levels=mutation_types);
+samples <- unique(x);
+sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
+x <- factor(x, levels=samples[sample_order]);
+data <- data.frame(x=x, y=y, fill=fill);
+
+
+p1 <- my_new_bar_plot(data,fill_colors=signature_colors,"Mutect before" )
+
+
+
+
+
+## Mutect1 after
+x <- mut_after_count_sum$x
+y <- mut_after_count_sum$y;
+mutation_types <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G");
+fill <- mut_after_count_sum$fill
+fill <- factor(fill, levels=mutation_types);
+samples <- unique(x);
+#sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
+x <- factor(x, levels=samples[sample_order]);
+data <- data.frame(x=x, y=y, fill=fill);
+
+p2 <- my_new_bar_plot(data,fill_colors=signature_colors,"Mutect After" )
+
+grid.arrange(p1,p2,
+             nrow = 2, top = textGrob(Cancer_type,gp=gpar(fontsize=24,font=3)))
+
+
+##Mutect2
+
+fill_colors = signature_colors
+
+## Mutect2 Before
+x <- mut2_before_count_sum$x
+y <- mut2_before_count_sum$y;
+mutation_types <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G");
+fill <- mut2_before_count_sum$fill
+fill <- factor(fill, levels=mutation_types);
+samples <- unique(x);
+sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
+x <- factor(x, levels=samples[sample_order]);
+data <- data.frame(x=x, y=y, fill=fill);
+
+
+p1 <- my_new_bar_plot(data,fill_colors=signature_colors,"Mutect2 before" )
+
+## Mutect2 after
+x <- mut2_after_count_sum$x
+y <- mut2_after_count_sum$y;
+mutation_types <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G");
+fill <- mut2_after_count_sum$fill
+fill <- factor(fill, levels=mutation_types);
+samples <- unique(x);
+#sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
+x <- factor(x, levels=samples[sample_order]);
+data <- data.frame(x=x, y=y, fill=fill);
+
+p2 <- my_new_bar_plot(data,fill_colors=signature_colors,"Mutect2 After" )
+
+grid.arrange(p1,p2,
+             nrow = 2, top = textGrob(Cancer_type,gp=gpar(fontsize=24,font=3)))
+
+
+dev.off()
+
+
+
 
 ## All the samples together
 pdf(paste("C:\\Users\\abc73_000\\Desktop\\bases_sub\\",Cancer_type,"_samples_data_6bases_count.pdf",sep="")
