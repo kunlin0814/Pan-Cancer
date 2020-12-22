@@ -51,7 +51,7 @@ vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/OM_VAF/Mutect1'
 
 while read line1 line2 line3
 do
-   mkdir -p $vaf_out/$line1
+    mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
 
     grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
@@ -102,7 +102,7 @@ done < $total_file
 
 # HSA
 total_file='/scratch/kh31516/Pan_cancer/HSA/source/PRJNA552034-HSA-Normal-Tumor-pair'
-mutect_folder='/scratch/tw71066/All_NEW_WES/PRJNA552034-HSA/Mutation/new_mutect_results'
+mutect_folder='/scratch/kh31516/Pan_cancer/HSA/store/PRJNA552034/new_mutect_results'
 vaf_out='/scratch/kh31516/Pan_cancer/HSA/store/PRJNA552034/Mutect1VAF'
 
 
@@ -213,3 +213,45 @@ do
     mv ${line1}_vaf_after.txt $vaf_out/$line1
     
 done < $total_file
+
+
+## cat all the file together
+final_total_Before_Mutect_output='/scratch/kh31516/Total_VAF_before_Mutect.txt'
+final_total_after_Mutect_output='/scratch/kh31516/Total_VAF_after_Mutect.txt'
+# MT
+vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/MT_VAF/Mutect1'
+cd $vaf_out
+cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+
+# OM
+vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/OM_VAF/Mutect1'
+cd $vaf_out
+cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+# GLM
+vaf_out='/scratch/kh31516/Pan_cancer/glioma/results/store/WES/Mutect1VAF'
+cd $vaf_out
+cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+# LYM
+vaf_out='/scratch/kh31516/Pan_cancer/lymphoma/store/Mutect1VAF'
+cd $vaf_out
+cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+# HSA
+vaf_out='/scratch/kh31516/Pan_cancer/HSA/store/PRJNA552034/Mutect1VAF'
+cd $vaf_out
+cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+# OSA
+vaf_out='/scratch/kh31516/Pan_cancer/Osteo/store/PRJNA391455/Mutect1VAF'
+cd $vaf_out
+cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+
+# UCL
+vaf_out='/scratch/kh31516/Pan_cancer/others/store/Mutect1VAF'
+cd $vaf_out
+cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt >> $final_total_after_Mutect_output
