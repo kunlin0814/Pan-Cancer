@@ -27,12 +27,15 @@ do
     mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
 
+    grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
+
     python $scripts/Filter_MutectStat_5steps.py \
     $mutect_folder/$line1/${line1}_PASS.stat \
     $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
     $mutect_folder/$line1/${line1}_vaf_before.txt \
     $mutect_folder/$line1/${line1}_vaf_after.txt \
-    $mutect_folder/$line1/${line1}_whyout.txt 
+    $mutect_folder/$line1/${line1}_whyout.txt \
+    $line1 
 
 
     mv ${line1}_vaf_before.txt $vaf_out/$line1
@@ -48,20 +51,22 @@ vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/OM_VAF/Mutect1'
 
 while read line1 line2 line3
 do
-  mkdir -p $vaf_out/$line1
+   mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
+
+    grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
 
     python $scripts/Filter_MutectStat_5steps.py \
     $mutect_folder/$line1/${line1}_PASS.stat \
     $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
     $mutect_folder/$line1/${line1}_vaf_before.txt \
     $mutect_folder/$line1/${line1}_vaf_after.txt \
-    $mutect_folder/$line1/${line1}_whyout.txt 
+    $mutect_folder/$line1/${line1}_whyout.txt \
+    $line1 
 
 
     mv ${line1}_vaf_before.txt $vaf_out/$line1
     mv ${line1}_vaf_after.txt $vaf_out/$line1
-
 
 done < $total_file
 
@@ -74,15 +79,18 @@ vaf_out='/scratch/kh31516/Pan_cancer/glioma/results/store/WES/Mutect1VAF'
 
 while read line1 line2 line3
 do
-    mkdir -p $vaf_out/$line1
+     mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
+
+    grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
 
     python $scripts/Filter_MutectStat_5steps.py \
     $mutect_folder/$line1/${line1}_PASS.stat \
     $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
     $mutect_folder/$line1/${line1}_vaf_before.txt \
     $mutect_folder/$line1/${line1}_vaf_after.txt \
-    $mutect_folder/$line1/${line1}_whyout.txt 
+    $mutect_folder/$line1/${line1}_whyout.txt \
+    $line1 
 
 
     mv ${line1}_vaf_before.txt $vaf_out/$line1
@@ -103,17 +111,19 @@ do
     mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
 
+    grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
+
     python $scripts/Filter_MutectStat_5steps.py \
     $mutect_folder/$line1/${line1}_PASS.stat \
     $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
     $mutect_folder/$line1/${line1}_vaf_before.txt \
     $mutect_folder/$line1/${line1}_vaf_after.txt \
-    $mutect_folder/$line1/${line1}_whyout.txt 
+    $mutect_folder/$line1/${line1}_whyout.txt \
+    $line1 
 
 
     mv ${line1}_vaf_before.txt $vaf_out/$line1
     mv ${line1}_vaf_after.txt $vaf_out/$line1
-
 done < $total_file
 
 
@@ -129,12 +139,16 @@ do
     mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
 
+    grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
+
     python $scripts/Filter_MutectStat_5steps.py \
     $mutect_folder/$line1/${line1}_PASS.stat \
     $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
     $mutect_folder/$line1/${line1}_vaf_before.txt \
     $mutect_folder/$line1/${line1}_vaf_after.txt \
-    $mutect_folder/$line1/${line1}_whyout.txt 
+    $mutect_folder/$line1/${line1}_whyout.txt \
+    $line1 
+
 
     mv ${line1}_vaf_before.txt $vaf_out/$line1
     mv ${line1}_vaf_after.txt $vaf_out/$line1
@@ -154,12 +168,15 @@ do
     mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
 
+    grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
+
     python $scripts/Filter_MutectStat_5steps.py \
     $mutect_folder/$line1/${line1}_PASS.stat \
     $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
     $mutect_folder/$line1/${line1}_vaf_before.txt \
     $mutect_folder/$line1/${line1}_vaf_after.txt \
-    $mutect_folder/$line1/${line1}_whyout.txt 
+    $mutect_folder/$line1/${line1}_whyout.txt \
+    $line1 
 
 
     mv ${line1}_vaf_before.txt $vaf_out/$line1
@@ -181,15 +198,18 @@ do
     mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
 
+    grep -w KEEP $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > $mutect_folder/$line1/${line1}_PASS.stat
+
     python $scripts/Filter_MutectStat_5steps.py \
     $mutect_folder/$line1/${line1}_PASS.stat \
     $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
     $mutect_folder/$line1/${line1}_vaf_before.txt \
     $mutect_folder/$line1/${line1}_vaf_after.txt \
-    $mutect_folder/$line1/${line1}_whyout.txt 
+    $mutect_folder/$line1/${line1}_whyout.txt \
+    $line1 
 
 
     mv ${line1}_vaf_before.txt $vaf_out/$line1
     mv ${line1}_vaf_after.txt $vaf_out/$line1
-
+    
 done < $total_file
