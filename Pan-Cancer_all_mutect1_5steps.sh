@@ -221,37 +221,41 @@ final_total_after_Mutect_output='/scratch/kh31516/Total_VAF_after_Mutect.txt'
 # MT
 vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/MT_VAF/Mutect1'
 cd $vaf_out
-cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
-cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+
+cat */*_vaf_before.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="MT" ; print}' >> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="MT" ; print}'>> $final_total_after_Mutect_output
 
 # OM
 vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/OM_VAF/Mutect1'
 cd $vaf_out
-cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
-cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+cat */*_vaf_before.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="OM" ; print}'>> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="OM" ; print}'>> $final_total_after_Mutect_output
 # GLM
 vaf_out='/scratch/kh31516/Pan_cancer/glioma/results/store/WES/Mutect1VAF'
 cd $vaf_out
-cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
-cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+cat */*_vaf_before.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="GLM" ; print}'>> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="GLM" ; print}'>> $final_total_after_Mutect_output
 # LYM
 vaf_out='/scratch/kh31516/Pan_cancer/lymphoma/store/Mutect1VAF'
 cd $vaf_out
-cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
-cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+cat */*_vaf_before.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="LYM" ; print}'>> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="LYM" ; print}'>> $final_total_after_Mutect_output
 # HSA
 vaf_out='/scratch/kh31516/Pan_cancer/HSA/store/PRJNA552034/Mutect1VAF'
 cd $vaf_out
-cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
-cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+cat */*_vaf_before.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="HSA" ; print}'>> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="HSA" ; print}'>> $final_total_after_Mutect_output
 # OSA
 vaf_out='/scratch/kh31516/Pan_cancer/Osteo/store/PRJNA391455/Mutect1VAF'
 cd $vaf_out
-cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
-cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+cat */*_vaf_before.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="OSA" ; print}'>> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="OSA" ; print}'>> $final_total_after_Mutect_output
 
 # UCL
 vaf_out='/scratch/kh31516/Pan_cancer/others/store/Mutect1VAF'
 cd $vaf_out
-cat */*_vaf_before.txt >> $final_total_Before_Mutect_output
-cat */*_vaf_after.txt >> $final_total_after_Mutect_output
+cat */*_vaf_before.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="UCL" ; print}'>> $final_total_Before_Mutect_output
+cat */*_vaf_after.txt | awk -F"\t" 'BEGIN { OFS = "\t" } {$9="UCL" ; print}'>> $final_total_after_Mutect_output
+
+gzip $final_total_Before_Mutect_output
+gzip $final_total_after_Mutect_output
