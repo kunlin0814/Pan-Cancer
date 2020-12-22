@@ -1,6 +1,6 @@
 #! /bin/bash
 
-
+: "
 while read line1 line2 line3
 do 
     mkdir /scratch/kh31516/Original_Melanoma/store/PRJEB12081/VAF/new_VAF/$line1
@@ -9,7 +9,7 @@ do
     cat *_before.txt | cut -f1-3 > /scratch/kh31516/Original_Melanoma/store/PRJEB12081/VAF/new_VAF/$line1/${line1}_vaf_before.txt
 
 done < /scratch/kh31516/Original_Melanoma/source/combined_melanoma.txt 
-
+"
 
 ml Anaconda3/2020.02
 ## 5 steps filtering
@@ -19,7 +19,7 @@ scripts='/home/kh31516/kh31516_Lab_Share_script'
 #MC
 total_file='/scratch/kh31516/Original_Mammary/source/K9_WXS_mammary_SRR_pairs.txt'
 mutect_folder='/scratch/kh31516/Original_Mammary/store/PRJNA489159/newMutectSNP'
-vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/MT_VAF'
+vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/MT_VAF/Mutect1'
 
 while read line1 line2 line3
 do
@@ -39,31 +39,32 @@ do
     mv ${line1}_vaf_after.txt $vaf_out/$line1
 
 done < $total_file
-: "
+
 #OM
-total_file=
-mutect_folder=
-vaf_out=
+total_file='/scratch/kh31516/Original_Melanoma/source/combined_melanoma.txt'
+mutect_folder='/scratch/kh31516/Original_Melanoma/store/PRJEB12081/newMutectSNP'
+vaf_out='/scratch/kh31516/Original_Mammary/store/PRJNA489159/OM_VAF/Mutect1'
 
 
 while read line1 line2 line3
 do
-    mkdir -p $vaf_out/$line1
+  mkdir -p $vaf_out/$line1
     cd $mutect_folder/$line1
 
-    python $script/Filter_MutectStat_5steps.py \
-    ${MuTect_out}/${line1}_PASS.stat \
-    ${MuTect_out}/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
-    ${MuTect_out}/${line1}_vaf_before.txt \
-    ${MuTect_out}/${line1}_vaf_after.txt \
-    ${MuTect_out}/${line1}_whyout.txt 
+    python $scripts/Filter_MutectStat_5steps.py \
+    $mutect_folder/$line1/${line1}_PASS.stat \
+    $mutect_folder/$line1/${line1}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
+    $mutect_folder/$line1/${line1}_vaf_before.txt \
+    $mutect_folder/$line1/${line1}_vaf_after.txt \
+    $mutect_folder/$line1/${line1}_whyout.txt 
 
 
-    mv ${line1}_vaf_before.txt ${line1}_vaf_after.txt $vaf_out
+    mv ${line1}_vaf_before.txt $vaf_out/$line1
+    mv ${line1}_vaf_after.txt $vaf_out/$line1
 
 
 done < $total_file
-"
+
 
 # GLM
 total_file='/scratch/kh31516/Pan_cancer/glioma/source/Glioma_WES_Pair.txt'
