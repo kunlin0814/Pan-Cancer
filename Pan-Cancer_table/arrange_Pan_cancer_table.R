@@ -32,7 +32,7 @@ fwrite(pair_info,file = paste(base_dir,"total_pair_info.txt",sep =seperator), co
 
 
 ## WGS ## file up case names
-
+seperator <- "/"
 base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/WGS_analysis"
 case_total_file <- read_excel(paste(base_dir,"WGS_QC.xlsx",sep=seperator),sheet = "Total_cases")
 table_file <- read_excel(paste(base_dir,"WGS_QC.xlsx",sep=seperator),sheet = "Sheet1")
@@ -53,6 +53,6 @@ identify_case <- function(SRR,case_total=case_total_file){
 case_name <- unlist(sapply(table_file$file_name,identify_case))
 table_file$Case_ID <- case_name
 
-write.table(table_file[,c(10,1:9)],file = paste(base_dir,"WGS_final_table.txt",sep=seperator),
+write.table(table_file,file = paste(base_dir,"WGS_final_table.txt",sep=seperator),
             sep = "\t",quote = F,col.names = T,row.names = F)
 
