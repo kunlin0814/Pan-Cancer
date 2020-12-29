@@ -6,9 +6,9 @@ library(readxl)
 library(ggpubr)
 library(grid)
 
-source("C:\\Users\\abc73_000\\Documents\\GitHub\\Pan-Cancer\\six_base_function_util.R")
+source("C:\\Users\\abc73_000\\Documents\\GitHub\\VAF\\six_base_function_util.R")
 
-excldue <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Figure1\\Original_Data_summary.xlsx",
+excldue <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan-Cancer-Manuscript\\Figure1\\Original_Data_summary.xlsx",
                       sheet = "Before_Matching_excluded")
 
 dot_size <- 1.4;
@@ -21,68 +21,148 @@ regular.text <- element_text(colour="black",size=20)
 
 #### Analyzed the ratio that overlap
 
-base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Mutation_rate\\OM_mutation_compare_with_Sanger"
+base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
 # sanger_signature <- read_excel(paste(base,"Sanger_mutation.xlsx",sep ="\\"),
 #                                 sheet ="Canine", skip = 29)
 
-sanger_signature <- fread(paste(base,"published_OM_cds.txt",sep ="\\"))
-                              
-clean_sanger <- sanger_signature[,c("#Chr","Position","Ref","Alt","Sample")]
-clean_sanger$chrom <- paste("chr",clean_sanger$`#Chr`,sep ="")
-clean_sanger$chrom_loc <- paste(clean_sanger$chrom,clean_sanger$Position,sep = "_")
+sanger_signature <- fread(paste(base,"DbSNP_sanger_mut_file_before_DBSNP.txt",sep ="\\"))
+clean_sanger <- sanger_signature
+#clean_sanger <- sanger_signature[,c("#Chr","Position","Ref","Alt","Sample")]
+#clean_sanger$Chromosome <- paste("chr",clean_sanger$`#Chr`,sep ="")
+clean_sanger$chrom_loc <- paste(clean_sanger$Chromosome,clean_sanger$Position,sep = "_")
 clean_sanger <- setDT(clean_sanger)
 
 samples <- sort(unique(sanger_signature$Sample))
 our_data <- fread(paste(base,"our_totalSangerOM_mutation.txt",sep="\\"))
-colnames(our_data) <- c("chrom","Position","Ref","Alt","Sample")
+colnames(our_data) <- c("Chromosome","Position","Ref","Alt","Sample")
 
 our_data_sample_convert <- sapply(our_data$Sample,convert_sample)
 our_data$Sample <- our_data_sample_convert
-our_data$chrom_loc <- paste(our_data$chrom,our_data$Position,sep ="_")
+our_data$chrom_loc <- paste(our_data$Chromosome,our_data$Position,sep ="_")
 
-total_ratio <- NULL
+total_uniq_num_to_them <- NULL
+total_uniq_num_to_us <- NULL
+total_share_number <- NULL
+total_uniq_ratio_to_them <- NULL
+total_uniq_ratio_to_us <- NULL
+total_share_ratio <- NULL
 total_sample <- NULL
+total_denomitor <- NULL
 for (samp in samples){
 
 our_each_mut <- our_data[Sample == samp, .(chrom_loc)]
 sanger_each_mut <- clean_sanger[Sample == samp,.(chrom_loc)]
-number_overlap <- nrow(intersect(our_each_mut,sanger_each_mut))
+
+
 our_each <- nrow(our_data[Sample==samp,])
 sanger_each <- nrow(clean_sanger[Sample==samp,])
+intercet_data <- nrow(intersect(our_each_mut,sanger_each_mut))
+denominator <- our_each+sanger_each-intercet_data
 
-overlap_ratio <- number_overlap/(min(our_each,sanger_each))
-total_ratio <- c(total_ratio,overlap_ratio)
+# count
+number_overlap <- nrow(intersect(our_each_mut,sanger_each_mut))
+uniq_number_to_us <-nrow(setdiff(our_each_mut,sanger_each_mut)) 
+uniq_number_to_them <- nrow(setdiff(sanger_each_mut,our_each_mut)) 
+
+# ratio
+uniq_ratio_to_them <- nrow(setdiff(sanger_each_mut,our_each_mut))/(denominator)
+uniq_ratio_to_us <- nrow(setdiff(our_each_mut,sanger_each_mut))/(denominator)
+overlap_ratio <- number_overlap/(denominator)
+
+
+# summary
+total_share_ratio <- c(total_share_ratio,overlap_ratio)
+total_uniq_ratio_to_us <- c(total_uniq_ratio_to_us,uniq_ratio_to_us)
+total_uniq_ratio_to_them <- c(total_uniq_ratio_to_them,uniq_ratio_to_them)
+total_uniq_num_to_them <- c(total_uniq_num_to_them,uniq_number_to_them)
+total_uniq_num_to_us <- c(total_uniq_num_to_us,uniq_number_to_us)
+total_share_number <- c(total_share_number,number_overlap)
 total_sample <- c(total_sample,samp)
+total_denomitor <- c(total_denomitor,denominator)
 
 }
 
-data <- data.frame(ratio = total_ratio, sample = total_sample)
-data$tumor_type <- "OM"
+data <- data.frame(share_ratio = as.numeric(total_share_ratio), 
+                   sample = total_sample,
+                   uniq_ratio_to_uga = as.numeric(total_uniq_ratio_to_us),
+                   uniq_ratio_to_sanger = as.numeric(total_uniq_ratio_to_them),
+                   uniq_num_to_sanger = as.numeric(total_uniq_num_to_them),
+                   uniq_num_to_uga = as.numeric(total_uniq_num_to_us),
+                   share_number = as.numeric(total_share_number),
+                   total_denomitor= as.numeric(total_denomitor))
+data <- setDT(data)
 
-pdf(paste(base,"OM_Mutation_overlap_ratio.pdf",sep="\\")
-    , height=4.94, width=4.94);
+pdf(paste(base,"bar_OM_Mutation_overlap_ratio.pdf",sep="\\")
+    , height=12.94, width=12.94);
 
-p <- ggplot(data, aes(x=tumor_type, y=ratio, color='black')) + 
-  geom_jitter(size=1.6, shape=20, position=position_jitterdodge(dodge.width=3))+
-  ylab("Mutation Position Overlap Ratio")
-p <- p + stat_summary(fun=median, fun.min=median, fun.max=median, position="dodge", geom="crossbar", size=0.2, width=0.8, color = "black", show.legend=FALSE);
-p <- p + scale_y_continuous(limits = c(0,1),breaks = c(0,0.5,1))
-p <- p + scale_color_manual(values = 'black')
-p <- p + theme(
-  axis.text=regular.text, 
-  axis.title=regular.text, 
-  axis.text.x = element_blank(),
-  axis.title.x =element_blank(),
-  axis.title.y=regular.text,
-  legend.position="None",
-  legend.title=regular.text, 
-  legend.text=regular.text, 
-  legend.key=element_blank(),
-  panel.background=element_blank(), 
-  axis.line=element_line(color="black"), 
-  strip.background=element_rect(color="black", fill="transparent", size=1.5), 
-  strip.text = element_text(hjust=0.5, size=12, face="plain",color="black"),)
-  
+
+count_data <- melt(data, id.vars = c("sample"),
+                   measure.vars= c("uniq_num_to_uga","uniq_num_to_sanger","share_number"),
+                   variable.name = "fill")
+count_data <- count_data[order(sample)]
+
+x <- count_data$sample
+y <- count_data$value
+classify <- c("uniq_num_to_uga","uniq_num_to_sanger","share_number");
+fill <- count_data$fill
+fill <- factor(fill, levels=classify);
+samples <- unique(x);
+sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
+x <- factor(x, levels=samples[sample_order]);
+plot_data <- data.frame(x=x, y=y, fill=fill);
+fill_colors <- c("cyan","black","red");
+
+p <- ggplot(plot_data, aes(x=x, y=y, fill=fill)) + 
+  geom_bar(stat="identity",position='stack', width=0.6)+
+  ggtitle("OM mutation number overlapped with Sanger")+
+  scale_fill_manual(values=fill_colors)+
+  theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title.x = element_blank(),
+    #element_text(face="plain",colour="black",size=fontsize),
+    axis.title.y = element_blank(),
+    #element_text(face="plain",colour="black",size=fontsize),
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_text(size=fontsize,face="plain",colour="black"),
+    legend.position="bottom",
+    legend.title= element_blank(), legend.text = element_text(size=fontsize,face="plain",colour="black"))
+
+print(p)
+
+
+ratio_data <- melt(data, id.vars = c("sample"),
+                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_sanger","share_ratio"),
+                   variable.name = "fill")
+ratio_data <- ratio_data[order(sample)]
+
+x <- ratio_data$sample
+y <- ratio_data$value
+classify <- c("uniq_ratio_to_uga","uniq_ratio_to_sanger","share_ratio");
+fill <- ratio_data$fill
+fill <- factor(fill, levels=classify);
+samples <- unique(x);
+sample_order <-sample_order;
+x <- factor(x, levels=samples[sample_order]);
+plot_data <- data.frame(x=x, y=y, fill=fill);
+fill_colors <- c("cyan","black","red");
+
+p <- ggplot(plot_data, aes(x=x, y=y, fill=fill)) + 
+  geom_bar(stat="identity",position='stack', width=0.6)+
+  ggtitle("OM mutation ratio overlapped with Sanger")+
+  scale_fill_manual(values=fill_colors)+
+  theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title.x = element_blank(),
+    #element_text(face="plain",colour="black",size=fontsize),
+    axis.title.y = element_blank(),
+    #element_text(face="plain",colour="black",size=fontsize),
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_text(size=fontsize,face="plain",colour="black"),
+    legend.position="bottom",
+    legend.title= element_blank(), legend.text = element_text(size=fontsize,face="plain",colour="black"))
+
 print(p)
 
 dev.off()
@@ -93,8 +173,8 @@ fontsize <- 20;
 signature_colors <- c("cyan","black","red","gray","green","pink");
 signature_levels <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G");
 col_name <- c("number","ref","alt")
-OM_base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Mutation_rate\\OM_mutation_compare_with_Sanger\\"
-MT_base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Mutation_rate\\MT_mutateion_compare_with_korean\\"
+OM_base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Six_base_sub_FFPE"
+MT_base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Six_base_sub_FFPE"
 OM_sample <-  sort(list.files (path =paste(OM_base,"OM","Mutect1",sep= "\\")))
 MC_sample <- sort(list.files (path = paste(MT_base,"MT","Mutect1",sep= "\\")))
 fill_colors <- signature_colors 
@@ -106,8 +186,10 @@ xangle <- 45
 
 if (Cancer_type =="OM"){
   total_sample <-OM_sample
+  base <- OM_base
 }else{
   total_sample <- MC_sample
+  base <- MT_base
 }
 mut_before_count_sum <- NULL
 mut_after_count_sum <- NULL
@@ -125,8 +207,8 @@ clean_sanger <- clean_table(clean_sanger)
 
 clean_sanger$conver_mut_type <- sapply(clean_sanger$mut_type, convert_mutation_type)
 
-pdf(paste(OM_base,"six_base_Compare_OM.pdf",sep="\\")
-    , height=8.94, width=12.84);
+# pdf(paste(OM_base,"six_base_Compare_OM.pdf",sep="\\")
+#     , height=8.94, width=12.84);
 
 
 for (sample in total_sample){
@@ -292,7 +374,7 @@ dev.off()
 
 ## All the samples together (sample not in the same order)
 
-source("C:\\Users\\abc73_000\\Documents\\GitHub\\Pan-Cancer\\six_base_function_util.R")
+source("C:\\Users\\abc73_000\\Documents\\GitHub\\VAF\\six_base_function_util.R")
 pdf(paste(OM_base,"OM_samples_data_6bases_count.pdf",sep="\\")
     , height=16.94, width=12.94);
 
