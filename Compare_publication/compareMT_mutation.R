@@ -78,7 +78,6 @@ xangle <- 45;
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 regular.text <- element_text(colour="black",size=20)
-unique(our_MT_before$sample_name)
 
 ## Analyze MT samples with mutect2
 
@@ -92,6 +91,10 @@ publisMT <- setDT(publishMT)
 our_MT_after <- clean_table(our_MT_after)
 our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
 our_MT_after$sample_name <- sapply(our_MT_after$sample_name, convert_MT_sample)
+our_MT_before <- clean_table(our_MT_before)
+our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
+our_MT_before$sample_name <- sapply(our_MT_before$sample_name, convert_MT_sample)
+
 samples <- unique(publishMT$Case)
 our_sample <- unique(our_MT_after$sample_name)
 their_sample <- unique(publishMT$Case)
@@ -101,8 +104,8 @@ setdiff(their_sample,our_sample)
 ## Analyzed ratio use bar plot
 
 #### Analyzed the ratio use bar plot after 5steps
-
-pdf(paste(base,"bar_MT_Mutation_overlap_ratio.pdf",sep="\\")
+### Mutect2
+pdf(paste(base,"bar_MT_Mutation_overlap_ratio_for_mutect12.pdf",sep="\\")
     , height=12.94, width=12.94);
 
 
@@ -125,7 +128,7 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="After MT mutation number overlapped with MT Korean",fontsize=20)
+                     title="After MT mutation number overlapped with MT Korean mutect2",fontsize=20)
 print(p)
 
 ratio_data <- melt(data, id.vars = c("sample"),
@@ -145,9 +148,9 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
-p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="After MT mutation ratio overlapped with MT Korean",fontsize=20)
-print(p)
+p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                     title="After MT mutation ratio overlapped with MT Korean mutect2",fontsize=20)
+print(p1)
 
 #### Analyzed the ratio use bar plot before 5steps
 
@@ -168,10 +171,10 @@ sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decr
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
-p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="Before MT mutation number overlapped with MT Korean",
+p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                     title="Before MT mutation number overlapped with MT Korean mutect2",
                      fontsize=20)
-print(p)
+print(p2)
 
 ratio_data <- melt(data, id.vars = c("sample"),
                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
@@ -190,12 +193,126 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
-p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="Before MT mutation ratio overlapped with MT Korean",
+p3 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                     title="Before MT mutation ratio overlapped with MT Korean mutect2",
                      fontsize=20)
-print(p)
+print(p3)
+##### Mutect2 end #####
 
 
+### Analyzed with mutect1
+our_MT_after <- fread(paste(base,"total_final_after_mutect_vaf.gz",sep = seperator));
+our_MT_before <- fread(paste(base,"total_final_before_mutect_vaf.gz",sep = seperator));
+
+our_MT_before <- our_MT_before[tumor_type=="MT" & symbol=="MT Korean", .(sample_names,chrom,pos,ref,alt)]
+our_MT_after <- our_MT_after[tumor_type=="MT" & symbol=="MT Korean",.(sample_names,chrom,pos,ref,alt)]
+publishMT$chrom_loc <- paste(publishMT$Chromosome,publishMT$Position,sep = "_")
+publisMT <- setDT(publishMT)
+our_MT_after <- clean_table(our_MT_after)
+our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
+our_MT_after$sample_name <- sapply(our_MT_after$sample_name, convert_MT_sample)
+our_MT_before <- clean_table(our_MT_before)
+our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
+our_MT_before$sample_name <- sapply(our_MT_before$sample_name, convert_MT_sample)
+
+samples <- unique(publishMT$Case)
+our_sample <- unique(our_MT_after$sample_name)
+their_sample <- unique(publishMT$Case)
+intercet_sample <- intersect(their_sample,our_sample)
+setdiff(their_sample,our_sample)
+
+
+data <- create_overlap_summary(our_MT_after,publisMT,intercet_sample)
+
+count_data <- melt(data, id.vars = c("sample"),
+                   measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
+                   variable.name = "fill")
+count_data <- count_data[order(sample)]
+
+x <- count_data$sample
+y <- count_data$value
+classify <- c("uniq_num_to_uga","uniq_num_to_publication","share_number");
+fill <- count_data$fill
+fill <- factor(fill, levels=classify);
+samples <- unique(x);
+sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
+x <- factor(x, levels=samples[sample_order]);
+plot_data <- data.frame(x=x, y=y, fill=fill);
+fill_colors <- c("cyan","black","red");
+
+p4 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                     title="After MT mutation number overlapped with MT Korean mutect1",fontsize=20)
+print(p4)
+
+ratio_data <- melt(data, id.vars = c("sample"),
+                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+                   variable.name = "fill")
+
+ratio_data <- ratio_data[order(sample)]
+
+x <- ratio_data$sample
+y <- ratio_data$value
+classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+fill <- ratio_data$fill
+fill <- factor(fill, levels=classify);
+samples <- unique(x);
+sample_order <-sample_order;
+x <- factor(x, levels=samples[sample_order]);
+plot_data <- data.frame(x=x, y=y, fill=fill);
+fill_colors <- c("cyan","black","red");
+
+p5 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                      title="After MT mutation ratio overlapped with MT Korean mutect1",fontsize=20)
+print(p5)
+
+#### Analyzed the ratio use bar plot before 5steps
+
+data <- create_overlap_summary(our_MT_before,publisMT,intercet_sample)
+
+count_data <- melt(data, id.vars = c("sample"),
+                   measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
+                   variable.name = "fill")
+count_data <- count_data[order(sample)]
+
+x <- count_data$sample
+y <- count_data$value
+classify <- c("uniq_num_to_uga","uniq_num_to_publication","share_number");
+fill <- count_data$fill
+fill <- factor(fill, levels=classify);
+samples <- unique(x);
+sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
+x <- factor(x, levels=samples[sample_order]);
+plot_data <- data.frame(x=x, y=y, fill=fill);
+fill_colors <- c("cyan","black","red");
+p6 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                      title="Before MT mutation number overlapped with MT Korean mutect1",
+                      fontsize=20)
+print(p6)
+
+ratio_data <- melt(data, id.vars = c("sample"),
+                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+                   variable.name = "fill")
+
+ratio_data <- ratio_data[order(sample)]
+
+x <- ratio_data$sample
+y <- ratio_data$value
+classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+fill <- ratio_data$fill
+fill <- factor(fill, levels=classify);
+samples <- unique(x);
+sample_order <-sample_order;
+x <- factor(x, levels=samples[sample_order]);
+plot_data <- data.frame(x=x, y=y, fill=fill);
+fill_colors <- c("cyan","black","red");
+
+p7 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                      title="Before MT mutation ratio overlapped with MT Korean mutect1",
+                      fontsize=20)
+print(p7)
+
+#grid.arrange(p, p2,p3,p4,pnrow = 2)
+#grid.arrange(p, p2,p3,p4,pnrow = 2)
 dev.off()
 
 ### Bar plot end ##
@@ -445,7 +562,70 @@ print(p)
 
 dev.off()
 
-##
+## Analyzed used Mutect1
+source("C:\\Users\\abc73_000\\Documents\\GitHub\\VAF\\six_base_function_util.R")
+
+excldue <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan-Cancer-Manuscript\\Figure1\\Original_Data_summary.xlsx",
+                      sheet = "Before_Matching_excluded")
+
+create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
+  
+  total_uniq_num_to_them <- NULL
+  total_uniq_num_to_us <- NULL
+  total_share_number <- NULL
+  total_uniq_ratio_to_them <- NULL
+  total_uniq_ratio_to_us <- NULL
+  total_share_ratio <- NULL
+  total_sample <- NULL
+  total_denomitor <- NULL
+  for (samp in intercet_sample){
+    
+    our_each_mut <- our_MT[sample_name == samp, .(chrom_loc)]
+    publish_each_mut <- publisMT[Case == samp,.(chrom_loc)]
+    
+    
+    our_each <- nrow(our_MT[sample_name==samp,])
+    sanger_each <- nrow(publisMT[Case==samp,])
+    intercet_data <- nrow(intersect(our_each_mut,publish_each_mut))
+    denominator <- our_each+sanger_each-intercet_data
+    
+    # count
+    number_overlap <- nrow(intersect(our_each_mut,publish_each_mut))
+    uniq_number_to_us <-nrow(setdiff(our_each_mut,publish_each_mut)) 
+    uniq_number_to_them <- nrow(setdiff(publish_each_mut,our_each_mut)) 
+    
+    # ratio
+    uniq_ratio_to_them <- nrow(setdiff(publish_each_mut,our_each_mut))/(denominator)
+    uniq_ratio_to_us <- nrow(setdiff(our_each_mut,publish_each_mut))/(denominator)
+    overlap_ratio <- number_overlap/(denominator)
+    
+    
+    # summary
+    total_share_ratio <- c(total_share_ratio,overlap_ratio)
+    total_uniq_ratio_to_us <- c(total_uniq_ratio_to_us,uniq_ratio_to_us)
+    total_uniq_ratio_to_them <- c(total_uniq_ratio_to_them,uniq_ratio_to_them)
+    total_uniq_num_to_them <- c(total_uniq_num_to_them,uniq_number_to_them)
+    total_uniq_num_to_us <- c(total_uniq_num_to_us,uniq_number_to_us)
+    total_share_number <- c(total_share_number,number_overlap)
+    total_sample <- c(total_sample,samp)
+    total_denomitor <- c(total_denomitor,denominator)
+    
+  }
+  
+  data <- data.frame(share_ratio = as.numeric(total_share_ratio), 
+                     sample = total_sample,
+                     uniq_ratio_to_uga = as.numeric(total_uniq_ratio_to_us),
+                     uniq_ratio_to_publication = as.numeric(total_uniq_ratio_to_them),
+                     uniq_num_to_publication = as.numeric(total_uniq_num_to_them),
+                     uniq_num_to_uga = as.numeric(total_uniq_num_to_us),
+                     share_number = as.numeric(total_share_number),
+                     total_denomitor= as.numeric(total_denomitor))
+  data <- setDT(data)
+  
+  return (data)
+}
+
+
 
 
 

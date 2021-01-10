@@ -10,7 +10,7 @@ source("C:\\Users\\abc73_000\\Documents\\GitHub\\VAF\\six_base_function_util.R")
 
 excldue <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan-Cancer-Manuscript\\Figure1\\Original_Data_summary.xlsx",
                       sheet = "Before_Matching_excluded")
-
+fontsize=20
 dot_size <- 1.4;
 abs_text_size <- 16;
 regular.text <- element_text(colour="black",size=abs_text_size);
@@ -18,6 +18,64 @@ xangle <- 45;
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 regular.text <- element_text(colour="black",size=20)
+
+
+create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
+  
+  total_uniq_num_to_them <- NULL
+  total_uniq_num_to_us <- NULL
+  total_share_number <- NULL
+  total_uniq_ratio_to_them <- NULL
+  total_uniq_ratio_to_us <- NULL
+  total_share_ratio <- NULL
+  total_sample <- NULL
+  total_denomitor <- NULL
+  for (samp in intercet_sample){
+    
+    our_each_mut <- our_MT[sample_name == samp, .(chrom_loc)]
+    publish_each_mut <- publisMT[Case == samp,.(chrom_loc)]
+    
+    
+    our_each <- nrow(our_MT[sample_name==samp,])
+    sanger_each <- nrow(publisMT[Case==samp,])
+    intercet_data <- nrow(intersect(our_each_mut,publish_each_mut))
+    denominator <- our_each+sanger_each-intercet_data
+    
+    # count
+    number_overlap <- nrow(intersect(our_each_mut,publish_each_mut))
+    uniq_number_to_us <-nrow(setdiff(our_each_mut,publish_each_mut)) 
+    uniq_number_to_them <- nrow(setdiff(publish_each_mut,our_each_mut)) 
+    
+    # ratio
+    uniq_ratio_to_them <- nrow(setdiff(publish_each_mut,our_each_mut))/(denominator)
+    uniq_ratio_to_us <- nrow(setdiff(our_each_mut,publish_each_mut))/(denominator)
+    overlap_ratio <- number_overlap/(denominator)
+    
+    
+    # summary
+    total_share_ratio <- c(total_share_ratio,overlap_ratio)
+    total_uniq_ratio_to_us <- c(total_uniq_ratio_to_us,uniq_ratio_to_us)
+    total_uniq_ratio_to_them <- c(total_uniq_ratio_to_them,uniq_ratio_to_them)
+    total_uniq_num_to_them <- c(total_uniq_num_to_them,uniq_number_to_them)
+    total_uniq_num_to_us <- c(total_uniq_num_to_us,uniq_number_to_us)
+    total_share_number <- c(total_share_number,number_overlap)
+    total_sample <- c(total_sample,samp)
+    total_denomitor <- c(total_denomitor,denominator)
+    
+  }
+  
+  data <- data.frame(share_ratio = as.numeric(total_share_ratio), 
+                     sample = total_sample,
+                     uniq_ratio_to_uga = as.numeric(total_uniq_ratio_to_us),
+                     uniq_ratio_to_publication = as.numeric(total_uniq_ratio_to_them),
+                     uniq_num_to_publication = as.numeric(total_uniq_num_to_them),
+                     uniq_num_to_uga = as.numeric(total_uniq_num_to_us),
+                     share_number = as.numeric(total_share_number),
+                     total_denomitor= as.numeric(total_denomitor))
+  data <- setDT(data)
+  
+  return (data)
+}
 
 #### Analyzed the ratio that overlap
 
@@ -111,22 +169,6 @@ sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decr
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
-
-p <- ggplot(plot_data, aes(x=x, y=y, fill=fill)) + 
-  geom_bar(stat="identity",position='stack', width=0.6)+
-  ggtitle("OM mutation number overlapped with Sanger")+
-  scale_fill_manual(values=fill_colors)+
-  theme(
-    plot.title = element_text(size = 20, face = "bold"),
-    axis.title.x = element_blank(),
-    #element_text(face="plain",colour="black",size=fontsize),
-    axis.title.y = element_blank(),
-    #element_text(face="plain",colour="black",size=fontsize),
-    axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank(),
-    axis.text.y = element_text(size=fontsize,face="plain",colour="black"),
-    legend.position="bottom",
-    legend.title= element_blank(), legend.text = element_text(size=fontsize,face="plain",colour="black"))
 
 print(p)
 
