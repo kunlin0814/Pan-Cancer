@@ -33,17 +33,53 @@ write.table(info, file = paste(base_dir,"assign_sep_breed_info.txt",sep =seperat
             sep ="\t", quote = F)
 
 
-## WES
-validation_set <- c("MT SNU", "OSA Tgen", "OM Sanger", "OSA Sanger","HSA Upenn")
+## WGS
+validation_set <- c("MT SNU", "OSA TGen", "OM Sanger", "OSA Sanger","HSA Upenn")
 seperator <- "/"
 
 base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 
-target <- fread(paste(base_dir,"target.txt",sep = seperator),header = T)
+target <- fread("C:/Users/abc73/Desktop/GLM_WGS.txt",header = F)
 
-total_file <- fread(paste(base_dir,"whole_wes_table.txt",sep = seperator))
+total_file <- fread(paste(base_dir,"whole_wgs_table.txt",sep = seperator))
 
-sample_order <- target$Sample_id
+info <- NULL 
+
+for (i in target$V1){
+  data <- total_file[Sample_ID==i, .(Sample_ID,Case_ID,Breeds,The_reason_to_exclude,Status)]
+  info <- rbind(info,data)
+}
+write.table(info, file = paste(base_dir,"Breed_prediction_meta_WGS.txt",sep = seperator),col.names = T,
+            row.names = F, quote = F, sep = "\t")
+
+## check Breed prediction meta
+
+meta <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/breed_prediction.xlsx",
+                   sheet = "meta")
+meta <- unique(meta[,c("SampleName","Breed")])
+a <- as.data.frame(table(meta$Breed))
+write.table(a, file = "C:/Users/abc73/Desktop/breed_WGS_summary.txt",col.names = T,
+            row.names = F, quote = F, sep = "\t")
+
+
+valid_breed_number <- as.data.frame(table(valid_breed$Breed_info))
+write.table(valid_breed_number, file = paste(base_dir,"Validset_wes_breed.txt",sep = seperator),col.names = T,
+            row.names = F, quote = F, sep = "\t")
+
+
+total_breed <- unique(total_file[,.(Case_ID, Breed_info)])
+
+breed <- as.data.frame(table(total_breed$Breed_info))
+write.table(breed, file = paste(base_dir,"total_wes_breed.txt",sep = seperator),col.names = T,
+            row.names = F, quote = F, sep = "\t")
+### Breed prediction ##
+
+library(readxl)
+base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1"
+breed_result <- read_excel(paste(base_dir,"WES_TableS1_1-05-21.xlsx",sep = seperator),
+                           sheet = "BreedQCresults",skip = 2)
+
+
 info <- NULL
   
 for (i in sample_order){

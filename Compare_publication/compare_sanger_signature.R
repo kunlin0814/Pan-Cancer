@@ -6,7 +6,7 @@ library(readxl)
 library(ggpubr)
 library(grid)
 
-source("C:\\Users\\abc73_000\\Documents\\GitHub\\VAF\\six_base_function_util.R")
+source("C:\\Users\\abc73\\Documents\\GitHub\\VAF\\six_base_function_util.R")
 
 excldue <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan-Cancer-Manuscript\\Figure1\\Original_Data_summary.xlsx",
                       sheet = "Before_Matching_excluded")
@@ -83,8 +83,9 @@ base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publica
 # sanger_signature <- read_excel(paste(base,"Sanger_mutation.xlsx",sep ="\\"),
 #                                 sheet ="Canine", skip = 29)
 
-sanger_signature <- fread(paste(base,"DbSNP_sanger_mut_file_before_DBSNP.txt",sep ="\\"))
+sanger_signature <- fread(paste(base,"Sanger_Mutation.txt",sep ="\\"))
 clean_sanger <- sanger_signature
+clean_sanger$Chromosome <- paste("chr",clean_sanger$Chromosome,sep="")
 #clean_sanger <- sanger_signature[,c("#Chr","Position","Ref","Alt","Sample")]
 #clean_sanger$Chromosome <- paste("chr",clean_sanger$`#Chr`,sep ="")
 clean_sanger$chrom_loc <- paste(clean_sanger$Chromosome,clean_sanger$Position,sep = "_")
@@ -150,7 +151,7 @@ data <- data.frame(share_ratio = as.numeric(total_share_ratio),
                    total_denomitor= as.numeric(total_denomitor))
 data <- setDT(data)
 
-pdf(paste(base,"bar_OM_Mutation_overlap_ratio.pdf",sep="\\")
+pdf(paste(base,"no_germline_filtering_bar_OM_Mutation_overlap_ratio.pdf",sep="\\")
     , height=12.94, width=12.94);
 
 
@@ -169,6 +170,23 @@ sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decr
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
+
+
+p <- ggplot(plot_data, aes(x=x, y=y, fill=fill)) + 
+  geom_bar(stat="identity",position='stack', width=0.6)+
+  ggtitle("OM count ratio overlapped with Sanger")+
+  scale_fill_manual(values=fill_colors)+
+  theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title.x = element_blank(),
+    #element_text(face="plain",colour="black",size=fontsize),
+    axis.title.y = element_blank(),
+    #element_text(face="plain",colour="black",size=fontsize),
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_text(size=fontsize,face="plain",colour="black"),
+    legend.position="bottom",
+    legend.title= element_blank(), legend.text = element_text(size=fontsize,face="plain",colour="black"))
 
 print(p)
 
