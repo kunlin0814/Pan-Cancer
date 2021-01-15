@@ -19,6 +19,28 @@ excldue_function <- function(run){
   }
 }
 
+pathPrep <- function(path = "clipboard") {
+  y <- if (path == "clipboard") {
+    readClipboard()
+  } else {
+    cat("Please enter the path:\n\n")
+    readline()
+  }
+  x <- chartr("\\", "/", y)
+  writeClipboard(x)
+  return(x)
+}
+
+WP()
+pathPrep()
+
+## bioproject
+
+
+meta <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/HSA/New_PRJNA552034.txt")
+
+
+## breed
 
 breed <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/merge_dis_val/assignment_clusters.txt")
 samples <- breed$SampleName
@@ -38,8 +60,6 @@ validation_set <- c("MT SNU", "OSA TGen", "OM Sanger", "OSA Sanger","HSA Upenn")
 seperator <- "/"
 
 base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
-
-target <- fread("C:/Users/abc73/Desktop/GLM_WGS.txt",header = F)
 
 total_file <- fread(paste(base_dir,"whole_wgs_table.txt",sep = seperator))
 
