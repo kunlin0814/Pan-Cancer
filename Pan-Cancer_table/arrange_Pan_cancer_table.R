@@ -2,6 +2,8 @@ library(data.table)
 library(tidyverse)
 library(readxl)
 
+base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+seperator <- "/"
 excldue_function <- function(run){
   if (total_file[Sample_ID == run,.(Total_pairs)<5000000]){
     return(paste(run,"total read pairs < 5M", sep =" "))
@@ -31,8 +33,19 @@ pathPrep <- function(path = "clipboard") {
   return(x)
 }
 
-WP()
+
 pathPrep()
+
+
+## function match_table
+
+match_table <- function(case_id, column, table){
+  info <- unlist(table[Case_ID == case_id, column, with = F])
+  if (length(info)==0){
+    print(case_id)
+  }
+  return (info)
+}
 
 ## bioproject
 
@@ -40,7 +53,61 @@ pathPrep()
 meta <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/HSA/New_PRJNA552034.txt")
 
 
-## breed
+#### breed table 
+# from breed_prediction metadata
+pure_WGS <- readClipboard()
+pure_WGS <- unique(pure_WGS)
+
+## from excel WESQCdata
+whole_table <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
+whole_table <- setDT(whole_table)
+
+whole_qc_status <- unique(whole_table[,c("Case_ID","The_reason_to_exclude")])
+whole_qc_status <- setDT(whole_qc_status)
+
+## from excel WES_BreedQCresults
+
+total_breed_info <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
+total_breed_info <- setDT(total_breed_info)
+#WES_total_breed_info <- total_breed_info[!SampleName %in% pure_WGS, ]
+
+
+# break down
+target_breed <- "Unknown"
+breed <- total_breed_info[Original_Breed_label ==target_breed,]
+total_sample <- breed$SampleName
+QC_summ <- c()
+for (sample in total_sample){
+
+  info <- unlist(match_table(sample,"The_reason_to_exclude",whole_qc_status))[1]
+  QC_summ <- c(QC_summ, info)
+}
+names(QC_summ) <- NULL
+breed$exclude_reason <- QC_summ
+#### Original breed label
+nrow(breed)
+#break down
+breed[,.N,keyby = .(DiseaseAcronym)]
+
+#### add by
+add_by <- total_breed_info[Original_Breed_label!=target_breed & BreedCluster==target_breed,]
+nrow(add_by)
+add_by[,.N,keyby = .(DiseaseAcronym)]
+
+#### remove by
+
+remove_by <- total_breed_info[Original_Breed_label==target_breed & BreedCluster!=target_breed,]
+nrow(remove_by)
+# break down
+remove_by[,.N,keyby = .(DiseaseAcronym)]
+
+##### final breed label
+nrow(total_breed_info[FinalBreed==target_breed,])
+
+# break down
+total_breed_info[FinalBreed==target_breed,.N, keyby=.(DiseaseAcronym)]
+
+####
 
 breed <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/merge_dis_val/assignment_clusters.txt")
 samples <- breed$SampleName
@@ -59,7 +126,7 @@ write.table(info, file = paste(base_dir,"assign_sep_breed_info.txt",sep =seperat
 validation_set <- c("MT SNU", "OSA TGen", "OM Sanger", "OSA Sanger","HSA Upenn")
 seperator <- "/"
 
-base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+
 
 total_file <- fread(paste(base_dir,"whole_wgs_table.txt",sep = seperator))
 
