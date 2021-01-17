@@ -24,7 +24,7 @@ shared_variants_fill_list <- list("MT CUK"=paste(base_dir, "discovery\\mammary_n
                                   #					"OSA SC"=paste(base_dir, "validation\\PRJEB7540_OSA.proportions.txt", sep=seperator),
                                   "HSA UPenn"=paste(base_dir, "validation\\PRJNA417727_HSA_WES.proportions.txt", sep=seperator));
 
-failed_sequencing_file <- paste(base_dir, "excluded_samples_merged_12_22_2020.txt", sep=seperator);
+failed_sequencing_file <- paste(base_dir, "wgs_fail.txt", sep=seperator);
 
 ################# Output files ######################## 
 # make sure to modify the paths to the correct ones
@@ -38,7 +38,7 @@ meta_data <- read.table(meta_data_file, sep="\t", stringsAsFactors=FALSE, check.
 meta_data <- meta_data[which(meta_data[,"Status"] == "Tumor"),];
 rownames(meta_data) <- meta_data[,"SampleName"];
 
-failed_sequencing_data <- read.table(failed_sequencing_file, sep="\t", row.names=1, header=TRUE);
+failed_sequencing_data <- read.table(failed_sequencing_file, row.names = 1,sep="\t", header=TRUE);
 failed_sequencing_samples <- rownames(failed_sequencing_data);
 
 

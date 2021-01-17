@@ -61,16 +61,47 @@ pure_WGS <- unique(pure_WGS)
 ## from excel WESQCdata
 whole_table <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
 whole_table <- setDT(whole_table)
+a <- unique(whole_table[The_reason_to_exclude!="Pass QC", .(The_reason_to_exclude),.(Case_ID,Tumor_Type)])
+
+
+
+all_sample <- whole_table$Case_ID
+summary <- NULL
+for (sample in all_sample){
+  info <- unlist(append_data[SampleName==sample,.(SampleName,SelfMatch,DiffFromBest)])
+  if (length(info)!=0){
+    pair_info <- info
+  }
+  else{
+    pair_info <- c(sample,"NA","NA")
+  }
+  print(pair_info)
+  summary <- rbind(summary,pair_info)
+}
+
+row.names(summary) <- NULL
+
+whole_table <- cbind(whole_table,summary)
+write.table(whole_table,  file = "C:\\Users\\abc73\\Desktop\\final_WGS_table",sep ="\t",
+            col.names = T, row.names = F,quote = F)
+
+rule_out <- unique(whole_table[The_reason_to_exclude!="Pass QC", .(Case_ID)])
+write.table(rule_out,  file = "C:\\Users\\abc73\\Desktop\\wgs_fail.txt",sep ="\t",
+            col.names = T, row.names = F,quote = F)
 
 whole_qc_status <- unique(whole_table[,c("Case_ID","The_reason_to_exclude")])
 whole_qc_status <- setDT(whole_qc_status)
+
+
 
 ## from excel WES_BreedQCresults
 
 total_breed_info <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
 total_breed_info <- setDT(total_breed_info)
-#WES_total_breed_info <- total_breed_info[!SampleName %in% pure_WGS, ]
+WES_total_breed_info <- total_breed_info[!SampleName %in% pure_WGS, ]
 
+write.table(WES_total_breed_info, file = "C:\\Users\\abc73\\Desktop\\wes_breed.txt",sep ="\t",
+            col.names = T, row.names = F,quote = F)
 
 # break down
 target_breed <- "Unknown"
@@ -90,7 +121,7 @@ nrow(breed)
 breed[,.N,keyby = .(DiseaseAcronym)]
 
 #### add by
-add_by <- total_breed_info[Original_Breed_label!=target_breed & BreedCluster==target_breed,]
+add_by <- total_breed_info[Original_Breed_label!=target_breed & BreedCluster==target_breed & FinalBreed==target_breed]
 nrow(add_by)
 add_by[,.N,keyby = .(DiseaseAcronym)]
 
