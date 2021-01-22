@@ -4,24 +4,9 @@ library(readxl)
 
 base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 seperator <- "/"
-excldue_function <- function(run){
-  if (total_file[Sample_ID == run,.(Total_pairs)<5000000]){
-    return(paste(run,"total read pairs < 5M", sep =" "))
-  }
-  else if (total_file[Sample_ID == run,.(Uniquely_coordinatly_mapped_rate)<0.6]){
-    return(paste(run,"Unique mapped_rate < 0.6"))
-  }
-  
-  else if (total_file[Sample_ID == run,.(Mean_Coverage)<30]){
-    return(paste(run,"mean coverage < 30"))
-  }
- 
-  else {
-    return("Pass QC")
-  }
-}
+source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
 
-pathPrep <- function(path = "clipboard") {
+Path <- function(path = "clipboard") {
   y <- if (path == "clipboard") {
     readClipboard()
   } else {
@@ -33,8 +18,7 @@ pathPrep <- function(path = "clipboard") {
   return(x)
 }
 
-
-pathPrep()
+Path()
 
 
 ## function match_table
@@ -52,47 +36,130 @@ match_table <- function(case_id, column, table){
 
 meta <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/HSA/New_PRJNA552034.txt")
 
-
+path()
 #### breed table 
 # from breed_prediction metadata
-pure_WGS <- readClipboard()
-pure_WGS <- unique(pure_WGS)
+GLM_WGS <- readClipboard()
+WGS_breed <-fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/GLMPRJNA579792_total.txt") 
+
+WGS_breed_info <- WGS_breed[`Assay Type`=="WGS",.(Run,Isolate,Breed)]
+GLM_WES <- readClipboard()
+
+
+overlap_WGS <- intersect(GLM_WGS,GLM_WES)
+
+WES_overlap_st <- GLM_WES %in%overlap_WGS
+WGS_overlap_st <- data.frame(GLM_WGS %in%overlap_WGS)
+
+write.table(WGS_overlap_st, file = "C:/Users/abc73/Desktop/overlap_WGS_info.txt",
+            sep = "\n", col.names = T, row.names = F, quote = F)
 
 ## from excel WESQCdata
 whole_table <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
 whole_table <- setDT(whole_table)
-a <- unique(whole_table[The_reason_to_exclude!="Pass QC", .(The_reason_to_exclude),.(Case_ID,Tumor_Type)])
+length(unique(whole_table$Case_ID))
+
+pass <- unique(whole_table[The_reason_to_exclude=="Pass QC" & Case_ID!="No-Pair",])
+pass <- setDT(pass)
+pass_breed <- unique(pass[, .(Case_ID,Breeds)])
+
+a <- data.frame(table(pass_breed$Breeds))
+write.table(a, file = "C:/Users/abc73/Desktop/Breeds_merge_WGS_info.txt",
+            sep = "\t", col.names = T, row.names = F, quote = F)
 
 
-
-all_sample <- whole_table$Case_ID
-summary <- NULL
-for (sample in all_sample){
-  info <- unlist(append_data[SampleName==sample,.(SampleName,SelfMatch,DiffFromBest)])
-  if (length(info)!=0){
-    pair_info <- info
-  }
-  else{
-    pair_info <- c(sample,"NA","NA")
-  }
-  print(pair_info)
-  summary <- rbind(summary,pair_info)
+symbol_sum <- NULL
+for (sample in GLM_WES){
+  symbol_sum <- c(symbol_sum,unlist(whole_table[Case_ID==sample, .(Symbol)])[1])
 }
 
-row.names(summary) <- NULL
+write.table(symbol_sum,file = "C:/Users/abc73/Desktop/breed_WES_info.txt",
+            sep = "\n",quote = F, col.names = T, row.names = F)
 
-whole_table <- cbind(whole_table,summary)
-write.table(whole_table,  file = "C:\\Users\\abc73\\Desktop\\final_WGS_table",sep ="\t",
-            col.names = T, row.names = F,quote = F)
+target <- whole_table[,.(Sample_ID,Case_ID,Tumor_Type,Breeds,Status,The_reason_to_exclude,Symbol)]
+fwrite(target, file = "C:/Users/abc73/Desktop/target_WGS_info.txt",
+       sep ="\t", quote = F, col.names = T, row.names = F)
 
-rule_out <- unique(whole_table[The_reason_to_exclude!="Pass QC", .(Case_ID)])
-write.table(rule_out,  file = "C:\\Users\\abc73\\Desktop\\wgs_fail.txt",sep ="\t",
-            col.names = T, row.names = F,quote = F)
+### Breed prediction and assignment ##
+library(readxl)
+library(data.table)
+# from WES_WGS_merge table
+whole_wes_wgs_table <- read.table("clipboard",sep = "\t", header = T,stringsAsFactors = F)
+whole_wes_wgs_table <- setDT(whole_wes_wgs_table)
 
-whole_qc_status <- unique(whole_table[,c("Case_ID","The_reason_to_exclude")])
-whole_qc_status <- setDT(whole_qc_status)
+
+breed_result <- read.table("clipboard",sep ="\t", header = T, stringsAsFactors = F)
+breed_result <- setDT(breed_result)
+total_samples <- unique(breed_result$SampleName)
+# info <- NULL
+# 
+# for (i in total_samples){
+#   original_label <- breed_result[SampleName==i,.(Breed)]
+#   cluster <- breed_result[SampleName == i, .(BreedCluster)]
+#   if (is.na(original_label)){
+#     qc <- "NA"
+#   }
+#   else if (original_label == cluster){
+#     qc <- "PassBreed"
+#   }
+#   else{
+#     qc <- "FailBreed"
+#   }
+#   info <- c(info,qc)
+#   
+# }
+# 
+# breed_result$BreedQC <- info
+
+breed_result <- assign_final_breeds(breed_result)
 
 
+
+symbol <- NULL
+
+for (i in total_samples){
+  each <- unlist(whole_wes_wgs_table[Case_ID==i,.(Symbol)])[1]
+  symbol <- c(symbol,each)
+}
+breed_result$Symbol <- symbol
+
+fwrite(breed_result, file = "C:/Users/abc73/Desktop/wes_9breeds_main.txt",
+       col.names = T, row.names = F, quote = F, sep = "\t",na = "NA")
+
+assign_final_breeds <- function(meta_data){
+  if ("BreedCluster" %in% colnames(meta_data)){
+    total_samples <- unique(meta_data$SampleName)
+    info <- NULL
+    
+    for (i in total_samples){
+      original_label <- meta_data[SampleName==i,.(Breed)]
+      cluster <- meta_data[SampleName == i, .(BreedCluster)]
+      if (is.na(original_label)){
+        qc <- "NA"
+      }
+      else if (original_label == cluster){
+        qc <- "PassBreed"
+      }
+      else{
+        qc <- "FailBreed"
+      }
+      info <- c(info,qc)
+      
+    }
+    meta_data$BreedQC <- info
+    final_breed <- meta_data[, "Breed"]; 
+    predicted_breed_indices <- intersect(which(is.na(meta_data[, "Breed"])), which(meta_data[, "BreedCluster"] != "Unknown"));
+    final_breed[predicted_breed_indices] <- meta_data[predicted_breed_indices, "BreedCluster"];
+    final_breed[which(meta_data[, "BreedQC"] == "FailBreed")] <- NA;
+    meta_data[, "FinalBreed"] <- final_breed;
+    return (meta_data)
+  }
+  else {
+    print("not BreedCluster assigned")
+  }
+}
+
+## Breed prediction and assignment end ###
 
 ## from excel WES_BreedQCresults
 
@@ -109,7 +176,7 @@ breed <- total_breed_info[Original_Breed_label ==target_breed,]
 total_sample <- breed$SampleName
 QC_summ <- c()
 for (sample in total_sample){
-
+  
   info <- unlist(match_table(sample,"The_reason_to_exclude",whole_qc_status))[1]
   QC_summ <- c(QC_summ, info)
 }
@@ -137,98 +204,7 @@ nrow(total_breed_info[FinalBreed==target_breed,])
 
 # break down
 total_breed_info[FinalBreed==target_breed,.N, keyby=.(DiseaseAcronym)]
-
-####
-
-breed <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/merge_dis_val/assignment_clusters.txt")
-samples <- breed$SampleName
-info <- NULL
-
-for (i in samples){
-  value <- total_file[Case_ID == i, .(Breed_info)][1]
-  info <- rbind(info, value)
-}
-
-write.table(info, file = paste(base_dir,"assign_sep_breed_info.txt",sep =seperator), col.names = T, row.names = F,
-            sep ="\t", quote = F)
-
-
-## WGS
-validation_set <- c("MT SNU", "OSA TGen", "OM Sanger", "OSA Sanger","HSA Upenn")
-seperator <- "/"
-
-
-
-total_file <- fread(paste(base_dir,"whole_wgs_table.txt",sep = seperator))
-
-info <- NULL 
-
-for (i in target$V1){
-  data <- total_file[Sample_ID==i, .(Sample_ID,Case_ID,Breeds,The_reason_to_exclude,Status)]
-  info <- rbind(info,data)
-}
-write.table(info, file = paste(base_dir,"Breed_prediction_meta_WGS.txt",sep = seperator),col.names = T,
-            row.names = F, quote = F, sep = "\t")
-
-## check Breed prediction meta
-
-meta <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/breed_prediction.xlsx",
-                   sheet = "meta")
-meta <- unique(meta[,c("SampleName","Breed")])
-a <- as.data.frame(table(meta$Breed))
-write.table(a, file = "C:/Users/abc73/Desktop/breed_WGS_summary.txt",col.names = T,
-            row.names = F, quote = F, sep = "\t")
-
-
-valid_breed_number <- as.data.frame(table(valid_breed$Breed_info))
-write.table(valid_breed_number, file = paste(base_dir,"Validset_wes_breed.txt",sep = seperator),col.names = T,
-            row.names = F, quote = F, sep = "\t")
-
-
-total_breed <- unique(total_file[,.(Case_ID, Breed_info)])
-
-breed <- as.data.frame(table(total_breed$Breed_info))
-write.table(breed, file = paste(base_dir,"total_wes_breed.txt",sep = seperator),col.names = T,
-            row.names = F, quote = F, sep = "\t")
-### Breed prediction ##
-
-library(readxl)
-base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1"
-breed_result <- read_excel(paste(base_dir,"WES_TableS1_1-05-21.xlsx",sep = seperator),
-                           sheet = "BreedQCresults",skip = 2)
-
-
-info <- NULL
-  
-for (i in sample_order){
-  value <- total_file[Sample_ID == i, .(Symbol)]
-  info <- rbind(info, value)
-  }
-
-
-# write.table(info, file = paste(base_dir,"QC_info.txt",sep =seperator), col.names = T, row.names = F,
-#             sep ="\t", quote = F)
-
-pass <- unique(total_file[The_reason_to_exclude=="Pass QC", .(Breed_info,Case_ID, Symbol)])
-
-combine_breed <- as.data.frame(table(pass$Breed_info))
-validation <- pass[Symbol %in% validation_set,]
-validation_breed <- as.data.frame(table(validation$Breed_info))
-
-
-fwrite(validation_breed, file = paste(base_dir,"validatiob_breeds.txt",sep=seperator),col.names = T,
-       row.names = F, quote = F, sep = "\t")
-
-
-#summary <- sapply(total_file$Sample_ID,FUN =excldue_function )
-#names(summary) <- NULL
-
-total_file$The_reason_to_exclude <- summary
-output <- total_file[,.(Case_ID,Sample_ID,The_reason_to_exclude,Sample_status,Symbol)]
-
-
-fwrite(output, file = paste(base_dir,"sample_status.txt",sep=seperator),col.names = T,
-       row.names = F, quote = F, sep = "\t")
+############## breed summary end ####
 
 ## WES
 seperator <- "/"
@@ -353,4 +329,20 @@ table_file$Case_ID <- case_name
 
 write.table(table_file,file = paste(base_dir,"WGS_final_table.txt",sep=seperator),
             sep = "\t",quote = F,col.names = T,row.names = F)
-
+# 
+# excldue_function <- function(run){
+#   if (total_file[Sample_ID == run,.(Total_pairs)<5000000]){
+#     return(paste(run,"total read pairs < 5M", sep =" "))
+#   }
+#   else if (total_file[Sample_ID == run,.(Uniquely_coordinatly_mapped_rate)<0.6]){
+#     return(paste(run,"Unique mapped_rate < 0.6"))
+#   }
+#   
+#   else if (total_file[Sample_ID == run,.(Mean_Coverage)<30]){
+#     return(paste(run,"mean coverage < 30"))
+#   }
+#   
+#   else {
+#     return("Pass QC")
+#   }
+# }
