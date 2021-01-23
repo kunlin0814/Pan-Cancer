@@ -214,6 +214,7 @@ seperator <- "/"
 
 base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+breed_info <- fread(paste(base_dir,"Pan-Cancer_All_breeds.txt",sep = seperator))
 pass_breed <- breed_info[The_reason_to_exclude =="Pass QC",]
 
 merge_breed <- unique(pass_breed[,.(SampleName,Breed)])
