@@ -37,7 +37,12 @@ for (sample in total_sample) {
   info_sum$BH_pvalue = p.adjust(info_sum$p_value, method = "BH")
   total_info_sum <- rbindlist(list(total_info_sum,info_sum))
 }
-
+fwrite(total_info_sum,
+       file = paste(base_dir,"variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       ,col.names = T,row.names = F,
+       quote = F,
+       compress = "gzip",
+       sep ="\t")
 ### samplewise ensembl_id ##
 
 total_info_sum <- NULL
