@@ -123,7 +123,7 @@ for (i in total_samples){
 }
 breed_result$Symbol <- symbol
 
-fwrite(breed_result, file = "C:/Users/abc73/Desktop/wes_9breeds_main.txt",
+fwrite(breed_result, file = "C:/Users/abc73/Desktop/WES_67WGS_breeds_main.txt",
        col.names = T, row.names = F, quote = F, sep = "\t",na = "NA")
 
 assign_final_breeds <- function(meta_data){

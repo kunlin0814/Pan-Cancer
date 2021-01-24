@@ -5,12 +5,18 @@ source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
 seperator <- "/"
 
+sample_variant <- fread(paste(base_dir,"significant","variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+sample_gene <- fread(paste(base_dir,"significant","gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+
+  
+
+
 Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_WGS_merge.xlsx",
                          sheet ="WES_WGS")
 
 Breed_info <- setDT(Breed_info)
 mutect_after_vaf <- fread(paste(base_dir,"total_final_Filtering3_VAF_Mutect_withBreeds_orientBiasShaying.gz",sep =seperator))
-mutect_after_vaf <- mutect_after_vaf[,chrom_loc:=paste(chrom,pos,sep = "_")]
+#mutect_after_vaf <- mutect_after_vaf[,chrom_loc:=paste(chrom,pos,sep = "_")]
 total_sample <- unique(mutect_after_vaf$sample_names)
 
 # breed <- sapply(total_sample,FUN = match_table, column="Breeds",table=Breed_info)
@@ -45,7 +51,7 @@ for (index in 1:length(total_sample)) {
   sample <- total_sample[index]
   info_sum <- NULL
   variant_loc <- mutect_after_vaf[sample_names==sample,.(ensembl_id)]
-  for (i in unique(variant_loc[["ensembl_id"]]) ){
+  for (i in sort(unique(variant_loc[["ensembl_id"]])) ){
     info <- mutect_after_vaf[sample_names==sample & ensembl_id==i,]
     target <- mutect_after_vaf[sample_names==sample & ensembl_id==i, .(tRef,tAlt)]
     target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
@@ -103,7 +109,7 @@ for (index in 1:length(tumor_type)) {
   tumor <- tumor_type[index]
   info_sum <- NULL
   variant_loc <- mutect_after_vaf[tumor_type==tumor,.(ensembl_id)]
-  for (i in unique(variant_loc[["ensembl_id"]]) ){
+  for (i in sort(unique(variant_loc[["ensembl_id"]])) ){
     info <- mutect_after_vaf[tumor_type==tumor & ensembl_id==i,]
     target <- mutect_after_vaf[tumor_type==tumor & ensembl_id==i, .(tRef,tAlt)]
     target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
