@@ -1,8 +1,9 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
+source("/Volumes/Research/GitHub/R_util/my_util.R")
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
 seperator <- "/"
 
 sample_variant <- fread(paste(base_dir,"significant","variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
@@ -42,7 +43,12 @@ for (sample in total_sample) {
   info_sum$BH_pvalue = p.adjust(info_sum$p_value, method = "BH")
   total_info_sum <- rbindlist(list(total_info_sum,info_sum))
 }
-
+fwrite(total_info_sum,
+       file = paste(base_dir,"variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       ,col.names = T,row.names = F,
+       quote = F,
+       compress = "gzip",
+       sep ="\t")
 ### samplewise ensembl_id ##
 
 total_info_sum <- NULL
@@ -67,10 +73,15 @@ for (index in 1:length(total_sample)) {
   total_info_sum <- rbindlist(list(total_info_sum,info_sum))
 }
 
+fwrite(total_info_sum,
+       file = paste(base_dir,"gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       ,col.names = T,row.names = F,
+       quote = F,
+       compress = "gzip",
+       sep ="\t")
+
 ### Tumor wise
 tumor_type <- unique(mutect_after_vaf$tumor_type)
-
-
 ### tumor_wise variants ##
 
 total_info_sum <- NULL
@@ -101,11 +112,24 @@ for (index in 1:length(tumor_type)) {
   total_info_sum <- rbindlist(list(total_info_sum,info_sum))
 }
 
+
+fwrite(total_info_sum,
+       file = paste(base_dir,"variant_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       ,col.names = T,row.names = F,
+       quote = F,
+       compress = "gzip",
+       sep ="\t")
+
+
 ### tumor_wise ensembl_id ##
+
+### Tumor wise
+tumor_type <- unique(mutect_after_vaf$tumor_type)
+### tumor_wise ensmbl_id ##
 
 total_info_sum <- NULL
 for (index in 1:length(tumor_type)) {
-  print(paste("processing the",index,"sample, with total samples",length(tumor_type),sep = " " ))
+  print(paste("processing the",index,"tumor, with total tumor",length(tumor_type),sep = " " ))
   tumor <- tumor_type[index]
   info_sum <- NULL
   variant_loc <- mutect_after_vaf[tumor_type==tumor,.(ensembl_id)]
@@ -117,7 +141,11 @@ for (index in 1:length(tumor_type)) {
     other_combine <- others[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     testor=rbindlist(list(target_combine,other_combine))
     p_value <- fisher.test(testor)$p.value
-    info <- info[,p_value:=p_value]
+    info <- data.table(tumor_type = tumor, 
+                       gene_name= gene_name, 
+                       ensembl_id = ensembl_id,
+                       p_value = p_value)
+    
     info_sum <- rbindlist(list(info_sum,info))
   }
   info_sum <- info_sum[order(p_value)]
@@ -128,9 +156,8 @@ for (index in 1:length(tumor_type)) {
 
 
 
-
 fwrite(total_info_sum,
-       file = paste(base_dir,"gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       file = paste(base_dir,"gene_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       compress = "gzip",
