@@ -207,9 +207,32 @@ total_breed_info[FinalBreed==target_breed,.N, keyby=.(DiseaseAcronym)]
 ############## breed summary end ####
 
 ## WES
+Tgen <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/Meta/Valid_PRJNA525883_TGEN_OSA.txt"
+
+
 seperator <- "/"
 
-base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+breed_info <- fread(paste(base_dir,"Pan-Cancer_All_breeds.txt",sep = seperator))
+pass_breed <- breed_info[The_reason_to_exclude =="Pass QC",]
+
+merge_breed <- unique(pass_breed[,.(SampleName,Breed)])
+merge_breed <- as.data.frame(table(merge_breed$Breed))
+
+write.table(merge_breed, file = paste(base_dir,"merge_total_breed.txt", sep = "/"),
+            sep ="\t",col.names = T,row.names = F,quote = F )
+
+val_breed <- unique(pass_breed[Dataset=="Validation",.(SampleName,Breed)])
+val_breed <- as.data.frame(table(val_breed$Breed))
+sum(val_breed$Freq)
+write.table(val_breed, file = paste(base_dir,"val_total_breed.txt", sep = "/"),
+            sep ="\t",col.names = T,row.names = F,quote = F )
+####
+
+whole_wes_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")
+pass_wes_table <- unique(whole_wes_table[Case_ID!="No-Pair" & The_reason_to_exclude=="Pass QC",.(Case_ID,Breed_info)])
+
 
 total_file <- fread(paste(base_dir,"whole_table.txt",sep = seperator))
 
@@ -232,6 +255,13 @@ unique(total_file$Symbol)
 
 tgen_sample <- fread(paste(base_dir,"tgne_WGS.txt",sep = seperator),header = F)
 tgen_meta <- fread(paste(base_dir,"TGENbreedsOSA.txt",sep=seperator))
+
+fina_pass_wes_breed <- as.data.frame(table(pass_wes_table$Breed_info))
+write.table(fina_pass_wes_breed, file = paste(base_dir,"final_pass_total_breed.txt", sep = "/"),
+            sep ="\t",col.names = T,row.names = F,quote = F )
+match_file <- fread(paste(base_dir,"tumor_normal_pair_QC_results.txt",sep = seperator))
+whole_table <- fread(paste(base_dir,"whole_table.txt",sep=seperator))
+
 
 breed <- tgen_meta[`Sample Name` %in% tgen_sample$V1,.(Breed)]
 fwrite(breed, file= paste(base_dir,"Tgne_WGS_breed.txt",sep = seperator),col.names = T,row.names = F,
