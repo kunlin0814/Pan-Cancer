@@ -1,12 +1,12 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  #"/Volumes/Research/GitHub/R_util/my_util.R")
-base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
+source("/Volumes/Research/GitHub/R_util/my_util.R")
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
 seperator <- "/"
 
+<<<<<<< HEAD
 retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
                          header = F)
 
@@ -21,6 +21,18 @@ exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case
 #                          sheet ="WES_WGS")
 # 
 # Breed_info <- setDT(Breed_info)
+=======
+sample_variant <- fread(paste(base_dir,"significant","variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+sample_gene <- fread(paste(base_dir,"significant","gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+
+  
+
+
+Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_WGS_merge.xlsx",
+                         sheet ="WES_WGS")
+
+Breed_info <- setDT(Breed_info)
+>>>>>>> parent of 37bf719... Update find_significat_gene.R
 mutect_after_vaf <- fread(paste(base_dir,"total_final_Filtering3_VAF_Mutect_withBreeds_orientBiasShaying.gz",sep =seperator))
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude, ]
 total_sample <- unique(mutect_after_vaf$sample_names)
@@ -65,8 +77,8 @@ for (index in 1:length(total_sample)) {
   print(paste("processing the",index,"sample, with total samples",length(total_sample),sep = " " ))
   sample <- total_sample[index]
   info_sum <- NULL
-  tumor <-  mutect_after_vaf[sample_names==sample,.(tumor_type)]$tumor_type[1]
   variant_loc <- mutect_after_vaf[sample_names==sample,.(ensembl_id)]
+<<<<<<< HEAD
 
   each_sample_ensmbl_id <- sort(unique(variant_loc[["ensembl_id"]]))
   for (i in each_sample_ensmbl_id ){
@@ -75,17 +87,17 @@ for (index in 1:length(total_sample)) {
   for (i in sort(unique(variant_loc[["ensembl_id"]])) ){
     info <- mutect_after_vaf[sample_names==sample & ensembl_id==i,]
 
+=======
+  for (i in sort(unique(variant_loc[["ensembl_id"]])) ){
+    info <- mutect_after_vaf[sample_names==sample & ensembl_id==i,]
+>>>>>>> parent of 37bf719... Update find_significat_gene.R
     target <- mutect_after_vaf[sample_names==sample & ensembl_id==i, .(tRef,tAlt)]
     target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     others <- mutect_after_vaf[sample_names==sample & ensembl_id!=i, .(tRef,tAlt)]
     other_combine <- others[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     testor=rbindlist(list(target_combine,other_combine))
     p_value <- fisher.test(testor)$p.value
-    info <- data.table(sample_names = sample, 
-                       gene_name= gene_name, 
-                       ensembl_id = i,
-                       tumor_type = tumor,
-                       p_value = p_value)
+    info <- info[,p_value:=p_value]
     info_sum <- rbindlist(list(info_sum,info))
   }
   info_sum <- info_sum[order(p_value)]
@@ -153,6 +165,7 @@ for (index in 1:length(tumor_type)) {
   tumor <- tumor_type[index]
   info_sum <- NULL
   variant_loc <- mutect_after_vaf[tumor_type==tumor,.(ensembl_id)]
+<<<<<<< HEAD
   each_sample_ensmbl_id <- sort(unique(variant_loc[["ensembl_id"]]))
   for (i in each_sample_ensmbl_id) {
 
@@ -160,6 +173,10 @@ for (index in 1:length(tumor_type)) {
     ensembl_id <- i
 
     gene_name <- mutect_after_vaf[tumor_type==tumor & ensembl_id==i, .(gene_name)]$gene_name[1]
+=======
+  for (i in sort(unique(variant_loc[["ensembl_id"]])) ){
+    info <- mutect_after_vaf[tumor_type==tumor & ensembl_id==i,]
+>>>>>>> parent of 37bf719... Update find_significat_gene.R
     target <- mutect_after_vaf[tumor_type==tumor & ensembl_id==i, .(tRef,tAlt)]
     target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     others <- mutect_after_vaf[tumor_type==tumor & ensembl_id!=i, .(tRef,tAlt)]
@@ -168,7 +185,7 @@ for (index in 1:length(tumor_type)) {
     p_value <- fisher.test(testor)$p.value
     info <- data.table(tumor_type = tumor, 
                        gene_name= gene_name, 
-                       ensembl_id = i,
+                       ensembl_id = ensembl_id,
                        p_value = p_value)
     
     info_sum <- rbindlist(list(info_sum,info))
