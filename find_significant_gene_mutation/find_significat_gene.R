@@ -214,6 +214,6 @@ top10_tumor_variants <- significant_tumor_variant[, head(.SD, 10), by=tumor_type
 top10_tumor_gene <- significant_tumor_gene[, head(.SD, 10), by=tumor_type]
 
 
-a <- top_10_sample_variants[tumor_type=="HSA",]
+# a <- top_10_sample_variants[tumor_type=="HSA",]
 # 
 # 
