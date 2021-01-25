@@ -7,6 +7,7 @@ base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/
 seperator <- "/"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
@@ -18,6 +19,8 @@ whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/ar
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 <<<<<<< HEAD
 
+=======
+>>>>>>> parent of f1292fb... Update find_significat_gene.R
 variant <- fread(paste(base_dir,"significant","variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
 gene <- fread(paste(base_dir,"significant","gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
 # why dup?
@@ -27,6 +30,17 @@ gene <- fread(paste(base_dir,"significant","gene_samplewise_p_value_total_final_
 
 ## check duplicated
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
+
+# target <- mutect_after_vaf[sample_names=="CCB040105" & ensembl_id=="ENSCAFG00000001781"]
+# target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
+# others <- mutect_after_vaf[sample_names=="CCB040105" & ensembl_id!="ENSCAFG00000001781", .(tRef,tAlt)]
+# other_combine <- others[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
+# testor=rbindlist(list(target_combine,other_combine))
+# p_value <- fisher.test(testor)$p.value
+# info <- info[,p_value:=p_value]
+# info_sum <- rbindlist(list(info_sum,info))
+##
+
 
 # 
 # Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_WGS_merge.xlsx",
@@ -50,19 +64,15 @@ total_sample <- unique(mutect_after_vaf$sample_names)
 
 
 mutect_after_vaf <- fread(paste(base_dir,"total_final_Filtering3_VAF_Mutect_withBreeds_orientBiasShaying.gz",sep =seperator))
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude, ]
+#mutect_after_vaf <- mutect_after_vaf[,chrom_loc:=paste(chrom,pos,sep = "_")]
 total_sample <- unique(mutect_after_vaf$sample_names)
-
-
 
 # breed <- sapply(total_sample,FUN = match_table, column="Breeds",table=Breed_info)
 # mutect_after_vaf$Breeds <- breed
 
 ### samplewise variants ##
 total_info_sum <- NULL
-for (index in 1:length(total_sample)) {
-  print(paste("processing the",index,"sample, with total samples",length(total_sample),sep = " " ))
-  sample <- total_sample[index]
+for (sample in total_sample) {
   info_sum <- NULL
   variant_loc <- mutect_after_vaf[sample_names==sample,.(chrom_loc)]
   for (i in unique(variant_loc[["chrom_loc"]]) ){
@@ -81,7 +91,7 @@ for (index in 1:length(total_sample)) {
   total_info_sum <- rbindlist(list(total_info_sum,info_sum))
 }
 fwrite(total_info_sum,
-       file = paste(base_dir,"clean_variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       file = paste(base_dir,"variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        compress = "gzip",
@@ -117,7 +127,7 @@ for (index in 1:length(total_sample)) {
 }
 
 fwrite(total_info_sum,
-       file = paste(base_dir,"clean_gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       file = paste(base_dir,"gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        compress = "gzip",
@@ -157,7 +167,7 @@ for (index in 1:length(tumor_type)) {
 
 
 fwrite(total_info_sum,
-       file = paste(base_dir,"clean_variant_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       file = paste(base_dir,"variant_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        compress = "gzip",
@@ -205,45 +215,9 @@ for (index in 1:length(tumor_type)) {
 
 
 fwrite(total_info_sum,
-       file = paste(base_dir,"clean_gene_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
+       file = paste(base_dir,"gene_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       compress = "gzip",
       sep ="\t")
 
-### check the results
-# 
-sample_variant <- fread(paste(base_dir,"significant","clean_variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-sample_gene <- fread(paste(base_dir,"significant","clean_gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-tumor_variant <- fread(paste(base_dir,"significant","clean_variant_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-tumor_gene <- fread(paste(base_dir,"significant","clean_gene_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-
-significant_sample_variant <- sample_variant[!ensembl_id %in% retro_gene_list
-                                             $V1 & BH_pvalue < 0.05 
-                                             & gene_name!="-",.(chrom_loc, BH_pvalue,gene_name), 
-                                             keyby = .(sample_names,tumor_type)]
-
-significant_sample_gene <- sample_variant[!ensembl_id %in% retro_gene_list$V1 
-                                          & BH_pvalue < 0.05
-                                          & gene_name!="-",.(gene_name, BH_pvalue), 
-                                          keyby = .(sample_names,tumor_type)]
-significant_tumor_variant <- tumor_variant[!ensembl_id %in% retro_gene_list$V1 
-                                           & BH_pvalue < 0.05
-                                           & gene_name!="-",.(chrom_loc, BH_pvalue),
-                                           keyby = .(tumor_type)]
-significant_tumor_gene <- tumor_gene[!ensembl_id %in% retro_gene_list$V1 
-                                     & BH_pvalue < 0.05
-                                     & gene_name!="-",
-                                     .(gene_name, BH_pvalue), keyby = .(tumor_type)]
-
-significant_tumor_gene[gene_name=="TP53",]
-
-top_10_sample_variants <- significant_sample_variant[, head(.SD, 10), by=.(sample_names)]
-top_10_sample_genes <- significant_sample_gene[, head(.SD, 10), by=.(sample_names)]
-top10_tumor_variants <- significant_tumor_variant[, head(.SD, 10), by=tumor_type]
-top10_tumor_gene <- significant_tumor_gene[, head(.SD, 10), by=tumor_type]
-
-
-a <- top_10_sample_variants[tumor_type=="HSA",]
-# 
-# 
