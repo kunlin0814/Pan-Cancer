@@ -45,7 +45,7 @@ for (index in 1:length(total_sample)) {
     others <- mutect_after_vaf[sample_names==sample & chrom_loc!=i, .(tRef,tAlt)]
     other_combine <- others[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     testor=rbindlist(list(target_combine,other_combine))
-    p_value <- fisher.test(testor)$p.value
+    p_value <- fisher.test(testor,alternative = "less")$p.value
     info <- info[,p_value:=p_value]
     info_sum <- rbindlist(list(info_sum,info))
   }
@@ -76,7 +76,7 @@ for (index in 1:length(total_sample)) {
     others <- mutect_after_vaf[sample_names==sample & ensembl_id!=i, .(tRef,tAlt)]
     other_combine <- others[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     testor=rbindlist(list(target_combine,other_combine))
-    p_value <- fisher.test(testor)$p.value
+    p_value <- fisher.test(testor,alternative = "less")$p.value
     info <- data.table(sample_names = sample, 
                        gene_name= gene_name, 
                        ensembl_id = i,
