@@ -13,8 +13,6 @@ retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Re
 whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-# why dup?
-
 ## check duplicated
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
 
@@ -69,14 +67,14 @@ for (index in 1:length(total_sample)) {
   info_sum <- NULL
   tumor <-  mutect_after_vaf[sample_names==sample,.(tumor_type)]$tumor_type[1]
   variant_loc <- mutect_after_vaf[sample_names==sample,.(ensembl_id)]
-<<<<<<< Updated upstream
+
   each_sample_ensmbl_id <- sort(unique(variant_loc[["ensembl_id"]]))
   for (i in each_sample_ensmbl_id ){
     gene_name <- mutect_after_vaf[sample_names==sample & ensembl_id==i, .(gene_name)]$gene_name[1]
-=======
+
   for (i in sort(unique(variant_loc[["ensembl_id"]])) ){
     info <- mutect_after_vaf[sample_names==sample & ensembl_id==i,]
->>>>>>> Stashed changes
+
     target <- mutect_after_vaf[sample_names==sample & ensembl_id==i, .(tRef,tAlt)]
     target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     others <- mutect_after_vaf[sample_names==sample & ensembl_id!=i, .(tRef,tAlt)]
@@ -155,13 +153,12 @@ for (index in 1:length(tumor_type)) {
   tumor <- tumor_type[index]
   info_sum <- NULL
   variant_loc <- mutect_after_vaf[tumor_type==tumor,.(ensembl_id)]
-<<<<<<< Updated upstream
   each_sample_ensmbl_id <- sort(unique(variant_loc[["ensembl_id"]]))
   for (i in each_sample_ensmbl_id) {
-=======
+
   for (i in sort(unique(variant_loc[["ensembl_id"]])) ){
     ensembl_id <- i
->>>>>>> Stashed changes
+
     gene_name <- mutect_after_vaf[tumor_type==tumor & ensembl_id==i, .(gene_name)]$gene_name[1]
     target <- mutect_after_vaf[tumor_type==tumor & ensembl_id==i, .(tRef,tAlt)]
     target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
