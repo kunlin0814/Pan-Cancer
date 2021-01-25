@@ -8,6 +8,7 @@ seperator <- "/"
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
@@ -21,6 +22,8 @@ exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case
 
 =======
 >>>>>>> parent of f1292fb... Update find_significat_gene.R
+=======
+>>>>>>> parent of f1292fb (Update find_significat_gene.R)
 variant <- fread(paste(base_dir,"significant","variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
 gene <- fread(paste(base_dir,"significant","gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
 # why dup?
@@ -62,11 +65,14 @@ mutect_after_vaf <- fread(paste(base_dir,"total_final_Filtering3_VAF_Mutect_with
 #mutect_after_vaf <- mutect_after_vaf[,chrom_loc:=paste(chrom,pos,sep = "_")]
 total_sample <- unique(mutect_after_vaf$sample_names)
 
+<<<<<<< HEAD
 
 mutect_after_vaf <- fread(paste(base_dir,"total_final_Filtering3_VAF_Mutect_withBreeds_orientBiasShaying.gz",sep =seperator))
 #mutect_after_vaf <- mutect_after_vaf[,chrom_loc:=paste(chrom,pos,sep = "_")]
 total_sample <- unique(mutect_after_vaf$sample_names)
 
+=======
+>>>>>>> parent of f1292fb (Update find_significat_gene.R)
 # breed <- sapply(total_sample,FUN = match_table, column="Breeds",table=Breed_info)
 # mutect_after_vaf$Breeds <- breed
 
