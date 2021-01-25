@@ -13,7 +13,6 @@ retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Re
 whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-# why dup?
 
 ## check duplicated
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
@@ -97,7 +96,7 @@ fwrite(total_info_sum,
        compress = "gzip",
        sep ="\t")
 
-### Tumor wise
+### Tumor wise, need to consider the samples that doesn't have mutation
 tumor_type <- unique(mutect_after_vaf$tumor_type)
 ### tumor_wise variants ##
 
@@ -188,9 +187,11 @@ sample_gene <- fread(paste(base_dir,"significant","clean_gene_samplewise_p_value
 tumor_variant <- fread(paste(base_dir,"significant","clean_variant_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
 tumor_gene <- fread(paste(base_dir,"significant","clean_gene_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
 
+a <- sample_variant[sample_names=="004",]
+
 significant_sample_variant <- sample_variant[!ensembl_id %in% retro_gene_list
                                              $V1 & BH_pvalue < 0.05 
-                                             & gene_name!="-",.(chrom_loc, BH_pvalue,gene_name), 
+                                             & gene_name!="-",.(chrom_loc, BH_pvalue,vaf), 
                                              keyby = .(sample_names,tumor_type)]
 
 significant_sample_gene <- sample_variant[!ensembl_id %in% retro_gene_list$V1 
@@ -206,12 +207,11 @@ significant_tumor_gene <- tumor_gene[!ensembl_id %in% retro_gene_list$V1
                                      & gene_name!="-",
                                      .(gene_name, BH_pvalue), keyby = .(tumor_type)]
 
-significant_tumor_gene[gene_name=="TP53",]
 
 top_10_sample_variants <- significant_sample_variant[, head(.SD, 10), by=.(sample_names)]
 top_10_sample_genes <- significant_sample_gene[, head(.SD, 10), by=.(sample_names)]
-top10_tumor_variants <- significant_tumor_variant[, head(.SD, 10), by=tumor_type]
-top10_tumor_gene <- significant_tumor_gene[, head(.SD, 10), by=tumor_type]
+top_10_tumor_variants <- significant_tumor_variant[, head(.SD, 10), by=tumor_type]
+top_10_tumor_gene <- significant_tumor_gene[, head(.SD, 10), by=tumor_type]
 
 
 # a <- top_10_sample_variants[tumor_type=="HSA",]
