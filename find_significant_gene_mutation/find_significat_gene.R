@@ -129,8 +129,7 @@ for (index in 1:length(tumor_type)) {
   print(paste("processing the", index, "tumor, with total number tumor", length(tumor_type),sep = " "))
   each_tumor <- tumor_type[index]
   each_tumor_info_sum <- NULL
-  each_tumor_type <-
-    sig_variants[tumor_type == each_tumor, .(chrom_loc, sample_names, gene_name, ensembl_id)]
+  each_tumor_type <- sig_variants[tumor_type == each_tumor, .(chrom_loc, sample_names, gene_name, ensembl_id)]
   total_variants_each_tumor <- unique(each_tumor_type[["chrom_loc"]])
   for (i in 1:length(total_variants_each_tumor)) {
     print(paste("processing the",i, "variants, with total variants", length(total_variants_each_tumor), sep = " "))
