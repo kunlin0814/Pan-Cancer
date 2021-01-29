@@ -44,7 +44,8 @@ for (each_tumor in tumor_type) {
     each_gene <- each_tumor_uniq_gene[index]
     total_others <- 0
     total_others_without <- 0
-    sample_loc <- which(each_gene == each_tumor_gene)
+    sample_loc <- each_tumor_gene %in% each_gene
+      #which(each_gene == each_tumor_gene)
        #length(unique(each_tumor_info[gene_mutation == each_gene, ]$sample_names))
     numbersamples_withgene <- length(unique(each_tumor_info$sample_names[sample_loc]))
     #length(which(each_gene == each_tumor_gene))
@@ -57,7 +58,8 @@ for (each_tumor in tumor_type) {
     for (other_gene in outside_target_gene) {
  
       #nubmersamples_others_variants <- 
-       other_sample_loc <- which(other_gene == each_tumor_gene)
+       other_sample_loc <- each_tumor_gene %in% other_gene
+         #which(other_gene == each_tumor_gene)
        nubmersamples_others_variants <- length(unique(each_tumor_info$sample_names[other_sample_loc]))
       #ength(unique(each_tumor_info[gene_mutation == other_gene , .(sample_names)]$sample_names))
       
