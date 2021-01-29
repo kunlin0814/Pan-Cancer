@@ -1,16 +1,16 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-#"/Volumes/Research/GitHub/R_util/my_util.R")
-base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
-#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
+whole_wes_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -21,7 +21,6 @@ amp_delete <- amp_delete[!sample_names %in% exclude,gene_mutation:=paste(gene_na
 
 
 tumor_type <- sort(unique(amp_delete$tumor_type))
-tumor_type <- "GLM"
 ## use which to find index and check how many samples ( can't use unique gene to find)
 total_gene_summary <- NULL
 for (each_tumor in tumor_type) {
@@ -95,3 +94,11 @@ for (each_tumor in tumor_type) {
   each_tumor_info_sum$p_value <- p_value_sum 
   total_gene_summary <- rbindlist(list(total_gene_summary, each_tumor_info_sum))
 }
+
+fwrite(total_gene_summary, file = paste(base_dir, "Pan_cancer_amp_delete.gz",
+                                        sep = seperator),
+       col.names = T, row.names = F, quote = F,sep = "\t",
+       eol = "\n", compress = "gzip")
+       
+
+
