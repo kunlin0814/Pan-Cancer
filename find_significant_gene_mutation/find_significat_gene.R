@@ -4,12 +4,11 @@ library(readxl)
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
   #"/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-
 whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
              #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
@@ -20,21 +19,26 @@ exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
 
 # 
-# Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_WGS_merge.xlsx",
-#                          sheet ="WES_WGS")
-# 
-# Breed_info <- setDT(Breed_info)
-mutect_after_vaf <- fread(paste(base_dir,"total_final_Filtering3_VAF_Mutect_withBreeds_orientBiasShaying.gz",sep =seperator))
+Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_WGS_merge.xlsx",
+                         sheet ="WES_WGS")
+
+Breed_info <- setDT(Breed_info)
+mutect_after_vaf <- fread(paste(base_dir,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep =seperator))
 
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
-a <- mutect_after_vaf[sample_names=="HSA_31",]
 
-total_sample <- unique(mutect_after_vaf$sample_names)
+table_total_sample <- mutect_after_vaf$sample_names
+
+breed <- sapply(table_total_sample,FUN = match_table, column="Breeds",table=Breed_info)
+mutect_after_vaf$Breeds <- breed
+mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
+
+a <- unique(mutect_after_vaf$ensembl_id)
+write.table(a, file = "C:/Users/abc73/Desktop/total_target_ensmbl_id",
+            sep ="\n", col.names = T, row.names =F, quote = F )
 
 
-# breed <- sapply(total_sample,FUN = match_table, column="Breeds",table=Breed_info)
-# mutect_after_vaf$Breeds <- breed
-
+total_sample <- unique( mutect_after_vaf$sample_names)
 ### samplewise variants ##
 total_info_sum <- NULL
 for (index in 1:length(total_sample)) {
@@ -58,14 +62,16 @@ for (index in 1:length(total_sample)) {
   total_info_sum <- rbindlist(list(total_info_sum,info_sum))
 }
 
-# fwrite(total_info_sum,
-#        file = paste(base_dir,"variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_26.gz",sep = seperator)
-#        ,col.names = T,
-#        row.names = F,
-#        quote = F,
-#        eol = "\n",
-#        compress = "gzip",
-#        sep ="\t")
+fwrite(total_info_sum,
+       file = paste(base_dir,"01_29","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator)
+       ,col.names = T,
+       row.names = F,
+       quote = F,
+       eol = "\n",
+       compress = "gzip",
+       sep ="\t")
+
+
 ### samplewise ensembl_id ##
 
 
@@ -97,19 +103,19 @@ for (index in 1:length(total_sample)) {
   gene_total_info_sum <- rbindlist(list(gene_total_info_sum,info_sum))
 }
 
-# fwrite(gene_total_info_sum,
-#        file = paste(base_dir,"01_27","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",sep = seperator)
-#        ,col.names = T,row.names = F,
-#        quote = F,
-#        eol = "\n",
-#        compress = "gzip",
-#        sep ="\t")
+fwrite(gene_total_info_sum,
+       file = paste(base_dir,"01_29","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator)
+       ,col.names = T,row.names = F,
+       quote = F,
+       eol = "\n",
+       compress = "gzip",
+       sep ="\t")
 
 
-sig_variants <- fread(file = paste(base_dir,"01_26","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_26.gz",sep = seperator))
-sig_variants <- sig_variant[BH_pvalue < 0.05,]
+sig_variants <- fread(file = paste(base_dir,"01_29","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator))
+sig_variants <- sig_variants[BH_pvalue < 0.05,]
 
-sig_gene <- fread(paste(base_dir,"01_27","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",sep = seperator))
+sig_gene <- fread(paste(base_dir,"01_29","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator))
 sig_gene <- sig_gene[BH_pvalue < 0.05, ]
 
 # fwrite(sig_gene,
@@ -125,122 +131,179 @@ tumor_type <- unique(sig_variants$tumor_type)
 ### Tumorwise variants
 
 total_variant_summary <- NULL
-for (index in 1:length(tumor_type)) {
-  print(paste("processing the", index, "tumor, with total number tumor", length(tumor_type),sep = " "))
-  each_tumor <- tumor_type[index]
+for (each_tumor in tumor_type) {
+  current <- match(each_tumor, tumor_type,nomatch = 0)
+  print(paste("Processing the ", current, "tumors with total numbers of tumor", length(tumor_type),sep = " "))
   each_tumor_info_sum <- NULL
-  each_tumor_type <- sig_variants[tumor_type == each_tumor, .(chrom_loc, sample_names, gene_name, ensembl_id)]
-  total_variants_each_tumor <- unique(each_tumor_type[["chrom_loc"]])
-  for (i in 1:length(total_variants_each_tumor)) {
-    print(paste("processing the",i, "variants, with total variants", length(total_variants_each_tumor), sep = " "))
-    each_variant <- total_variants_each_tumor[i]
+  each_tumor_info <- sig_variants[tumor_type == each_tumor, ]
+  each_tumor_variants <- each_tumor_info$chrom_loc
+  each_tumor_uniq_variants <- unique(each_tumor_variants)
+  tumor_type_sum <- character(length(each_tumor_uniq_variants))
+  gene_mut_sum <- character(length(each_tumor_uniq_variants))
+  numbersamples_withgene_sum <-numeric(length(each_tumor_uniq_variants))
+  numbersamples_withoutgene_sum <- numeric(length(each_tumor_uniq_variants))
+  total_others_sum <- numeric(length(each_tumor_uniq_variants))
+  total_others_without_sum <- numeric(length(each_tumor_uniq_variants))
+  each_tumor_total_sample <-   length(unique(each_tumor_info$sample_names))
+  ensmbl_id_sum <- character(length(each_tumor_uniq_variants))
+  gene_name_sum <- character(length(each_tumor_uniq_variants))
+  total_numbersamples_withgene <- 0
+  total_numbersamples_withoutgene <- 0 
+  
+  # calculate total x and total y
+  for (index in 1:length(each_tumor_uniq_variants)) {
+    #current <- match(each_variant, each_tumor_variants,nomatch = 0)
+    print(paste("Processing the ", index, "variants, with variants", length(each_tumor_uniq_variants),sep = " "))
+    each_variant <- each_tumor_uniq_variants[index]
+    each_gene <- each_tumor_info[chrom_loc==each_variant]$gene_name[1]
+    each_ensembl <- each_tumor_info[chrom_loc==each_variant]$ensembl_id[1]
     total_others <- 0
     total_others_without <- 0
-    numbersamples_withvariants <-
-      length(unique(each_tumor_type[chrom_loc == each_variant, .(sample_names)][['sample_names']]))
-    numersamples_withoutvariants <-
-      length(unique(each_tumor_type$sample_names)) - numbersamples_withvariants
-    gene_name <-
-      each_tumor_type[chrom_loc == each_variant, .(gene_name)][['gene_name']][1]
-    ensembl_id <-
-      each_tumor_type[chrom_loc == each_variant, .(ensembl_id)][['ensembl_id']][1]
+    sample_loc <- which(each_variant == each_tumor_variants)
     
-    remaining_variant <- total_variants_each_tumor[!total_variants_each_tumor %in% each_variant]
+    #length(unique(each_tumor_info[gene_mutation == each_variant, ]$sample_names))
+    numbersamples_withgene <- length(unique(each_tumor_info$sample_names[sample_loc]))
+    #length(which(each_variant == each_tumor_variants))
+    #length(unique(each_tumor_info[gene_mutation == each_variant, ]$sample_names))
     
-    for (other_variant in  remaining_variant) {
+    numbersamples_withoutgene <- each_tumor_total_sample- numbersamples_withgene
     
-        nubmersamples_others_variants <- length(unique(each_tumor_type[chrom_loc == other_variant, .(sample_names)][['sample_names']]))
-        numersamples_others_withoutvariants <- length(unique(each_tumor_type$sample_names)) - nubmersamples_others_variants
-        total_others <- total_others + nubmersamples_others_variants
-        total_others_without <- total_others_without + numersamples_others_withoutvariants
-      
-      
-    }
-    testor <-
-      rbind(c(numbersamples_withvariants,numersamples_withoutvariants),
-        c(total_others, total_others_without))
+    total_numbersamples_withgene <- total_numbersamples_withgene+numbersamples_withgene
+    total_numbersamples_withoutgene <- total_numbersamples_withoutgene+numbersamples_withoutgene
     
-    each_variant_p_value <-
-      fisher.test(testor, alternative = "greater")$p.value
-    # if (each_variant_p_value <0.05){
-    # print(testor)
-    # print(each_variant_p_value)}
-    info <- data.table(
-      tumor_type = each_tumor,
-      chrom_loc = each_variant,
-      gene_name = gene_name,
-      ensembl_id = ensembl_id,
-      p_value = each_variant_p_value
-    )
     
-    each_tumor_info_sum <- rbindlist(list(each_tumor_info_sum, info))
+    gene_name_sum[index] <- each_gene
+    ensmbl_id_sum[index] <- each_ensembl
+    tumor_type_sum[index] <- each_tumor
+    gene_mut_sum[index] <- each_variant
+    numbersamples_withgene_sum[index] <- numbersamples_withgene
+    numbersamples_withoutgene_sum[index] <- numbersamples_withoutgene
+    
+    
   }
+  total_others_sum <- total_numbersamples_withgene -numbersamples_withgene_sum
+  total_others_without_sum <- total_numbersamples_withoutgene- numbersamples_withoutgene_sum
+  
+  
+  
+  
+  each_tumor_info_sum <- data.table( tumor_type = tumor_type_sum,
+                                     ensembl_id =ensmbl_id_sum,
+                                     gene_name = gene_name_sum,
+                                     gene_mut = gene_mut_sum,
+                                     numbersamples_withgene = numbersamples_withgene_sum,
+                                     numbersamples_withoutgene = numbersamples_withoutgene_sum,
+                                     total_others = total_others_sum,
+                                     total_others_withoutgene = total_others_without_sum
+  )
+  
+  p_value_sum <- numeric(length(each_tumor_uniq_variants))
+  for ( i in 1:nrow(each_tumor_info_sum)) {
+    
+    target <- as.matrix(each_tumor_info_sum[i,.(numbersamples_withgene,numbersamples_withoutgene)])
+    others <- as.matrix(each_tumor_info_sum[i,.(total_others,total_others_withoutgene)])
+    testor <- rbind(c(target),c(others))
+    each_gene_p_value <- fisher.test(testor, alternative = "greater")$p.value
+    p_value_sum[i] <-  each_gene_p_value
+    
+  }
+  each_tumor_info_sum$p_value <- p_value_sum 
   each_tumor_info_sum <- each_tumor_info_sum[order(p_value)]
   each_tumor_info_sum$BH_pvalue = p.adjust(each_tumor_info_sum$p_value, method = "BH")
+  
   total_variant_summary <- rbindlist(list(total_variant_summary, each_tumor_info_sum))
 }
 
-# fwrite(total_variant_summary,
-#        file = paste(base_dir,"variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator)
-#        ,col.names = T,row.names = F,
-#        eol = "\n",
-#        quote = F,
-#        compress = "gzip",
-#        sep ="\t")
+fwrite(total_variant_summary,
+       file = paste(base_dir,"01_29","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_0129.gz",sep = seperator)
+       ,col.names = T,row.names = F,
+       eol = "\n",
+       quote = F,
+       compress = "gzip",
+       sep ="\t")
 
-tumor_variant <- fread(paste(base_dir,"01_26","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-tumor_variant <- tumor_variant[p_value<0.05,]
 
 ## TumorWise
 tumor_type <- unique(sig_gene$tumor_type)
 ### Tumorwise genes
-
-tumor_type <- unique(sig_variants$tumor_type)
-total_ensembl_summary <- NULL
-for (index in 1:length(tumor_type)) {
-  print(paste("processing the", index, "tumor, with total number tumor", length(tumor_type),sep = " "))
-  each_tumor <- tumor_type[index]
+total_gene_summary <- NULL
+for (each_tumor in tumor_type) {
+  current <- match(each_tumor, tumor_type,nomatch = 0)
+  print(paste("Processing the ", current, "tumors with total numbers of tumor", length(tumor_type),sep = " "))
   each_tumor_info_sum <- NULL
-  each_tumor_type <- sig_gene[tumor_type == each_tumor, .(sample_names, gene_name)]
-  total_gene_each_tumor <- unique(each_tumor_type[["gene_name"]])
-  for (i in 1:length(total_gene_each_tumor)) {
-    print(paste("processing the",i, "genes, with total genes", length(total_gene_each_tumor), sep = " "))
-    each_gene <- total_gene_each_tumor[i]
+  each_tumor_info <- sig_gene[tumor_type == each_tumor, ]
+  each_tumor_genes <- each_tumor_info$gene_name
+  each_tumor_uniq_genes <- unique(each_tumor_genes)
+  tumor_type_sum <- character(length(each_tumor_uniq_genes))
+  numbersamples_withgene_sum <-numeric(length(each_tumor_uniq_genes))
+  numbersamples_withoutgene_sum <- numeric(length(each_tumor_uniq_genes))
+  total_others_sum <- numeric(length(each_tumor_uniq_genes))
+  total_others_without_sum <- numeric(length(each_tumor_uniq_genes))
+  each_tumor_total_sample <-   length(unique(each_tumor_info$sample_names))
+  ensmbl_id_sum <- character(length(each_tumor_uniq_genes))
+  gene_name_sum <- character(length(each_tumor_uniq_genes))
+  total_numbersamples_withgene <- 0
+  total_numbersamples_withoutgene <- 0 
+  
+  # calculate total x and total y
+  for (index in 1:length(each_tumor_uniq_genes)) {
+    #current <- match(each_gene, each_tumor_genes,nomatch = 0)
+    print(paste("Processing the ", index, "genes, with total_genes", length(each_tumor_uniq_genes),sep = " "))
+    each_gene <- each_tumor_uniq_genes[index]
+    each_ensembl <- each_tumor_info[gene_name==each_gene]$ensembl_id[1]
     total_others <- 0
     total_others_without <- 0
-    numbersamples_withvariants <-
-      length(unique(each_tumor_type[gene_name == each_gene, .(sample_names)][['sample_names']]))
-    numersamples_withoutvariants <-
-      length(unique(each_tumor_type$sample_names)) - numbersamples_withvariants
+    sample_loc <- which(each_gene == each_tumor_genes)
     
-    for (other_gene in  total_gene_each_tumor) {
-      if (other_gene != each_gene) {
-        nubmersamples_others_variants <- length(unique(each_tumor_type[gene_name == other_gene, .(sample_names)][['sample_names']]))
-        numersamples_others_withoutvariants <- length(unique(each_tumor_type$sample_names)) - nubmersamples_others_variants
-        
-        total_others <- total_others + nubmersamples_others_variants
-        total_others_without <- total_others_without + numersamples_others_withoutvariants
-      }
-      
-    }
-    testor <-
-      rbind(c(numbersamples_withvariants,numersamples_withoutvariants),
-            c(total_others, total_others_without))
+    #length(unique(each_tumor_info[gene_mutation == each_gene, ]$sample_names))
+    numbersamples_withgene <- length(unique(each_tumor_info$sample_names[sample_loc]))
+    #length(which(each_gene == each_tumor_genes))
+    #length(unique(each_tumor_info[gene_mutation == each_gene, ]$sample_names))
     
-    each_ensembl_p_value <-
-      fisher.test(testor, alternative = "greater")$p.value
+    numbersamples_withoutgene <- each_tumor_total_sample- numbersamples_withgene
     
-    info <- data.table(
-      tumor_type = each_tumor,
-      gene_name = each_gene,
-      p_value = each_ensembl_p_value
-    )
+    total_numbersamples_withgene <- total_numbersamples_withgene+numbersamples_withgene
+    total_numbersamples_withoutgene <- total_numbersamples_withoutgene+numbersamples_withoutgene
     
-    each_tumor_info_sum <- rbindlist(list(each_tumor_info_sum, info))
+    
+    gene_name_sum[index] <- each_gene
+    ensmbl_id_sum[index] <- each_ensembl
+    tumor_type_sum[index] <- each_tumor
+    numbersamples_withgene_sum[index] <- numbersamples_withgene
+    numbersamples_withoutgene_sum[index] <- numbersamples_withoutgene
+    
+    
   }
+  total_others_sum <- total_numbersamples_withgene -numbersamples_withgene_sum
+  total_others_without_sum <- total_numbersamples_withoutgene- numbersamples_withoutgene_sum
+  
+  
+  
+  
+  each_tumor_info_sum <- data.table( tumor_type = tumor_type_sum,
+                                     ensembl_id =ensmbl_id_sum,
+                                     gene_name = gene_name_sum,
+                                     numbersamples_withgene = numbersamples_withgene_sum,
+                                     numbersamples_withoutgene = numbersamples_withoutgene_sum,
+                                     total_others = total_others_sum,
+                                     total_others_withoutgene = total_others_without_sum
+  )
+  
+  p_value_sum <- numeric(length(each_tumor_uniq_genes))
+  for ( i in 1:nrow(each_tumor_info_sum)) {
+    
+    target <- as.matrix(each_tumor_info_sum[i,.(numbersamples_withgene,numbersamples_withoutgene)])
+    others <- as.matrix(each_tumor_info_sum[i,.(total_others,total_others_withoutgene)])
+    testor <- rbind(c(target),c(others))
+    each_gene_p_value <- fisher.test(testor, alternative = "greater")$p.value
+    p_value_sum[i] <-  each_gene_p_value
+    
+  }
+  each_tumor_info_sum$p_value <- p_value_sum 
   each_tumor_info_sum <- each_tumor_info_sum[order(p_value)]
   each_tumor_info_sum$BH_pvalue = p.adjust(each_tumor_info_sum$p_value, method = "BH")
-  total_ensembl_summary <- rbindlist(list(total_ensembl_summary, each_tumor_info_sum))
+  
+  total_gene_summary <- rbindlist(list(total_gene_summary, each_tumor_info_sum))
 }
 
 check <- total_ensembl_summary[BH_pvalue<0.2,]
