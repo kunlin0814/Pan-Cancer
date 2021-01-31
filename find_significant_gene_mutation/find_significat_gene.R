@@ -23,15 +23,15 @@ Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/
                          sheet ="WES_WGS")
 
 Breed_info <- setDT(Breed_info)
-mutect_after_vaf <- fread(paste(base_dir,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep =seperator))
+mutect_after_vaf <- fread(paste(base_dir,"01_31","mutect_noucl_vaf_withBreeds_callable.txt",sep =seperator))
 
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
-
-table_total_sample <- mutect_after_vaf$sample_names
-
-breed <- sapply(table_total_sample,FUN = match_table, column="Breeds",table=Breed_info)
-mutect_after_vaf$Breeds <- breed
-mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
+# mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
+# 
+# table_total_sample <- mutect_after_vaf$sample_names
+# 
+# breed <- sapply(table_total_sample,FUN = match_table, column="Breeds",table=Breed_info)
+# mutect_after_vaf$Breeds <- breed
+# mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 
 # write.table(mutect_after_vaf, file = "C:/Users/abc73/Desktop/Burair_WithBreeds_QCpass_filtering3_mutect_after_vaf.txt",
 #             sep ="\t", col.names = T, row.names =F, quote = F )
@@ -66,7 +66,7 @@ for (index in 1:length(total_sample)) {
 }
 
 fwrite(total_info_sum,
-       file = paste(base_dir,"01_29","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator)
+       file = paste(base_dir,"01_31","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator)
        ,col.names = T,
        row.names = F,
        quote = F,
@@ -107,7 +107,7 @@ for (index in 1:length(total_sample)) {
 }
 
 fwrite(gene_total_info_sum,
-       file = paste(base_dir,"01_29","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator)
+       file = paste(base_dir,"01_31","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
@@ -115,10 +115,10 @@ fwrite(gene_total_info_sum,
        sep ="\t")
 
 
-sig_variants <- fread(file = paste(base_dir,"01_29","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator))
+sig_variants <- fread(file = paste(base_dir,"01_31","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator))
 sig_variants <- sig_variants[BH_pvalue < 0.05,]
 
-sig_gene <- fread(paste(base_dir,"01_29","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_29.gz",sep = seperator))
+sig_gene <- fread(paste(base_dir,"01_31","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator))
 sig_gene <- sig_gene[BH_pvalue < 0.05, ]
 
 # fwrite(sig_gene,
@@ -218,7 +218,7 @@ for (each_tumor in tumor_type) {
 }
 
 fwrite(total_variant_summary,
-       file = paste(base_dir,"01_29","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_0129.gz",sep = seperator)
+       file = paste(base_dir,"01_31","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_0129.gz",sep = seperator)
        ,col.names = T,row.names = F,
        eol = "\n",
        quote = F,
@@ -314,7 +314,7 @@ check <- total_ensembl_summary[BH_pvalue<0.2,]
 
 
 fwrite(total_ensembl_summary,
-       file = paste(base_dir,"01_26","pure_gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",sep = seperator)
+       file = paste(base_dir,"01_31","pure_gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       eol = "\n",
