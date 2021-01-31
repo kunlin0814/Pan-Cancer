@@ -33,9 +33,12 @@ breed <- sapply(table_total_sample,FUN = match_table, column="Breeds",table=Bree
 mutect_after_vaf$Breeds <- breed
 mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 
-a <- unique(mutect_after_vaf$ensembl_id)
-write.table(a, file = "C:/Users/abc73/Desktop/total_target_ensmbl_id",
-            sep ="\n", col.names = T, row.names =F, quote = F )
+# write.table(mutect_after_vaf, file = "C:/Users/abc73/Desktop/Burair_WithBreeds_QCpass_filtering3_mutect_after_vaf.txt",
+#             sep ="\t", col.names = T, row.names =F, quote = F )
+
+# a <- unique(mutect_after_vaf$ensembl_id)
+# write.table(a, file = "C:/Users/abc73/Desktop/total_target_ensmbl_id",
+#             sep ="\n", col.names = T, row.names =F, quote = F )
 
 
 total_sample <- unique( mutect_after_vaf$sample_names)
