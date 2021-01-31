@@ -141,9 +141,6 @@ total_file='/scratch/kh31516/Pan_cancer/Osteo/source/Tgen_TrueN_Tpairs_WES.txt'
 
 cd  ${mutect_folder}
 
-printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "file_name" "retro_mutation_rate" "retor_PASS" "retro_callable" "non_retro_mutation_rate" \
-"non_retro_PASS" "nonr_retro_callable" "combine_mutation_rate" "combine_PASS" "combine_callable" "cancer_type" >> ${total_genome_mutation_number_file}
-
 while read line line1 line2;
 do
     mkdir -p ${output_folder}/${line}

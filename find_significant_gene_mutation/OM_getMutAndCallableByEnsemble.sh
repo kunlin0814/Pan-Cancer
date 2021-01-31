@@ -49,7 +49,7 @@ do
 
 done < $total_file
 
-
+gzip $total_mutation_number_file
 ml Java
 
         # String annotationFile = args[0];
@@ -66,7 +66,7 @@ java -Xmx32g -cp $scripts/ GetCallableCounts /work/szlab/Lab_shared_PanCancer/so
 $ensembl_source \
 $wig_callable $total_mutation_callable_file
 
-gzip $total_mutation_number_file
+
 gzip $total_mutation_callable_file
 
 cd  ${mutect_folder}

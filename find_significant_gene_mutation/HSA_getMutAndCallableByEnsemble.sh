@@ -135,15 +135,12 @@ done < $total_file
 
 
 ## Upenn HSA
-output_folder='/scratch/kh31516/Pan_cancer/Burair_filtering3/HSA_TGen/Mutect'
-wig_folder="/scratch/jlw87619/PanK9cancer/OsteHSArcoma_PRJNA525883-WXS/results_SG"
+wig_folder="/scratch/kh31516/Pan_cancer/HSA/store/PRJNA417727/Mutect"
 mutect_folder='/scratch/kh31516/Pan_cancer/Burair_filtering3/HSA_UPenn/Mutect'
+output_folder='/scratch/kh31516/Pan_cancer/Burair_filtering3/HSA_UPenn/Mutect'
 total_file='/scratch/kh31516/Pan_cancer/HSA/source/PRJNA417727_HSA_WES.txt'
 
 cd  ${mutect_folder}
-
-printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "file_name" "retro_mutation_rate" "retor_PASS" "retro_callable" "non_retro_mutation_rate" \
-"non_retro_PASS" "nonr_retro_callable" "combine_mutation_rate" "combine_PASS" "combine_callable" "cancer_type" >> ${total_genome_mutation_number_file}
 
 while read line line1 line2;
 do

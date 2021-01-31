@@ -70,6 +70,8 @@ do
 
 done < $total_file
 
+gzip $total_mutation_number_file
+
 ml Java
 
         # String annotationFile = args[0];
