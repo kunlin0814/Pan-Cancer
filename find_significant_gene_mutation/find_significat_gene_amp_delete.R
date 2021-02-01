@@ -9,8 +9,8 @@ seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
-"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
+whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -100,5 +100,24 @@ fwrite(total_gene_summary, file = paste(base_dir, "Pan_cancer_amp_delete.gz",
        col.names = T, row.names = F, quote = F,sep = "\t",
        eol = "\n", compress = "gzip")
        
+
+### Analyzed the results
+# 
+# amp_delete <- fread(paste(base_dir, "Pan_cancer_amp_delete.gz",
+#                           sep = seperator))
+# 
+# different_type <- as.data.table(str_split_fixed(amp_delete$gene_mut,"_",2))
+# colnames(different_type) <- c("gene","mut_type")
+# amp_delete <- cbind(amp_delete,different_type)
+# 
+# fwrite(amp_delete, file = paste(base_dir, "final_Pan_cancer_amp_delete.gz",
+#                                         sep = seperator),
+#        col.names = T, row.names = F, quote = F,sep = "\t",
+#        eol = "\n", compress = "gzip")
+
+amp_delete <- fread(paste(base_dir, "final_Pan_cancer_amp_delete.gz",
+                          sep = seperator))
+
+top_10_mut <- amp_delete[, head(.SD, 10), by=.(tumor_type)]
 
 
