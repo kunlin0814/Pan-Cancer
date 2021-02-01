@@ -14,10 +14,10 @@ whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/ar
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"total_samples_amp_delete.txt",sep = seperator),header = F)
-colnames(amp_delete) <- c("sample_names","gene_name","mutation_type","CNA","tumor_type")
+amp_delete <- fread(paste(base_dir,"final_Pan_cancer_amp_delete.gz",sep = seperator))
+#colnames(amp_delete) <- c("sample_names","gene_name","mutation_type","CNA","tumor_type")
 
-amp_delete <- amp_delete[!sample_names %in% exclude,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
+#amp_delete <- amp_delete[!sample_names %in% exclude,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
 
 
 tumor_type <- sort(unique(amp_delete$tumor_type))

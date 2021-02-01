@@ -101,6 +101,7 @@ for (index in 1:length(total_sample)) {
     ensembl_mut_number <- mutect_after_vaf[sample_names==sample & ensembl_id==ensembl_id, .(ensembl_mut_numer)]$ensembl_mut_numer[1]
     sample_genome_wide_mut_number <- mutect_after_vaf[sample_names==sample & ensembl_id==ensembl_id, .(sample_genome_wide_mut_number)]$sample_genome_wide_mut_number[1]
     sample_genome_wide_mut_callable <- mutect_after_vaf[sample_names==sample & ensembl_id==ensembl_id, .(sample_genome_wide_mut_callable)]$sample_genome_wide_mut_callable[1]
+    
     info <- data.table(sample_names = sample, 
                        gene_name= i, 
                        ensembl_id = ensembl_id,
@@ -118,6 +119,11 @@ for (index in 1:length(total_sample)) {
   gene_total_info_sum <- rbindlist(list(gene_total_info_sum,info_sum))
 }
 
+gene_total_info_sum$gene_TMB <- (gene_total_info_sum$ensembl_mut_number*1000000)/gene_total_info_sum$ensembl_callable
+gene_total_info_sum$genome_TMB <- (gene_total_info_sum$sample_genome_wide_mut_number*1000000)/gene_total_info_sum$sample_genome_wide_mut_callable
+
+
+
 fwrite(gene_total_info_sum,
        file = paste(base_dir,"01_31","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator)
        ,col.names = T,row.names = F,
@@ -130,7 +136,7 @@ fwrite(gene_total_info_sum,
 sig_variants <- fread(file = paste(base_dir,"01_31","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator))
 sig_variants <- sig_variants[BH_pvalue < 0.05,]
 
-sig_gene <- fread(paste(base_dir,"01_31","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator))
+sig_gene <- fread(paste(base_dir,"01_31","gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator))
 sig_gene <- sig_gene[BH_pvalue < 0.05, ]
 
 # fwrite(sig_gene,
@@ -326,7 +332,7 @@ check <- total_gene_summary[BH_pvalue<0.2,]
 
 
 fwrite(total_gene_summary,
-       file = paste(base_dir,"01_31","pure_gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator)
+       file = paste(base_dir,"01_31","gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       eol = "\n",
