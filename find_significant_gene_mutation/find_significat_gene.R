@@ -24,6 +24,9 @@ Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/
 
 Breed_info <- setDT(Breed_info)
 mutect_after_vaf <- fread(paste(base_dir,"01_31","mutect_noucl_vaf_withBreeds_callable.txt",sep =seperator))
+mutect_after_vaf$gene_TMB <- (mutect_after_vaf$ensembl_mut_numer*1000000)/mutect_after_vaf$ensembl_callable
+mutect_after_vaf$genome_TMB <- (mutect_after_vaf$sample_genome_wide_mut_number*1000000)/mutect_after_vaf$sample_genome_wide_mut_callable
+
 
 # mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
 # 
@@ -94,11 +97,20 @@ for (index in 1:length(total_sample)) {
     other_combine <- others[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
     testor=rbindlist(list(target_combine,other_combine))
     p_value <- fisher.test(testor,alternative = "less")$p.value
+    ensembl_callable <- mutect_after_vaf[sample_names==sample & ensembl_id==ensembl_id, .(ensembl_callable)]$ensembl_callable[1]
+    ensembl_mut_number <- mutect_after_vaf[sample_names==sample & ensembl_id==ensembl_id, .(ensembl_mut_numer)]$ensembl_mut_numer[1]
+    sample_genome_wide_mut_number <- mutect_after_vaf[sample_names==sample & ensembl_id==ensembl_id, .(sample_genome_wide_mut_number)]$sample_genome_wide_mut_number[1]
+    sample_genome_wide_mut_callable <- mutect_after_vaf[sample_names==sample & ensembl_id==ensembl_id, .(sample_genome_wide_mut_callable)]$sample_genome_wide_mut_callable[1]
     info <- data.table(sample_names = sample, 
                        gene_name= i, 
                        ensembl_id = ensembl_id,
                        tumor_type = tumor,
-                       p_value = p_value)
+                       p_value = p_value,
+                       ensembl_mut_number =ensembl_mut_number,
+                       ensembl_callable = ensembl_callable,
+                       sample_genome_wide_mut_number = sample_genome_wide_mut_number,
+                       sample_genome_wide_mut_callable = sample_genome_wide_mut_callable
+                       )
     info_sum <- rbindlist(list(info_sum,info))
   }
   info_sum <- info_sum[order(p_value)]
@@ -218,7 +230,7 @@ for (each_tumor in tumor_type) {
 }
 
 fwrite(total_variant_summary,
-       file = paste(base_dir,"01_31","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_0129.gz",sep = seperator)
+       file = paste(base_dir,"01_31","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator)
        ,col.names = T,row.names = F,
        eol = "\n",
        quote = F,
@@ -309,12 +321,12 @@ for (each_tumor in tumor_type) {
   total_gene_summary <- rbindlist(list(total_gene_summary, each_tumor_info_sum))
 }
 
-check <- total_ensembl_summary[BH_pvalue<0.2,]
+check <- total_gene_summary[BH_pvalue<0.2,]
 
 
 
-fwrite(total_ensembl_summary,
-       file = paste(base_dir,"01_31","pure_gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",sep = seperator)
+fwrite(total_gene_summary,
+       file = paste(base_dir,"01_31","pure_gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       eol = "\n",
@@ -324,13 +336,13 @@ fwrite(total_ensembl_summary,
 # 
 # ### check the results
 
-variant_sample <- fread(paste(base_dir,"01_27","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",
+variant_sample <- fread(paste(base_dir,"01_31","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",
                               sep = seperator))
-variant_tumor <- fread(paste(base_dir,"01_27","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",
+variant_tumor <- fread(paste(base_dir,"01_31","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",
                              sep = seperator))
-gene_sample <- fread(paste(base_dir,"01_27","gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",
+gene_sample <- fread(paste(base_dir,"01_31","pure_gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",
                            sep = seperator))
-gene_tumor <- fread(paste(base_dir,"01_27","gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_27.gz",
+gene_tumor <- fread(paste(base_dir,"01_31","pure_gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_01_31.gz",
                           sep = seperator))
 
 pik3_sign <- unique(variant_sample[tumor_type=="HSA" & gene_name=="PIK3CA",.(sample_names)])
