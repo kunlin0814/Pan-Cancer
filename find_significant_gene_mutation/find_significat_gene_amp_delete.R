@@ -14,10 +14,12 @@ whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/ar
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"final_Pan_cancer_amp_delete.gz",sep = seperator))
-#colnames(amp_delete) <- c("sample_names","gene_name","mutation_type","CNA","tumor_type")
+amp_delete <- fread(paste(base_dir,"total_samples_amp_delete.txt",sep = seperator))
 
-#amp_delete <- amp_delete[!sample_names %in% exclude,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
+colnames(amp_delete) <- c("sample_names","gene_name","mutation_type","CNA","tumor_type")
+
+amp_delete <- amp_delete[!sample_names %in% exclude]
+amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
 
 
 tumor_type <- sort(unique(amp_delete$tumor_type))
@@ -100,24 +102,61 @@ fwrite(total_gene_summary, file = paste(base_dir, "Pan_cancer_amp_delete.gz",
        col.names = T, row.names = F, quote = F,sep = "\t",
        eol = "\n", compress = "gzip")
        
-
+total_gene_summary
 ### Analyzed the results
 # 
-# amp_delete <- fread(paste(base_dir, "Pan_cancer_amp_delete.gz",
-#                           sep = seperator))
-# 
-# different_type <- as.data.table(str_split_fixed(amp_delete$gene_mut,"_",2))
-# colnames(different_type) <- c("gene","mut_type")
-# amp_delete <- cbind(amp_delete,different_type)
+
+amp_delete <- fread(paste(base_dir, "Pan_cancer_amp_delete.gz",sep =seperator))
+
+different_type <- as.data.table(str_split_fixed(amp_delete$gene_mut,"_",2))
+colnames(different_type) <- c("gene","mut_type")
+amp_delete <- cbind(amp_delete,different_type)
 # 
 # fwrite(amp_delete, file = paste(base_dir, "final_Pan_cancer_amp_delete.gz",
 #                                         sep = seperator),
 #        col.names = T, row.names = F, quote = F,sep = "\t",
 #        eol = "\n", compress = "gzip")
 
+
+
+
+
+#### adjust pvalue with BH methods ####
 amp_delete <- fread(paste(base_dir, "final_Pan_cancer_amp_delete.gz",
                           sep = seperator))
 
-top_10_mut <- amp_delete[, head(.SD, 10), by=.(tumor_type)]
+total_summary <- NULL
 
+tumor_type <- sort(unique(amp_delete$tumor_type))
+
+for (each_tumor in tumor_type) {
+  each_tumor_info <- amp_delete[tumor_type==each_tumor]
+  mut_type <- sort(unique(each_tumor_info[,.(mut_type)]$mut_type))
+  each_tumor_sum <- NULL
+  for (each_mut_type in mut_type){
+    
+    each_mut_type_tumor <- each_tumor_info[mut_type==each_mut_type,]
+    each_mut_type_tumor <- each_mut_type_tumor[order(p_value)]
+    each_mut_type_tumor$BH_pvalue <- p.adjust(each_mut_type_tumor$p_value, method = "BH")
+    each_tumor_sum <- rbindlist(list(each_tumor_sum,each_mut_type_tumor))
+    
+  }
+  total_summary <- rbindlist(list(total_summary,each_tumor_sum))
+}
+
+# 
+# fwrite(total_summary, file = paste(base_dir, "With_BH_final_Pan_cancer_amp_delete.gz",
+#                                         sep = seperator),
+#        col.names = T, row.names = F, quote = F,sep = "\t",
+#        eol = "\n", compress = "gzip")
+
+### Analyzed the final results ###
+
+amp_delete <- fread(paste(base_dir, "With_BH_final_Pan_cancer_amp_delete_02_01.gz", sep = seperator))
+                                    
+mut_type <- amp_delete[ ,.N, keyby = .(tumor_type,mut_type)]
+
+sig_amp_del <- amp_delete[tumor_type=="OM" & BH_pvalue<0.05,]
+
+top5 <- sig_amp_del[,head(.SD,5),keyby = tumor_type] 
 

@@ -55,9 +55,31 @@ write.table(WGS_overlap_st, file = "C:/Users/abc73/Desktop/overlap_WGS_info.txt"
             sep = "\n", col.names = T, row.names = F, quote = F)
 
 ## from excel WESQCdata
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+        sep="", collapse=" ")
+}
+
+a <- c("a book")
+s <- strsplit(a, " ")[[1]]
+
 whole_table <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
 whole_table <- setDT(whole_table)
-length(unique(whole_table$Case_ID))
+Breed <- as.data.table(table(whole_table$Breeds))
+
+breed_info <- sapply(whole_table$Breeds, simpleCap)
+whole_table$Breeds <- breed_info
+meta_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/metadata_summary_02_01_2021.txt")
+colnames(meta_table)[1] <- "sample_names"
+target_col <- c("DiseaseAcronym1","DiseaseAcronym2","DiseaseSubtype/Tissue")
+
+meta_file <- lapply(whole_table$Case_ID,FUN = match_table, column = target_col,table = meta_table)
+
+whole_table$DiseaseAcronym2 <- meta_file
+write.table(whole_table, file = "C:/Users/abc73/Desktop/whole_new_wgs_with_clean_breed.txt",
+            sep = "\t", col.names = T, row.names = F, quote = F)
+# length(unique(whole_table$Case_ID))
 
 pass <- unique(whole_table[The_reason_to_exclude=="Pass QC" & Case_ID!="No-Pair",])
 pass <- setDT(pass)
