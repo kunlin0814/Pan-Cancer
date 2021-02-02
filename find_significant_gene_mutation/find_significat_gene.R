@@ -34,13 +34,15 @@ mutect_after_vaf$genome_TMB <- (mutect_after_vaf$sample_genome_wide_mut_number*1
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
 
 table_total_sample <- mutect_after_vaf$sample_names
-
+subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_table)
 breed <- sapply(table_total_sample,FUN = match_table, column="Breeds",table=Breed_info)
+mutect_after_vaf$Subtype <- subtype
 mutect_after_vaf$Breeds <- breed
 mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 
-# write.table(mutect_after_vaf, file = "C:/Users/abc73/Desktop/Burair_WithBreeds_QCpass_filtering3_mutect_after_vaf.txt",
-#             sep ="\t", col.names = T, row.names =F, quote = F )
+
+write.table(mutect_after_vaf, file = "C:/Users/abc73/Desktop/Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_01.txt",
+            sep ="\t", col.names = T, row.names =F, quote = F )
 
 # a <- unique(mutect_after_vaf$ensembl_id)
 # write.table(a, file = "C:/Users/abc73/Desktop/total_target_ensmbl_id",
