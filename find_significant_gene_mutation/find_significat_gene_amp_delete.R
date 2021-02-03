@@ -14,14 +14,25 @@ whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/ar
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"total_samples_amp_delete.txt",sep = seperator))
+amp_delete <- fread(paste(base_dir,"With_subtype_no_pesudo_samples_amp_delete_0202.txt",sep = seperator))
 
-colnames(amp_delete) <- c("sample_names","gene_name","mutation_type","CNA","tumor_type")
+#colnames(amp_delete) <- c("sample_names","gene_name","mutation_type","CNA","tumor_type")
+# 
+# amp_delete <- amp_delete[!sample_names %in% exclude]
+# amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
+# 
+# ## append subtype 
+# table_total_sample <- amp_delete$sample_names
+# subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_table)
+# amp_delete$subtype <- subtype
+# ## get rid of pseuo genes
+# amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
+# 
+# fwrite(amp_delete,file = paste(base_dir,"With_subtype_no_pesudo_samples_amp_delete_0202.txt",sep = seperator),
+#        col.names = T, row.names = F, quote = F, sep = "\t",
+#        eol = "\n")
 
-amp_delete <- amp_delete[!sample_names %in% exclude]
-amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
-
-
+################ main code ####################
 tumor_type <- sort(unique(amp_delete$tumor_type))
 ## use which to find index and check how many samples ( can't use unique gene to find)
 total_gene_summary <- NULL
