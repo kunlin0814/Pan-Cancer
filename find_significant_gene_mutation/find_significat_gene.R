@@ -1,16 +1,16 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  #"/Volumes/Research/GitHub/R_util/my_util.R")
-base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  "/Volumes/Research/GitHub/R_util/my_util.R")
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
-             #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
+whole_wes_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+             "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -379,10 +379,10 @@ fwrite(total_gene_summary,
 # 
 # ### check the results
 
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+# source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 #"/Volumes/Research/GitHub/R_util/my_util.R")
-base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
 
@@ -395,7 +395,18 @@ gene_sample <- fread(paste(base_dir,"02_01","gene_nonsyn_samplewide_p_value_VAF_
 gene_tumor <- fread(paste(base_dir,"02_01","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_01.gz",
                           sep = seperator))
 
-mutect_after_vaf[gene_name=="NRAS" & tumor_type=="HSA",.(sample_names)]
+
+
+# top_10_sample_variants <- variant_sample[, head(.SD, 10), by=.(tumor_type)]
+# top_10_sample_genes <- gene_sample[, head(.SD, 10), by=.(tumor_type)]
+top_5_tumor_variants <- variant_tumor[, head(.SD, 5), by=tumor_type]
+top_5_tumor_gene <- gene_tumor[, head(.SD, 5), by=tumor_type]
+
+
+
+gene_tumor[tumor_type=="GLM" & gene_name=="PIK3CA"]
+
+mutect_after_vaf[gene_name=="PIK3CA" & tumor_type=="GLM",.(sample_names)]
 
 gene_sign <- gene_tumor[tumor_type=="HSA"]
 pik3_sample_num <- variant_sample[gene_name=="PIK3CA" & p_value<0.05, .(p_value,BH_pvalue), keyby = .(tumor_type,sample_names)]
