@@ -38,7 +38,7 @@ mutect_after_vaf <- fread(paste(base_dir,"02_01","Burair_WithBreeds_Subtypes_QCp
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 
 total_sample <- unique( mutect_after_vaf$sample_names)
-### samplewise variants ##
+### samplewide variants ##
 total_info_sum <- NULL
 for (index in 1:length(total_sample)) {
   print(paste("processing the",index,"sample, with total samples",length(total_sample),sep = " " ))
@@ -64,7 +64,7 @@ for (index in 1:length(total_sample)) {
 }
 
 fwrite(total_info_sum,
-       file = paste(base_dir,"02_01","variant_nonsyn_samplewise_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
+       file = paste(base_dir,"02_01","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
        ,col.names = T,
        row.names = F,
        quote = F,
@@ -73,13 +73,14 @@ fwrite(total_info_sum,
        sep ="\t")
 
 
-### samplewise gene_name ##
+### samplewide gene_name ##
 
 gene_total_info_sum <- NULL
 for (index in 1:length(total_sample)) {
   print(paste("processing the",index,"sample, with total samples",length(total_sample),sep = " " ))
   sample <- total_sample[index]
   info_sum <- NULL
+  subtype <-  mutect_after_vaf[sample_names==sample,.(Subtype)]$Subtype[1]
   tumor <-  mutect_after_vaf[sample_names==sample,.(tumor_type)]$tumor_type[1]
   gene_name <- mutect_after_vaf[sample_names==sample,.(gene_name)]
   each_sample_gene_id <- sort(unique(gene_name[["gene_name"]]))
@@ -104,6 +105,7 @@ for (index in 1:length(total_sample)) {
                        gene_name= i, 
                        ensembl_id = ensembl_id,
                        tumor_type = tumor,
+                       subtype = subtype,
                        p_value = p_value,
                        ensembl_mut_number =ensembl_mut_number,
                        ensembl_callable = ensembl_callable,
@@ -123,7 +125,7 @@ gene_total_info_sum$genome_TMB <- (gene_total_info_sum$sample_genome_wide_mut_nu
 
 
 fwrite(gene_total_info_sum,
-       file = paste(base_dir,"02_01","gene_nonsym_samplewise_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
+       file = paste(base_dir,"02_01","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
@@ -135,29 +137,27 @@ fwrite(gene_total_info_sum,
 MT <- mutect_after_vaf[tumor_type=="MT",]
 
 #mutect_after_vaf$sample_names[sample_loc])
-mutect_after_vaf[tumor_type=="MT",.(ensembl_mut_numer)][a]$ensembl_mut_numer
+
+sig_variants_sample_wide <- fread(file = paste(base_dir,"02_01","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator))
+
+sig_gene_sample_wide <- fread(paste(base_dir,"02_01","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator))
 
 
-sig_variants_sample_wise <- fread(file = paste(base_dir,"02_01","variant_nonsyn_samplewise_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator))
+## Tumorwide
+tumor_type <- unique(mutect_after_vaf$Subtype)
 
-sig_gene_sample_wise <- fread(paste(base_dir,"02_01","gene_nonsym_samplewise_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator))
-
-sig_gene <- unique(sig_gene_sample_wise[BH_pvalue < 0.05 & tumor_type=="MT",.(gene_name)]$gene_name)
-
-## TumorWise
-tumor_type <- unique(mutect_after_vaf$tumor_type)
-### Tumorwise variants
+### Tumorwide variants
 
 total_variant_summary <- NULL
 for (each_tumor in tumor_type) {
   current <- match(each_tumor, tumor_type,nomatch = 0)
   print(paste("Processing the ", current, "tumors with total numbers of tumor", length(tumor_type),sep = " "))
   each_tumor_info_sum <- NULL
-  each_tumor_info <- mutect_after_vaf[tumor_type == each_tumor, ]
+  each_tumor_info <- mutect_after_vaf[Subtype == each_tumor, ]
   each_tumor_variants <- each_tumor_info$chrom_loc
   
-  # the sig variants come from samplewise vaf comparision 
-  each_tumor_uniq_sig_variants <- unique(sig_variants_sample_wise[BH_pvalue < 0.05 & tumor_type==each_tumor, .(chrom_loc)]$chrom_loc)
+  # the sig variants come from samplewide vaf comparision 
+  each_tumor_uniq_sig_variants <- unique(sig_variants_sample_wide[BH_pvalue < 0.05 & Subtype==each_tumor, .(chrom_loc)]$chrom_loc)
   
   ## vectorized the value I want to append later
   tumor_type_sum <- character(length(each_tumor_uniq_sig_variants))
@@ -193,8 +193,7 @@ for (each_tumor in tumor_type) {
     
     total_numbersamples_withgene <- total_numbersamples_withgene + numbersamples_withgene
     total_numbersamples_withoutgene <- total_numbersamples_withoutgene + numbersamples_withoutgene
-    
-    sum(MT[chrom_loc=="chr34_12675674",.(ensembl_callable)])
+  
     target_samples_mut_number <-  sum(each_tumor_info[chrom_loc==each_variant,.(ensembl_mut_number)])
     target_samples_mut_callable <-  sum(each_tumor_info[chrom_loc==each_variant,.(ensembl_callable)])
     
@@ -253,11 +252,9 @@ for (each_tumor in tumor_type) {
   total_variant_summary <- rbindlist(list(total_variant_summary, each_tumor_info_sum))
 }
 
-check <- total_variant_summary[tumor_type=="MT",]
-check <- MT[chrom_loc=="chr27_22261798",.(sample_names)]
 
 fwrite(total_variant_summary,
-       file = paste(base_dir,"02_01","variant_tumorwise_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
+       file = paste(base_dir,"02_01","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
        ,col.names = T,row.names = F,
        eol = "\n",
        quote = F,
@@ -265,33 +262,46 @@ fwrite(total_variant_summary,
        sep ="\t")
 
 
-## TumorWise
-tumor_type <- unique(sig_gene$tumor_type)
-### Tumorwise genes
+## Tumorwide
+## 2/2
+## use mutect_vaf input file to identify the occurence 
+## for variants and genes, if the variants or gene are not sig if all samples, then the variants and gene won't be choosed
+## The variants or genes must be sig in at least one samples, so that it will be choosed 
+
+
+tumor_type <- unique(mutect_after_vaf$Subtype)
+### Tumorwide genes
 total_gene_summary <- NULL
 for (each_tumor in tumor_type) {
   current <- match(each_tumor, tumor_type,nomatch = 0)
   print(paste("Processing the ", current, "tumors with total numbers of tumor", length(tumor_type),sep = " "))
   each_tumor_info_sum <- NULL
-  each_tumor_info <- sig_gene[tumor_type == each_tumor, ]
+  each_tumor_info <- mutect_after_vaf[Subtype == each_tumor, ]
   each_tumor_genes <- each_tumor_info$gene_name
-  each_tumor_uniq_genes <- unique(each_tumor_genes)
-  tumor_type_sum <- character(length(each_tumor_uniq_genes))
-  numbersamples_withgene_sum <-numeric(length(each_tumor_uniq_genes))
-  numbersamples_withoutgene_sum <- numeric(length(each_tumor_uniq_genes))
-  total_others_sum <- numeric(length(each_tumor_uniq_genes))
-  total_others_without_sum <- numeric(length(each_tumor_uniq_genes))
+  each_tumor_sign_uniq_genes <- unique(sig_gene_sample_wide[BH_pvalue < 0.05 & subtype==each_tumor, .(gene_name)]$gene_name)
+  
+  tumor_type_sum <- character(length(each_tumor_sign_uniq_genes))
+  numbersamples_withgene_sum <-numeric(length(each_tumor_sign_uniq_genes))
+  numbersamples_withoutgene_sum <- numeric(length(each_tumor_sign_uniq_genes))
+  total_others_sum <- numeric(length(each_tumor_sign_uniq_genes))
+  total_others_without_sum <- numeric(length(each_tumor_sign_uniq_genes))
   each_tumor_total_sample <-   length(unique(each_tumor_info$sample_names))
-  ensmbl_id_sum <- character(length(each_tumor_uniq_genes))
-  gene_name_sum <- character(length(each_tumor_uniq_genes))
+  ensmbl_id_sum <- character(length(each_tumor_sign_uniq_genes))
+  gene_name_sum <- character(length(each_tumor_sign_uniq_genes))
+  sum_target_samples_mut_number <- numeric(length(each_tumor_sign_uniq_genes))
+  sum_target_samples_mut_callable <- numeric(length(each_tumor_sign_uniq_genes))
+  sum_target_sample_mut_genome_mut_number <- numeric(length(each_tumor_sign_uniq_genes))
+  sum_target_sample_mut_genome_mut_callable<- numeric(length(each_tumor_sign_uniq_genes))
+  
+  
   total_numbersamples_withgene <- 0
   total_numbersamples_withoutgene <- 0 
   
   # calculate total x and total y
-  for (index in 1:length(each_tumor_uniq_genes)) {
+  for (index in 1:length(each_tumor_sign_uniq_genes)) {
     #current <- match(each_gene, each_tumor_genes,nomatch = 0)
-    print(paste("Processing the ", index, "genes, with total_genes", length(each_tumor_uniq_genes),sep = " "))
-    each_gene <- each_tumor_uniq_genes[index]
+    print(paste("Processing the ", index, "genes, with total_genes", length(each_tumor_sign_uniq_genes),sep = " "))
+    each_gene <- each_tumor_sign_uniq_genes[index]
     each_ensembl <- each_tumor_info[gene_name==each_gene]$ensembl_id[1]
     total_others <- 0
     total_others_without <- 0
@@ -299,21 +309,26 @@ for (each_tumor in tumor_type) {
     
     #length(unique(each_tumor_info[gene_mutation == each_gene, ]$sample_names))
     numbersamples_withgene <- length(unique(each_tumor_info$sample_names[sample_loc]))
-    #length(which(each_gene == each_tumor_genes))
-    #length(unique(each_tumor_info[gene_mutation == each_gene, ]$sample_names))
-    
     numbersamples_withoutgene <- each_tumor_total_sample- numbersamples_withgene
     
     total_numbersamples_withgene <- total_numbersamples_withgene+numbersamples_withgene
     total_numbersamples_withoutgene <- total_numbersamples_withoutgene+numbersamples_withoutgene
     
+    target_samples_mut_number <-  sum(each_tumor_info[chrom_loc==each_gene,.(ensembl_mut_number)])
+    target_samples_mut_callable <-  sum(each_tumor_info[chrom_loc==each_gene,.(ensembl_callable)])
+    
+    target_sample_mut_genome_mut_number <- sum(each_tumor_info[chrom_loc==each_gene,.(sample_genome_wide_mut_number)])
+    target_sample_mut_genome_mut_callable <- sum(each_tumor_info[chrom_loc==each_gene,.(sample_genome_wide_mut_callable)])
     
     gene_name_sum[index] <- each_gene
     ensmbl_id_sum[index] <- each_ensembl
     tumor_type_sum[index] <- each_tumor
     numbersamples_withgene_sum[index] <- numbersamples_withgene
     numbersamples_withoutgene_sum[index] <- numbersamples_withoutgene
-    
+    sum_target_samples_mut_number[index] <- target_samples_mut_number
+    sum_target_samples_mut_callable[index] <- target_samples_mut_callable
+    sum_target_sample_mut_genome_mut_number[index] <- target_sample_mut_genome_mut_number
+    sum_target_sample_mut_genome_mut_callable[index] <- target_sample_mut_genome_mut_callable
     
   }
   total_others_sum <- total_numbersamples_withgene -numbersamples_withgene_sum
@@ -328,10 +343,14 @@ for (each_tumor in tumor_type) {
                                      numbersamples_withgene = numbersamples_withgene_sum,
                                      numbersamples_withoutgene = numbersamples_withoutgene_sum,
                                      total_others = total_others_sum,
-                                     total_others_withoutgene = total_others_without_sum
-  )
+                                     total_others_withoutgene = total_others_without_sum,
+                                     total_gene_mut_number = sum_target_samples_mut_number,
+                                     total_gene_mut_callable = sum_target_samples_mut_callable,
+                                     target_sample_genome_mut_number = sum_target_sample_mut_genome_mut_number,
+                                     target_sample_genome_mut_callable = sum_target_sample_mut_genome_mut_callable)
   
-  p_value_sum <- numeric(length(each_tumor_uniq_genes))
+  
+  p_value_sum <- numeric(length(each_tumor_sign_uniq_genes))
   for ( i in 1:nrow(each_tumor_info_sum)) {
     
     target <- as.matrix(each_tumor_info_sum[i,.(numbersamples_withgene,numbersamples_withoutgene)])
@@ -348,12 +367,9 @@ for (each_tumor in tumor_type) {
   total_gene_summary <- rbindlist(list(total_gene_summary, each_tumor_info_sum))
 }
 
-check <- total_gene_summary[BH_pvalue<0.2,]
-
-
 
 fwrite(total_gene_summary,
-       file = paste(base_dir,"02_01","gene_tumorwise_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
+       file = paste(base_dir,"02_01","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       eol = "\n",
@@ -363,16 +379,25 @@ fwrite(total_gene_summary,
 # 
 # ### check the results
 
-variant_sample <- fread(paste(base_dir,"02_01","variant_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_02_01.gz",
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+#"/Volumes/Research/GitHub/R_util/my_util.R")
+base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
+seperator <- "/"
+
+
+variant_sample <- fread(paste(base_dir,"02_01","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_01.gz",
                               sep = seperator))
-variant_tumor <- fread(paste(base_dir,"02_01","variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_02_01.gz",
+variant_tumor <- fread(paste(base_dir,"02_01","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_01.gz",
                              sep = seperator))
-gene_sample <- fread(paste(base_dir,"02_01","gene_samplewise_p_value_Filtering3_VAF_Mutect_orientBias3_02_01.gz",
+gene_sample <- fread(paste(base_dir,"02_01","gene_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_01.gz",
                            sep = seperator))
-gene_tumor <- fread(paste(base_dir,"02_01","gene_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3_02_01.gz",
+gene_tumor <- fread(paste(base_dir,"02_01","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_01.gz",
                           sep = seperator))
 
-gene_sign <- gene_tumor[BH_pvalue<0.05,]
+mutect_after_vaf[gene_name=="NRAS" & tumor_type=="HSA",.(sample_names)]
+
+gene_sign <- gene_tumor[tumor_type=="HSA"]
 pik3_sample_num <- variant_sample[gene_name=="PIK3CA" & p_value<0.05, .(p_value,BH_pvalue), keyby = .(tumor_type,sample_names)]
 tp53_sample_num <- variant_sample[gene_name=="TP53" & p_value<0.05, .N, keyby = .(tumor_type)]
 
@@ -382,14 +407,14 @@ tp53_sign <- unique(variant_sample[tumor_type=="HSA" & gene_name=="TP53",.(sampl
 
 freq <- as.data.frame(table(tumor$chrom_loc))
 
-# file <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1/01_26/variant_tumorwise_p_value_Filtering3_VAF_Mutect_orientBias3.gz") 
+# file <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/Burair_filtering3/Mutect1/01_26/variant_tumorwide_p_value_Filtering3_VAF_Mutect_orientBias3.gz") 
 
 
 # # 
-# sample_variant <- fread(paste(base_dir,"significant","clean_variant_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-# sample_gene <- fread(paste(base_dir,"significant","clean_gene_samplewise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-# tumor_variant <- fread(paste(base_dir,"significant","clean_variant_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
-# tumor_gene <- fread(paste(base_dir,"significant","clean_gene_tumorwise_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+# sample_variant <- fread(paste(base_dir,"significant","clean_variant_samplewide_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+# sample_gene <- fread(paste(base_dir,"significant","clean_gene_samplewide_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+# tumor_variant <- fread(paste(base_dir,"significant","clean_variant_tumorwide_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
+# tumor_gene <- fread(paste(base_dir,"significant","clean_gene_tumorwide_p_value_total_final_Filtering3_VAF_Mutect_orientBias3.gz",sep = seperator))
 # 
 # a <- sample_variant[sample_names=="004",]
 # 
