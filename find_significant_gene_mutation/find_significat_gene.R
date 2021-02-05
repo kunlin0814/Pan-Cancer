@@ -1,16 +1,16 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  "/Volumes/Research/GitHub/R_util/my_util.R")
-base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  #"/Volumes/Research/GitHub/R_util/my_util.R")
+base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
-             "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
+whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+             #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -25,6 +25,7 @@ Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/
 Breed_info <- setDT(Breed_info)
 mutect_after_vaf <- fread(paste(base_dir,"02_01","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_01.txt",sep =seperator))
 
+
 # subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_table)
 # breed <- sapply(table_total_sample,FUN = match_table, column="Breeds",table=Breed_info)
 # mutect_after_vaf$Subtype <- subtype
@@ -36,6 +37,7 @@ mutect_after_vaf <- fread(paste(base_dir,"02_01","Burair_WithBreeds_Subtypes_QCp
 
 ## get_rid of syn mut
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
+
 
 total_sample <- unique( mutect_after_vaf$sample_names)
 ### samplewide variants ##
@@ -74,7 +76,7 @@ fwrite(total_info_sum,
 
 
 ### samplewide gene_name ##
-
+total_sample <- unique( mutect_after_vaf$sample_names)
 gene_total_info_sum <- NULL
 for (index in 1:length(total_sample)) {
   print(paste("processing the",index,"sample, with total samples",length(total_sample),sep = " " ))
@@ -88,7 +90,7 @@ for (index in 1:length(total_sample)) {
     ensembl_id <- mutect_after_vaf[sample_names==sample & gene_name==i, .(ensembl_id)]$ensembl_id[1]
     target <- mutect_after_vaf[sample_names==sample & gene_name==i, .(tRef,tAlt)]
     target_combine <- target[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
-    
+    mut_status <- mutect_after_vaf[sample_names==sample & gene_name==i, .(status)]$status[1]
     # others gene_name!=i
     others <- mutect_after_vaf[sample_names==sample & gene_name!=i, .(tRef,tAlt)]
     other_combine <- others[, .(tRef = sum(tRef), tAlt = sum(tAlt)),]
@@ -110,7 +112,8 @@ for (index in 1:length(total_sample)) {
                        ensembl_mut_number =ensembl_mut_number,
                        ensembl_callable = ensembl_callable,
                        sample_genome_wide_mut_number = sample_genome_wide_mut_number,
-                       sample_genome_wide_mut_callable = sample_genome_wide_mut_callable
+                       sample_genome_wide_mut_callable = sample_genome_wide_mut_callable,
+                       mut_type = mut_status
                        )
     info_sum <- rbindlist(list(info_sum,info))
   }
@@ -122,14 +125,14 @@ for (index in 1:length(total_sample)) {
 gene_total_info_sum$gene_TMB <- (gene_total_info_sum$ensembl_mut_number*1000000)/gene_total_info_sum$ensembl_callable
 gene_total_info_sum$genome_TMB <- (gene_total_info_sum$sample_genome_wide_mut_number*1000000)/gene_total_info_sum$sample_genome_wide_mut_callable
 
+taifang_data <- gene_total_info_sum[,.(sample_names,gene_name,tumor_type,mut_type)]
 
 
-fwrite(gene_total_info_sum,
-       file = paste(base_dir,"02_01","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_01.gz",sep = seperator)
+fwrite(taifang_data,
+       file = paste(base_dir,"02_05","target_col_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_01.txt",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
-       compress = "gzip",
        sep ="\t")
 
 

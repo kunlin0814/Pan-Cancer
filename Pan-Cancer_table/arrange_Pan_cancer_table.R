@@ -21,15 +21,6 @@ Path <- function(path = "clipboard") {
 Path()
 
 
-## function match_table
-
-match_table <- function(case_id, column, table){
-  info <- unlist(table[Case_ID == case_id, column, with = F])
-  if (length(info)==0){
-    print(case_id)
-  }
-  return (info)
-}
 
 ## bioproject
 
@@ -145,7 +136,7 @@ for (i in total_samples){
 }
 breed_result$Symbol <- symbol
 
-fwrite(breed_result, file = "C:/Users/abc73/Desktop/WES_57WGS_breeds_main.txt",
+fwrite(breed_result, file = "C:/Users/abc73/Desktop/allWES_67WGSbreeds_assign.txt",
        col.names = T, row.names = F, quote = F, sep = "\t",na = "NA")
 
 assign_final_breeds <- function(meta_data){
