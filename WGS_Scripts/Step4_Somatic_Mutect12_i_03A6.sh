@@ -215,6 +215,6 @@ $strelka_out/${sample_name}/runWorkflow.py -m local -j 20
 ## limit strelka result into CDS region
 ## WGS current don't consdier CDS
 
-python2 $script/Limit_vcf_to_CDS.py $strelka_out/results/variants/somatic.indels.vcf.gz ${reference}/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list
+python2 $script/Limit_vcf_to_CDS.py $strelka_out/${sample_name}/results/variants/somatic.indels.vcf.gz ${reference}/Canis_familiaris.CanFam3.1.99.gtf-chr1-38X-CDS-forDepthOfCoverage.interval_list
 
 "
