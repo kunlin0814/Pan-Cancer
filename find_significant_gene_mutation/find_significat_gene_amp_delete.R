@@ -3,32 +3,57 @@ library(tidyverse)
 library(readxl)
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 #"/Volumes/Research/GitHub/R_util/my_util.R")
-base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
+base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
-"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_clean_breed_table.txt")       
+# dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
-exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"With_subtype_no_pesudo_samples_amp_delete_0202.txt",sep = seperator))
+
+exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
+amp_delete <- fread(paste(base_dir,"02_05","With_subtype_no_pesudo_samples_amp_delete_0205.txt",sep = seperator))
+amp_delete <- amp_delete[!sample_names %in% exclude]
+
 
 #colnames(amp_delete) <- c("sample_names","gene_name","mutation_type","CNA","tumor_type")
-# 
-# amp_delete <- amp_delete[!sample_names %in% exclude]
+
 # amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
 # 
-# ## append subtype 
+
+
+## append column and write the output
+# # colnames(dataset)[2] <- "sample_names"
+# # taifang <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp/Taifang/0206/target_col_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_01.txt")
+# # subtype <- match_vector_table(taifang$sample_names, "DiseaseAcronym2",
+# #                               table=whole_wes_clean_breed_table, string_value = T)
+# #
+# #
+# # datatype <- match_vector_table(taifang$sample_names, "Dataset",
+# #                               table=dataset, string_value = T)
+# # taifang$DataType <- datatype
+# 
+# fwrite(taifang,file = paste(base_dir,"02_05","target_col_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_05.txt",sep = seperator),
+#        col.names = T, row.names = F, quote = F, sep = "\t",
+#        eol = "\n")
+
 # table_total_sample <- amp_delete$sample_names
-# subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_table)
+# subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_clean_breed_table)
 # amp_delete$subtype <- subtype
 # ## get rid of pseuo genes
 # amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
 # 
-# fwrite(amp_delete,file = paste(base_dir,"With_subtype_no_pesudo_samples_amp_delete_0202.txt",sep = seperator),
+#breed <- sapply(amp_delete$sample_names,FUN = match_table, column="Breed_info",table=whole_wes_clean_breed_table)
+
+# breed <- match_vector_table(amp_delete$sample_names, "Breed_info", 
+#                             table=whole_wes_clean_breed_table, string_value = T)
+# amp_delete$Breeds <- breed
+# 
+# fwrite(amp_delete,file = paste(base_dir,"02_05","With_subtype_no_pesudo_samples_amp_delete_0205.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t",
 #        eol = "\n")
 
