@@ -9,35 +9,37 @@ seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
-             #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
-exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+
+exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 
 ## check duplicated
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
 
 # 
-Breed_info <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_WGS_merge.xlsx",
-                         sheet ="WES_WGS")
 
-Breed_info <- setDT(Breed_info)
-mutect_after_vaf <- fread(paste(base_dir,"02_01","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_01.txt",sep =seperator))
-
-
-# subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_table)
-# breed <- sapply(table_total_sample,FUN = match_table, column="Breeds",table=Breed_info)
-# mutect_after_vaf$Subtype <- subtype
-# mutect_after_vaf$Breeds <- breed
-# mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
-# mutect_after_vaf$gene_TMB <- (mutect_after_vaf$ensembl_mut_numer*1000000)/mutect_after_vaf$ensembl_callable
-# mutect_after_vaf$genome_TMB <- (mutect_after_vaf$sample_genome_wide_mut_number*1000000)/mutect_after_vaf$sample_genome_wide_mut_callable
-# mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
-
-## get_rid of syn mut
+mutect_after_vaf <- fread(paste(base_dir,"02_05","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_05.txt",sep =seperator))
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
+mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude,]
 
+### append column ###
+
+# subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_clean_breed_table)
+# breed <- sapply(mutect_after_vaf$sample_names,FUN = match_table, column="Breed_info",table=whole_wes_clean_breed_table)
+# mutect_after_vaf$Breeds <- breed
+# # mutect_after_vaf$Subtype <- subtype
+# # mutect_after_vaf$Breeds <- breed
+# # mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
+# # mutect_after_vaf$gene_TMB <- (mutect_after_vaf$ensembl_mut_numer*1000000)/mutect_after_vaf$ensembl_callable
+# # mutect_after_vaf$genome_TMB <- (mutect_after_vaf$sample_genome_wide_mut_number*1000000)/mutect_after_vaf$sample_genome_wide_mut_callable
+# # mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
+# 
+# fwrite(mutect_after_vaf, file = paste(base_dir,"02_05","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_05.txt",sep = seperator),
+#        col.names = T, row.names = F, quote = F, sep = "\t")
+
+### append column end ###
 
 total_sample <- unique( mutect_after_vaf$sample_names)
 ### samplewide variants ##

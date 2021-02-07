@@ -101,6 +101,10 @@ whole_wes_wgs_table <- read.table("clipboard",sep = "\t", header = T,stringsAsFa
 whole_wes_wgs_table <- setDT(whole_wes_wgs_table)
 
 
+
+
+
+
 breed_result <- read.table("clipboard",sep ="\t", header = T, stringsAsFactors = F)
 breed_result <- setDT(breed_result)
 total_samples <- unique(breed_result$SampleName)
