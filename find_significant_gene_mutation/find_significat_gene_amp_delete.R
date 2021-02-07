@@ -16,7 +16,7 @@ whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer
 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
-amp_delete <- fread(paste(base_dir,"02_05","With_subtype_no_pesudo_samples_amp_delete_0205.txt",sep = seperator))
+amp_delete <- fread(paste(base_dir,"02_06","With_subtype_no_pesudo_samples_amp_delete_0206.txt",sep = seperator))
 amp_delete <- amp_delete[!sample_names %in% exclude]
 
 
