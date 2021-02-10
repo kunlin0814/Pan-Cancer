@@ -25,8 +25,10 @@ amp_delete <- amp_delete[!sample_names %in% exclude]
 # amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mutation_type,sep = "_")]
 # 
 
+dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
 ## append column and write the output
+## 
 # # colnames(dataset)[2] <- "sample_names"
 # # taifang <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp/Taifang/0206/target_col_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_01.txt")
 # # subtype <- match_vector_table(taifang$sample_names, "DiseaseAcronym2",

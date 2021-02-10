@@ -100,13 +100,25 @@ library(data.table)
 whole_wes_wgs_table <- read.table("clipboard",sep = "\t", header = T,stringsAsFactors = F)
 whole_wes_wgs_table <- setDT(whole_wes_wgs_table)
 
+dis <- unique(whole_wes_wgs_table[dataset=="Validation", .(Case_ID,Breed_info)])
+brred_summary <- as.data.frame(table(dis$Breed_info))
+write.table(brred_summary, file = 'C:/Users/abc73/Desktop/val_breed.txt',
+            sep = "\t", row.names = F, col.names = T, quote = F)
 
 
 
-
+coverage_file <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/sample_coverage_classify.txt")
 
 breed_result <- read.table("clipboard",sep ="\t", header = T, stringsAsFactors = F)
 breed_result <- setDT(breed_result)
+
+sample_breed <- unique(breed_result[,.(Case_ID,Breed_info)])
+
+brred_summary <- as.data.frame(table(sample_breed$Breed_info))
+write.table(brred_summary, file = 'C:/Users/abc73/Desktop/breed.txt',
+            sep = "\t", row.names = F, col.names = T, quote = F)
+
+
 total_samples <- unique(breed_result$SampleName)
 # info <- NULL
 # 

@@ -11,7 +11,6 @@
 
 
 tumor_type="OM"
-scripts="/home/kh31516/kh31516_Lab_Share_script/Retro_gene_script"
 total_file='/scratch/kh31516/Original_Melanoma/source/combined_melanoma.txt'
 # mutect results from Burair_filtering3
 mutect_folder="/scratch/kh31516/Pan_cancer/Burair_filtering3/OM_cross_spcs/Mutect"
@@ -37,7 +36,7 @@ do
     # sample_name = sys.argv[3]
     # output = open(sys.argv[4], 'w')
 
-    python $scripts/find_ensmbl_mutation.py \
+    python $Retro_gene_script/find_ensmbl_mutation.py \
     $ensembl_source \
     $line.Mutect.vcf-5steps_orientBias3-avinput.exonic_variant_function_WithGeneName \
     $line \
@@ -62,7 +61,7 @@ ml Java
 
 total_mutation_callable_file="/scratch/kh31516/total_${tumor_type}_callable_mutation_inlist.txt"
 
-java -Xmx32g -cp $scripts/ GetCallableCounts /work/szlab/Lab_shared_PanCancer/source/Canis_familiaris.CanFam3.1.99.chr.gtf \
+java -Xmx32g -cp $Retro_gene_script/ GetCallableCounts /work/szlab/Lab_shared_PanCancer/source/Canis_familiaris.CanFam3.1.99.chr.gtf \
 $ensembl_source \
 $wig_callable $total_mutation_callable_file
 
@@ -85,7 +84,7 @@ do
     b=$(cat ${line}.Mutect.vcf-5steps_orientBias3 | grep -v "^#" | grep -i "PASS"| wc -l |bc) #numerator, all PASS
     c=$(python $Retro_gene_script/find_vcf.py $Retro_gene_source/new_retro_gene_list_information_CanFam3.1.99gtf.txt ${mutect_folder}/${line}/${line}.Mutect.vcf-5steps_orientBias3) # retro numerator
     
-    java -cp $scripts/ GetCallableCounts /work/szlab/Lab_shared_PanCancer/source/Canis_familiaris.CanFam3.1.99.chr.gtf \
+    java -cp $Retro_gene_script/ GetCallableCounts /work/szlab/Lab_shared_PanCancer/source/Canis_familiaris.CanFam3.1.99.chr.gtf \
     $Retro_gene_source/new_retro_gene_list_information_CanFam3.1.99gtf.txt \
     ${output_folder}/${line}/sample_wigs_file.txt \
     ${output_folder}/${line}/retro_callable_summary.txt # give the retro gene callable summary
