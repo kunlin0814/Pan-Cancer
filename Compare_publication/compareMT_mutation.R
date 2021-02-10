@@ -6,11 +6,11 @@ library(readxl)
 library(ggpubr)
 library(grid)
 
+source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
 
-source("C:\\Users\\abc73_000\\Documents\\GitHub\\VAF\\six_base_function_util.R")
+exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-excldue <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan-Cancer-Manuscript\\Figure1\\Original_Data_summary.xlsx",
-                      sheet = "Before_Matching_excluded")
 
 create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
   
