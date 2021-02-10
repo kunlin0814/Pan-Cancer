@@ -2,59 +2,64 @@ library(data.table)
 library(tidyverse)
 library(readxl)
 
-base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 seperator <- "/"
-source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
 
-Path <- function(path = "clipboard") {
-  y <- if (path == "clipboard") {
-    readClipboard()
-  } else {
-    cat("Please enter the path:\n\n")
-    readline()
-  }
-  x <- chartr("\\", "/", y)
-  writeClipboard(x)
-  return(x)
-}
+#source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
 
-Path()
+### WES table ###
 
+whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
+excel_wes_table <- read_excel("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_TableS1_02-01-21.xlsx",
+                              sheet = "WESQCdata",skip=1)
+# mac version
+excel_wes_table <- read.table(pipe("pbpaste"), sep="\t", header=TRUE, stringsAsFactors = F) 
 
-## bioproject
+excel_wes_table <- setDT(excel_wes_table)
+excel_wes_table$The_reason_to_exclude
+# total_sample, column, table, string_value = T
+QC <- match_vector_table(whole_wes_clean_breed_table$Case_ID,"The_reason_to_exclude", excel_wes_table)
+whole_wes_clean_breed_table$The_reason_to_exclude <- QC
 
-
-meta <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/HSA/New_PRJNA552034.txt")
-
-path()
-#### breed table 
-# from breed_prediction metadata
-GLM_WGS <- readClipboard()
-WGS_breed <-fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/GLMPRJNA579792_total.txt") 
-
-WGS_breed_info <- WGS_breed[`Assay Type`=="WGS",.(Run,Isolate,Breed)]
-GLM_WES <- readClipboard()
+fwrite(whole_wes_clean_breed_table, file = "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt",
+       quote = F, col.names = T, row.names = F, sep = "\t")
 
 
-overlap_WGS <- intersect(GLM_WGS,GLM_WES)
+##### check QC results
 
-WES_overlap_st <- GLM_WES %in%overlap_WGS
-WGS_overlap_st <- data.frame(GLM_WGS %in%overlap_WGS)
+excel_wes_table <- read_excel("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_TableS1_02-01-21.xlsx",
+                              sheet = "WESQCdata",skip=1)
+excel_wes_table <- setDT(excel_wes_table)
 
-write.table(WGS_overlap_st, file = "C:/Users/abc73/Desktop/overlap_WGS_info.txt",
-            sep = "\n", col.names = T, row.names = F, quote = F)
+Burair_QC <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/tumor_normal_pair_QC_results.txt")
+notpass <- Burair_QC[PairingQCResult!="Passed",]$SampleName
 
+excel_not_pass <- unique(excel_wes_table[The_reason_to_exclude!="Pass QC"]$Case_ID)
+setdiff(notpass,excel_not_pass)
+
+# #### breed table 
+# # from breed_prediction metadata
+# GLM_WGS <- readClipboard()
+# WGS_breed <-fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Pan-Cancer-meta/GLMPRJNA579792_total.txt") 
+# 
+# WGS_breed_info <- WGS_breed[`Assay Type`=="WGS",.(Run,Isolate,Breed)]
+# GLM_WES <- readClipboard()
+# 
+# 
+# overlap_WGS <- intersect(GLM_WGS,GLM_WES)
+# 
+# WES_overlap_st <- GLM_WES %in%overlap_WGS
+# WGS_overlap_st <- data.frame(GLM_WGS %in%overlap_WGS)
+# 
+# write.table(WGS_overlap_st, file = "C:/Users/abc73/Desktop/overlap_WGS_info.txt",
+#             sep = "\n", col.names = T, row.names = F, quote = F)
+
+## Breed prediction and assignment
 ## from excel WESQCdata
-simpleCap <- function(x) {
-  s <- strsplit(x, " ")[[1]]
-  paste(toupper(substring(s, 1,1)), substring(s, 2),
-        sep="", collapse=" ")
-}
-
-a <- c("a book")
-s <- strsplit(a, " ")[[1]]
-
 whole_table <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
 whole_table <- setDT(whole_table)
 Breed <- as.data.table(table(whole_table$Breeds))
@@ -93,100 +98,6 @@ target <- whole_table[,.(Sample_ID,Case_ID,Tumor_Type,Breeds,Status,The_reason_t
 fwrite(target, file = "C:/Users/abc73/Desktop/target_WGS_info.txt",
        sep ="\t", quote = F, col.names = T, row.names = F)
 
-### Breed prediction and assignment ##
-library(readxl)
-library(data.table)
-# from WES_WGS_merge table
-whole_wes_wgs_table <- read.table("clipboard",sep = "\t", header = T,stringsAsFactors = F)
-whole_wes_wgs_table <- setDT(whole_wes_wgs_table)
-
-dis <- unique(whole_wes_wgs_table[dataset=="Validation", .(Case_ID,Breed_info)])
-brred_summary <- as.data.frame(table(dis$Breed_info))
-write.table(brred_summary, file = 'C:/Users/abc73/Desktop/val_breed.txt',
-            sep = "\t", row.names = F, col.names = T, quote = F)
-
-
-
-coverage_file <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/sample_coverage_classify.txt")
-
-breed_result <- read.table("clipboard",sep ="\t", header = T, stringsAsFactors = F)
-breed_result <- setDT(breed_result)
-
-sample_breed <- unique(breed_result[,.(Case_ID,Breed_info)])
-
-brred_summary <- as.data.frame(table(sample_breed$Breed_info))
-write.table(brred_summary, file = 'C:/Users/abc73/Desktop/breed.txt',
-            sep = "\t", row.names = F, col.names = T, quote = F)
-
-
-total_samples <- unique(breed_result$SampleName)
-# info <- NULL
-# 
-# for (i in total_samples){
-#   original_label <- breed_result[SampleName==i,.(Breed)]
-#   cluster <- breed_result[SampleName == i, .(BreedCluster)]
-#   if (is.na(original_label)){
-#     qc <- "NA"
-#   }
-#   else if (original_label == cluster){
-#     qc <- "PassBreed"
-#   }
-#   else{
-#     qc <- "FailBreed"
-#   }
-#   info <- c(info,qc)
-#   
-# }
-# 
-# breed_result$BreedQC <- info
-
-breed_result <- assign_final_breeds(breed_result)
-
-
-
-symbol <- NULL
-
-for (i in total_samples){
-  each <- unlist(whole_wes_wgs_table[Case_ID==i,.(Symbol)])[1]
-  symbol <- c(symbol,each)
-}
-breed_result$Symbol <- symbol
-
-fwrite(breed_result, file = "C:/Users/abc73/Desktop/allWES_67WGSbreeds_assign.txt",
-       col.names = T, row.names = F, quote = F, sep = "\t",na = "NA")
-
-assign_final_breeds <- function(meta_data){
-  if ("BreedCluster" %in% colnames(meta_data)){
-    total_samples <- unique(meta_data$SampleName)
-    info <- NULL
-    
-    for (i in total_samples){
-      original_label <- meta_data[SampleName==i,.(Breed)]
-      cluster <- meta_data[SampleName == i, .(BreedCluster)]
-      if (is.na(original_label)){
-        qc <- "NA"
-      }
-      else if (original_label == cluster){
-        qc <- "PassBreed"
-      }
-      else{
-        qc <- "FailBreed"
-      }
-      info <- c(info,qc)
-      
-    }
-    meta_data$BreedQC <- info
-    final_breed <- meta_data[, "Breed"]; 
-    predicted_breed_indices <- intersect(which(is.na(meta_data[, "Breed"])), which(meta_data[, "BreedCluster"] != "Unknown"));
-    final_breed[predicted_breed_indices] <- meta_data[predicted_breed_indices, "BreedCluster"];
-    final_breed[which(meta_data[, "BreedQC"] == "FailBreed")] <- NA;
-    meta_data[, "FinalBreed"] <- final_breed;
-    return (meta_data)
-  }
-  else {
-    print("not BreedCluster assigned")
-  }
-}
 
 ## Breed prediction and assignment end ###
 
