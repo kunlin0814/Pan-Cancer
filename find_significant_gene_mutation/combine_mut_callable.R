@@ -4,7 +4,7 @@ library(readxl)
 # file <- fread("C:/Users/abc73/Desktop/TestTMB/CMT-2_3_java_test.txt")
 remove <- c("Ensemble_id","Whole Exome")
 seperator <- "/"
-base_dir <- "C:/Users/abc73/Desktop/TestTMB/Mut_output"
+base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mut_output"
 
 pan_tumor_callable <- NULL
 pan_tumor_genomewide <- NULL
@@ -48,7 +48,7 @@ whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/ar
 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-mutect_after_vaf <- fread(paste(base_dir,"01_29","Burair_WithBreeds_QCpass_filtering3_mutect_after_vaf.txt",sep =seperator))
+mutect_after_vaf <- fread(paste(base_dir,"02_10","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_10.txt",sep =seperator))
 mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL",]
 
 total_ensembl_callable <- numeric(nrow(mutect_after_vaf))
@@ -71,8 +71,8 @@ mutect_after_vaf$ensembl_callable <- total_ensembl_callable
 mutect_after_vaf$sample_genome_wide_mut_number <- total_sample_genome_wide_mut_number
 mutect_after_vaf$sample_genome_wide_mut_callable <- total_sample_genome_wide_mut_callable
 
-# write.table(mutect_after_vaf, file = "C:/Users/abc73/Desktop/mutect_noucl_vaf_withBreeds_callable.txt",
-#              sep ="\t", col.names = T, row.names =F, quote = F )
+write.table(mutect_after_vaf, file = "C:/Users/abc73/Desktop/mutect_noucl_vaf_withBreeds_callable_0210.txt",
+             sep ="\t", col.names = T, row.names =F, quote = F )
 # 
 # fwrite(pan_tumor_callable, file = paste(base_dir,"pan_tumor_callable_table.txt",sep = seperator),
 #        col.names = T, row.names = F,quote = F, sep = "\t")
