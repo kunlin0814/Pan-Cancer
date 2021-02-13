@@ -4,13 +4,13 @@ library(readxl)
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
   #"/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- 
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-
 ## check duplicated
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
 
@@ -20,35 +20,25 @@ exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pas
 
 
 # fill up with NA string 
-mutect_after_vaf <- fread(paste(base_dir,"02_10","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator)
-                          )
+mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator))
+                          
 
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & tumor_type!="UCL",]
-subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
-mutect_after_vaf$Subtype <- subtype
-breed <- match_vector_table(mutect_after_vaf$sample_names,column="Breed_info",table=whole_wes_clean_breed_table)
-mutect_after_vaf$Breeds <- breed
-
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
-mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
+mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 
 
-
-
-# fwrite(mutect_after_vaf, file = paste(base_dir,"02_10","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_10.txt",sep = seperator),
+# fwrite(mutect_after_vaf, file = paste(base_dir,"02_11","NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t")
-### append column ###
 
-# subtype <- sapply(table_total_sample,FUN = match_table, column="DiseaseAcronym2",table=whole_wes_clean_breed_table)
-# breed <- sapply(mutect_after_vaf$sample_names,FUN = match_table, column="Breed_info",table=whole_wes_clean_breed_table)
+
+### append column ###
+# subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
+# mutect_after_vaf$Subtype <- subtype
+# breed <- match_vector_table(mutect_after_vaf$sample_names,column="Breed_info",table=whole_wes_clean_breed_table)
 # mutect_after_vaf$Breeds <- breed
-# # mutect_after_vaf$Subtype <- subtype
-# # mutect_after_vaf$Breeds <- breed
-# # mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
-# # mutect_after_vaf$gene_TMB <- (mutect_after_vaf$ensembl_mut_numer*1000000)/mutect_after_vaf$ensembl_callable
-# # mutect_after_vaf$genome_TMB <- (mutect_after_vaf$sample_genome_wide_mut_number*1000000)/mutect_after_vaf$sample_genome_wide_mut_callable
-# # mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
+# 
+# mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
+# mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 # 
 
 ### append column end ###
@@ -80,7 +70,7 @@ for (index in 1:length(total_sample)) {
 }
 
 fwrite(total_info_sum,
-       file = paste(base_dir,"02_10","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_10.txt",sep = seperator)
+       file = paste(base_dir,"02_11","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
        ,col.names = T,
        row.names = F,
        quote = F,
@@ -144,7 +134,7 @@ gene_total_info_sum$genome_TMB <- (gene_total_info_sum$sample_genome_wide_mut_nu
 
 
 fwrite(gene_total_info_sum,
-       file = paste(base_dir,"02_10","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_10.txt",sep = seperator)
+       file = paste(base_dir,"02_11","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
@@ -152,9 +142,9 @@ fwrite(gene_total_info_sum,
 
 #### Tumor wide analysis ####
 
-sig_variants_sample_wide <- fread(file = paste(base_dir,"02_10","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_10.txt",sep = seperator))
+sig_variants_sample_wide <- fread(file = paste(base_dir,"02_11","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator))
 
-sig_gene_sample_wide <- fread(paste(base_dir,"02_10","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_10.txt",sep = seperator))
+sig_gene_sample_wide <- fread(paste(base_dir,"02_11","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator))
 
 
 whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
@@ -162,7 +152,7 @@ whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 
-mutect_after_vaf <- fread(paste(base_dir,"02_10","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_10.txt",sep =seperator)
+mutect_after_vaf <- fread(paste(base_dir,"02_11","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_11.txt",sep =seperator)
                           ,fill = T,na.strings="")
 
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
@@ -279,7 +269,7 @@ for (each_tumor in tumor_type) {
 
 
 fwrite(total_variant_summary,
-       file = paste(base_dir,"02_10","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_10.txt",sep = seperator)
+       file = paste(base_dir,"02_11","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
        ,col.names = T,row.names = F,
        eol = "\n",
        quote = F,
@@ -393,7 +383,7 @@ for (each_tumor in tumor_type) {
 
 
 fwrite(total_gene_summary,
-       file = paste(base_dir,"02_10","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_10.txt",sep = seperator)
+       file = paste(base_dir,"02_11","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       eol = "\n",
@@ -402,21 +392,20 @@ fwrite(total_gene_summary,
 #### Breeds within each tumor type 
 # need at least 10 dogs,
 # need at least two certain dogs have that mutation (gene or variants)
-base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
+base_dir <- 
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
-  #fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
-
-#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
-# dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
-mutect_after_vaf <- fread(paste(base_dir,"02_10","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_10.txt",sep =seperator)
+
+
+mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator)
                           ,fill = T,na.strings="")
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude,]
-mutect_after_vaf[tumor_type=="MT" & gene_name!="PIK3CA",.(sample_names,gene_name)]
 total_breeds <- unique( mutect_after_vaf$Breeds)
 clean_breeds <- na.omit(total_breeds)
 
@@ -424,7 +413,7 @@ clean_breeds <- na.omit(total_breeds)
 # need at least 10 dogs,
 # need at least two certain dogs have that mutation (gene or variants)
 
-number_breeds_cutoff <- 9
+number_breeds_cutoff <- 10
 number_sample_mut_cutoff <- 2
 ### breedwide variants ##
 tumor_type <- unique(mutect_after_vaf$Subtype)
@@ -450,14 +439,14 @@ for (index in 1:length(tumor_type)) {
     each_tumor_breed_number <-
       data.table(table(each_tumor_all_breeds$Breeds))
     candidate_breeds <-
-      sort(each_tumor_breed_number[N > number_breeds_cutoff,]$V1)
+      sort(each_tumor_breed_number[N >= number_breeds_cutoff,]$V1)
     candidate_breeds_uniq_gene_mut <-
       unique(mutect_after_vaf[Breeds %in% candidate_breeds, .(gene_name)]$gene_name)
     all_gene_summary <- NULL
     for (index in 1:length(candidate_breeds_uniq_gene_mut)) {
       #print(paste("Processing the ",index," gene mutation with total gene mutation",length(candidate_breeds_uniq_gene_mut),sep = " "))
       each_gene_mut = candidate_breeds_uniq_gene_mut[index]
-      #each_gene_mut = "PIK3CA"
+      #each_gene_mut = "AKT1"
       #each_tumor_breed_gene <- each_tumor[Breeds ==each_breed]$gene_name
       #each_tumor_breed_uniq_gene <- unique(each_tumor_breed_gene)
       #### check gene mut for each breed ( at least two dogs)
@@ -465,7 +454,7 @@ for (index in 1:length(tumor_type)) {
         unique(each_tumor_info[gene_name == each_gene_mut, .(sample_names, Breeds)])
       number_gene_mut_in_breeds <-
         candidate_breeds_info[, .N, keyby = .(Breeds)]
-      if (sum(number_gene_mut_in_breeds$N) > number_sample_mut_cutoff) {
+      if (any(number_gene_mut_in_breeds$N >= number_sample_mut_cutoff) ) {
         missing_breed <-
           setdiff(candidate_breeds, number_gene_mut_in_breeds$Breeds)
         if (length(missing_breed) > 0) {
@@ -501,7 +490,7 @@ for (index in 1:length(tumor_type)) {
             fisher.test(testor, alternative = "greater")$p.value
           
           each_breed_sum <-
-            list(
+            data.table(
               breeds = each_candidate_breed,
               gene_mut = each_gene_mut,
               tumor_type = each_tumor,
@@ -513,9 +502,9 @@ for (index in 1:length(tumor_type)) {
             )
           
           all_candidate_breed_each_gene_sum <-
-            rbind(all_candidate_breed_each_gene_sum, each_breed_sum)
+            rbindlist(list(all_candidate_breed_each_gene_sum, each_breed_sum))
         }
-        all_candidate_breed_each_gene_sum <- data.table(all_candidate_breed_each_gene_sum)
+        all_candidate_breed_each_gene_sum <- setDT(all_candidate_breed_each_gene_sum)
         #all_candidate_breed_each_gene_sum <- all_candidate_breed_each_gene_sum[order(p_value)]
         #all_candidate_breed_each_gene_sum$BH_pvalue = p.adjust(all_candidate_breed_each_gene_sum$p_value, method = "BH")
         all_gene_summary <-
@@ -528,39 +517,77 @@ for (index in 1:length(tumor_type)) {
   total_tumor_type_summary <-
     rbindlist(list(total_tumor_type_summary, each_tumor_sum))
 }
-total_tumor_type_summary <- data.table(total_tumor_type_summary)
-fwrite(total_tumor_type_summary, file = "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/breed_significant_02_09.txt",
+
+# fwrite(total_tumor_type_summary, file = "C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt",
+#        col.names = T, row.names = F, quote = F, sep = "\t")
+
+
+# total_tumor_type_summary <- fread("C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt")
+
+meet_cut_off <- total_tumor_type_summary[target_breeds_with >number_sample_mut_cutoff,]
+
+
+
+unique(unlist(meet_cut_off[tumor_type =="MT",.(breeds)]$breeds))
+a <- meet_cut_off[tumor_type == "MT" & breeds == "Maltese"]
+a[order(p_value)]
+## within each tumor type, do p adjustment for each breed
+
+Total_tumor_info <- NULL
+for (each_tumor_type in tumor_type){
+  each_tumor_breed_info <- NULL
+  #each_tumor_type <- "MT"
+  candidate_breed_each_tumor_type <- unique(unlist(meet_cut_off[tumor_type ==each_tumor_type,.(breeds)]$breeds))
+  for ( each_breed in candidate_breed_each_tumor_type){
+    each_breed_pvalue_for_each_tumor <- meet_cut_off[tumor_type == each_tumor_type & breeds == each_breed]
+    each_breed_pvalue_for_each_tumor <- each_breed_pvalue_for_each_tumor[order(p_value)]
+    each_breed_pvalue_for_each_tumor$BH_pvalue = p.adjust(each_breed_pvalue_for_each_tumor$p_value, method = "BH")
+    each_tumor_breed_info <- rbindlist(list(each_tumor_breed_info, each_breed_pvalue_for_each_tumor))
+  }
+  Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_breed_info))
+}
+
+fwrite(Total_tumor_info, file = paste(base_dir,"WithBH_breed_significant_Tumor_wide_02_11.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n",
        sep = "\t")
 
 
 
-# 
+
 # ### check the results
 
 # source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 #"/Volumes/Research/GitHub/R_util/my_util.R")
-base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
+base_dir <- 
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
 
-variant_sample <- fread(paste(base_dir,"02_10","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_10.txt",
+variant_sample <- fread(paste(base_dir,"02_11","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",
                               sep = seperator))
-variant_tumor <- fread(paste(base_dir,"02_10","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_10.txt",
+variant_tumor <- fread(paste(base_dir,"02_11","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",
                              sep = seperator))
-gene_sample <- fread(paste(base_dir,"02_10","gene_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_10.gz",
+gene_sample <- fread(paste(base_dir,"02_11","gene_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",
                            sep = seperator))
-gene_tumor <- fread(paste(base_dir,"02_10","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_10.txt",
+gene_tumor <- fread(paste(base_dir,"02_11","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",
                           sep = seperator))
 
 
 
 # top_10_sample_variants <- variant_sample[, head(.SD, 10), by=.(tumor_type)]
 # top_10_sample_genes <- gene_sample[, head(.SD, 10), by=.(tumor_type)]
-top_5_tumor_variants <- variant_tumor[, head(.SD, 5), by=tumor_type]
-top_5_tumor_gene <- gene_tumor[, head(.SD, 5), by=tumor_type]
+top_6_tumor_variants <- variant_tumor[, head(.SD, 5), by=tumor_type]
+top_6_tumor_gene <- gene_tumor[, head(.SD, 5), by=tumor_type]
 
+fwrite(top_6_tumor_variants, file = paste(base_dir,"02_11","top_6_tumor_variants.txt",sep=seperator),
+       col.names = T, row.names = F, quote = F, eol = "\n",
+       sep = "\t")
+
+
+fwrite(top_6_tumor_gene, file = paste(base_dir,"02_11","top_6_tumor_genes.txt",sep=seperator),
+       col.names = T, row.names = F, quote = F, eol = "\n",
+       sep = "\t")
 
 
 gene_tumor[tumor_type=="GLM" & gene_name=="PIK3CA"]
