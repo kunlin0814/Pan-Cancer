@@ -10,14 +10,31 @@ base_dir <-
 seperator <- "/"
 
 whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
                                 sep =seperator))
+
+
+a <- unique(mutect_after_vaf[Subtype=="HSA",.(Breeds,sample_names)])
+as.data.frame(table(a$Breeds))
+## indel
+  
+indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
+indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
+setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
+indel_file <- indel_file[,emsembl_id:=NULL]
+# fwrite(indel_file, file= paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator),
+#        col.names = T, row.names = F, sep = "\t", quote = F, eol="\n")
+
+Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table )
+indel_file$Subtype <- Subtype
+
 amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype.txt",sep = seperator),header = T)
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
 CNV <- unique(amp_delete[,c("sample_names","gene_name","mut_type","subtype"),with =F])
 colnames(CNV)<- c("sample_names","gene_name","status","Subtype")
-total_mut <- rbindlist(list(SNV,CNV))
+total_mut <- rbindlist(list(SNV,CNV,indel_file))
 total_sample <- unique(total_mut$sample_names)
 pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
 path_col <- colnames(pathway)
@@ -77,8 +94,8 @@ total_sum$Subtype <- subtype
 total_tumor_p_value_sum <- NULL
 no_UCL <- total_sum[Subtype!="UCL",]
 
-fwrite(no_UCL,file = paste(base_dir,"no_UCL_pathway_summary.txt",sep = seperator),
-       col.names = T, row.names = F, quote = F, sep = "\t")
+fwrite(no_UCL,file = paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator),
+       col.names = T, row.names = F, quote = F, sep = "\t", na="NA")
 
 total_tumor_type <- unique(no_UCL$Subtype)
 for (index in 1:length(total_tumor_type)){
@@ -90,8 +107,9 @@ for (index in 1:length(total_tumor_type)){
   each_tumor_target_without <- numeric(length(path_col))
   each_tumor_other_with <- numeric(length(path_col))
   each_tumor_other_without <- numeric(length(path_col))
-  each_tumor_enrich_p_value <- numeric(length(path_col))
-  each_tumor_deplete_p_value <- numeric(length(path_col))
+  each_tumor_enrich_scores <- numeric(length(path_col))
+  #each_tumor_enrich_p_value <- numeric(length(path_col))
+  #each_tumor_deplete_p_value <- numeric(length(path_col))
   each_tumor_col <- character(length(path_col))
   each_tumor_type <- character(length(path_col))
   for (col_index in 1:length(path_col)){
@@ -110,11 +128,19 @@ for (index in 1:length(total_tumor_type)){
     testor <- rbind(c(each_tumor_target[col_index],each_tumor_target_without[col_index]),
                     c(each_tumor_other_with[col_index],each_tumor_other_without[col_index]))
     
-    enrich_p_value <- fisher.test(testor, alternative = "greater")$p.value
-    deplete_p_value <- fisher.test(testor, alternative = "less")$p.value
+    fisher_test <- fisher.test(testor)
+    p_value <- fisher_test[["p.value"]];
+    odds_ratio <- fisher_test[["estimate"]];
     
-    each_tumor_enrich_p_value[col_index] <- enrich_p_value
-    each_tumor_deplete_p_value[col_index] <- deplete_p_value
+    enr_score <- min(5, (log10(p_value) * -1));
+    if(odds_ratio < 1) {
+      enr_score <- 0-enr_score;
+    }
+    # enrich_p_value <- fisher.test(testor, alternative = "greater")$p.value
+    # deplete_p_value <- fisher.test(testor, alternative = "less")$p.value
+    each_tumor_enrich_scores[col_index] <- enr_score
+    # each_tumor_enrich_p_value[col_index] <- enrich_p_value
+    # each_tumor_deplete_p_value[col_index] <- deplete_p_value
     #print(each_col)
   }
   each_tumor_sum <- data.table(tumor_type = each_tumor_type,
@@ -123,44 +149,43 @@ for (index in 1:length(total_tumor_type)){
                                each_gene_without = each_tumor_target_without,
                                each_gene_other_with = each_tumor_other_with,
                                each_gene_other_without = each_tumor_other_without,
-                               each_gene_enrich_pvalue = each_tumor_enrich_p_value,
-                               each_gene_deplete_pvalue= each_tumor_deplete_p_value
-  )
+                               fisher_pvalue = p_value,
+                               odds_ratio = odds_ratio,
+                               each_tumor_enrich_scores= each_tumor_enrich_scores)
+                               # each_gene_enrich_pvalue = each_tumor_enrich_p_value,
+                               # each_gene_deplete_pvalue= each_tumor_deplete_p_value
   
-  each_tumor_sum <- each_tumor_sum[order(each_gene_enrich_pvalue)]
-  each_tumor_sum$Enrich_BH_pvalue = p.adjust(each_tumor_sum$each_gene_enrich_pvalue, method = "BH")
-  each_tumor_sum <- each_tumor_sum[order(each_gene_deplete_pvalue)]
-  each_tumor_sum$Deplete_BH_pvalue = p.adjust(each_tumor_sum$each_gene_deplete_pvalue, method = "BH")
+  # 
+  # each_tumor_sum <- each_tumor_sum[order(each_gene_enrich_pvalue)]
+  # each_tumor_sum$Enrich_BH_pvalue = p.adjust(each_tumor_sum$each_gene_enrich_pvalue, method = "BH")
+  # each_tumor_sum <- each_tumor_sum[order(each_gene_deplete_pvalue)]
+  # each_tumor_sum$Deplete_BH_pvalue = p.adjust(each_tumor_sum$each_gene_deplete_pvalue, method = "BH")
 
   total_tumor_p_value_sum <- rbind(total_tumor_p_value_sum, each_tumor_sum)
   
 }
 
-# fwrite(total_tumor_p_value_sum, file=paste(base_dir,"02_11","Pathway","pan-tumor_pathway_02_11.txt",sep=seperator),
-#        col.names = T, row.names = F, quote = F, sep="\t",eol="\n")
-
-
+fwrite(total_tumor_p_value_sum, file=paste(base_dir,"02_14","Pathway","With_pValue_pan-tumor_pathway_02_14.txt",sep=seperator),
+       col.names = T, row.names = F, quote = F, sep="\t",eol="\n",na = "NA")
 
 #### reshape and heatmap ###
-# 
-# target <- total_tumor_p_value_sum[,.(tumor_type,Enrich_BH_pvalue,gene_pathway)]
-# matrix <- dcast(target, tumor_type~gene_pathway,value.var = "Enrich_BH_pvalue")
+# target_col <- path_col[-c(2,3,7,8)]
+# target <- total_tumor_p_value_sum[gene_pathway %in% target_col,.(tumor_type,each_tumor_enrich_scores,gene_pathway)]
+# matrix <- dcast(target, tumor_type~gene_pathway,value.var = "each_tumor_enrich_scores")
 # matrix <- setDF(matrix)
 # rownames(matrix) <- matrix$tumor_type
 # matrix <- matrix[,-1]
 # matrix <- t(matrix)
 # library(ComplexHeatmap)
+# library(circlize)
+# col_fun = colorRamp2(c( -5,0,5), c("blue", "white", "red"))
 # 
-# 
-# 
-# col_fun = colorRamp2(c( 0,0.5,1), c("green", "white", "red"))
-# 
-# Heatmap(matrix,col = col_fun,
+# heatmap_object <- Heatmap(matrix,col = col_fun,
 #         cluster_rows = FALSE, cluster_columns = FALSE)
-
-
-
-
+# 
+# heatmap_object <- draw(heatmap_object, heatmap_legend_side  = "bottom");
+# 
+# dev.off()
 ### reshape heatmap end
 
 #### Breeds within each tumor type 
@@ -181,7 +206,7 @@ base_dir <-
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
-total_sum <- fread(paste(base_dir,"no_UCL_pathway_summary.txt",sep = seperator))
+total_sum <- fread(paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator))
 breed <- match_vector_table(total_sum$sample_names, "Breed_info", whole_wes_clean_breed_table)
 total_sum$Breeds <- breed
 
@@ -229,16 +254,38 @@ for (index in 1:length(tumor_type)) {
         testor <- rbind(c(target_breed_with,target_breed_without),
                         c(other_breeds_with,other_breeds_without ))
         
-        enrich_p_value <- fisher.test(testor, alternative = "greater")$p.value
-        deplete_p_value <- fisher.test(testor, alternative = "less")$p.value
+        fisher_test <- fisher.test(testor)
+        p_value <- fisher_test[["p.value"]];
+        odds_ratio <- fisher_test[["estimate"]];
+        
+        enr_score <- min(5, (log10(p_value) * -1));
+        
+        if (target_breed_with <number_sample_mut_cutoff){
+          enr_score <- NA
+          
+        }
+        else{
+        
+        if(odds_ratio < 1) {
+          enr_score <- 0-enr_score;
+        }
+          
+        }
+        # enrich_p_value <- fisher.test(testor, alternative = "greater")$p.value
+        # deplete_p_value <- fisher.test(testor, alternative = "less")$p.value
+        # enrich_p_value <- fisher.test(testor, alternative = "greater")$p.value
+        # deplete_p_value <- fisher.test(testor, alternative = "less")$p.value
         
         each_breed_each_pathway <- data.table(pathway = each_pathway,
                                               target_breed_with = target_breed_with,
                                               target_breed_without= target_breed_without,
                                               other_breeds_with =other_breeds_with, 
                                               other_breeds_without = other_breeds_without,
-                                              enrich_p_value = enrich_p_value,
-                                              deplete_p_value=deplete_p_value,
+                                              enr_score = enr_score,
+                                              fisher_pvalue = p_value,
+                                              odds_ratio = odds_ratio,
+                                              # enrich_p_value = enrich_p_value,
+                                              # deplete_p_value=deplete_p_value,
                                               breeds = candidate_breed,
                                               subtype = each_tumor)
         total_breed_each_pathway <- rbindlist(list(total_breed_each_pathway, each_breed_each_pathway))
@@ -261,30 +308,115 @@ for (index in 1:length(tumor_type)) {
 
 tumor_type <- unique(total_tumor_type_summary$subtype)
 
-## within each tumor type, do p adjustment for each breed
-
-Total_tumor_info <- NULL
-for (each_tumor_type in tumor_type){
-  each_tumor_breed_info <- NULL
-  #each_tumor_type <- "MT"
-  candidate_breed_each_tumor_type <- unique(unlist(total_tumor_type_summary[subtype ==each_tumor_type,.(breeds)]$breeds))
-  for ( each_breed in candidate_breed_each_tumor_type){
-    each_breed_pvalue_for_each_tumor <- total_tumor_type_summary[subtype == each_tumor_type & breeds == each_breed]
-    each_breed_pvalue_for_each_tumor <- each_breed_pvalue_for_each_tumor[order(enrich_p_value)]
-    each_breed_pvalue_for_each_tumor$enrich_BH_pvalue = p.adjust(each_breed_pvalue_for_each_tumor$enrich_p_value, method = "BH")
-    
-    each_breed_pvalue_for_each_tumor <- each_breed_pvalue_for_each_tumor[order(deplete_p_value)]
-    each_breed_pvalue_for_each_tumor$deplete_BH_pvalue = p.adjust(each_breed_pvalue_for_each_tumor$deplete_p_value, method = "BH")
-    
-    each_tumor_breed_info <- rbindlist(list(each_tumor_breed_info, each_breed_pvalue_for_each_tumor))
-  }
-  Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_breed_info))
-}
-path_col
+## within each tumor type, do p adjustment for each breed , no need to do BH adjustment because we use enrich scores
+# 
+# Total_tumor_info <- NULL
+# for (each_tumor_type in tumor_type){
+#   each_tumor_breed_info <- NULL
+#   #each_tumor_type <- "MT"
+#   candidate_breed_each_tumor_type <- unique(unlist(total_tumor_type_summary[subtype ==each_tumor_type,.(breeds)]$breeds))
+#   for ( each_breed in candidate_breed_each_tumor_type){
+#     each_breed_pvalue_for_each_tumor <- total_tumor_type_summary[subtype == each_tumor_type & breeds == each_breed]
+#     each_breed_pvalue_for_each_tumor <- each_breed_pvalue_for_each_tumor[order(enrich_p_value)]
+#     each_breed_pvalue_for_each_tumor$enrich_BH_pvalue = p.adjust(each_breed_pvalue_for_each_tumor$enrich_p_value, method = "BH")
+#     
+#     each_breed_pvalue_for_each_tumor <- each_breed_pvalue_for_each_tumor[order(deplete_p_value)]
+#     each_breed_pvalue_for_each_tumor$deplete_BH_pvalue = p.adjust(each_breed_pvalue_for_each_tumor$deplete_p_value, method = "BH")
+#     
+#     each_tumor_breed_info <- rbindlist(list(each_tumor_breed_info, each_breed_pvalue_for_each_tumor))
+#   }
+#   Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_breed_info))
+# }
 target_col <- path_col[-c(2,3,7,8)]
 
-target_info <- Total_tumor_info[subtype %in% c("MT","BCL","TCL","OSA") & pathway %in% target_col,]
-fwrite(Total_tumor_info, file = paste(base_dir,"02_11","Pathway","total_Breeds_sig_pan_tumor.txt",sep = seperator),
-       col.names = T, row.names = F, quote = F,sep = "\t")
+### Reshape the info so that fit the matrix format
+target_info <- total_tumor_type_summary[subtype %in% c("MT","TCL","OSA") & pathway %in% target_col,]
+target_info$enr_score
+# matrix <- dcast(target_info, breeds+subtype~pathway,value.var = "enr_score")
+# matrix <- setDF(matrix)
+# rownames(matrix) <- matrix$tumor_type
+# matrix <- matrix[,-1]
+# matrix <- t(matrix)
+
+
+fwrite(target_info, file = paste(base_dir,"02_14","Pathway","with_Pvalue_target_Breeds_sig_pan_tumor_02_14.txt",sep = seperator),
+       col.names = T, row.names = F, quote = F,sep = "\t",
+       na = "NA")
+
+
+## Golden retriever compare across different tumor ## 
+# "OSA", "HSA", "BCL", "TCL"
+
+base_dir <- 
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+seperator <- "/"
+total_sum <- fread(paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator))
+breed <- match_vector_table(total_sum$sample_names, "Breed_info", whole_wes_clean_breed_table)
+total_sum$Breeds <- breed
+
+number_breeds_cutoff <- 10
+number_sample_mut_cutoff <- 2
+target_breed <- "Golden Retriever"
+target_tumor <- c("OSA","BCL","TCL","HSA")
+
+a<- total_sum[Subtype != "BCL" & Breeds == target_breed]
+
+## golden retriever
+
+tumor_sum <- NULL
+for (tumor in target_tumor){
+  target_tumor_target_breed_info <- total_sum[Subtype == tumor & Breeds == target_breed]
+  other_tumor_target_breed_info <- total_sum[Subtype != tumor & Breeds == target_breed]
+  total_target_tumor_breed_number <- nrow(target_tumor_target_breed_info)
+  total_othter_tumor_breed_number <- nrow(total_sum[Subtype != tumor & Breeds == target_breed])
+  path_way_sum <- NULL
+  
+  for (index in 1:length(path_col)){
+    each_pathway <- path_col[index]
+    target_tumor_target_pathway_with <- sum(target_tumor_target_breed_info[[each_pathway]])
+    target_tumor_target_pathway_without <- total_target_tumor_breed_number-target_tumor_target_pathway_with
+    other_tumor_target_pathway_with <- sum(other_tumor_target_breed_info[[each_pathway]])
+    other_tumor_target_pathway_without <- total_othter_tumor_breed_number - other_tumor_target_pathway_with
+    testor <- rbind(c(target_tumor_target_pathway_with,target_tumor_target_pathway_without),
+                    c(other_tumor_target_pathway_with,other_tumor_target_pathway_without ))
+    
+    fisher_test <- fisher.test(testor)
+    p_value <- fisher_test[["p.value"]];
+    odds_ratio <- fisher_test[["estimate"]];
+    
+    enr_score <- min(5, (log10(p_value) * -1));
+    
+    if (target_tumor_target_pathway_with <number_sample_mut_cutoff){
+      enr_score <- NA
+      
+    } 
+    else{
+      
+      if(odds_ratio < 1) {
+        enr_score <- 0-enr_score;
+      }
+    }
+    each_pathway <- data.table(pathway = each_pathway,
+                               tumor_with = target_tumor_target_pathway_with,
+                               tumor_without= target_tumor_target_pathway_without,
+                               othertumors_with =other_tumor_target_pathway_with, 
+                               other_tumors_without = other_tumor_target_pathway_without,
+                               enr_score = enr_score,
+                               fisher_pvalue = p_value,
+                               odds_ratio = odds_ratio,
+                               # enrich_p_value = enrich_p_value,
+                               # deplete_p_value=deplete_p_value,
+                               breeds = target_breed,
+                               subtype = tumor)
+    path_way_sum <- rbindlist(list(path_way_sum,each_pathway))
+    
+  }
+  tumor_sum <- rbindlist(list(tumor_sum, path_way_sum))
+}
+
+fwrite(tumor_sum, file=paste(base_dir,"02_15","Pathway","GoldenWith_pValue_pathway_02_15.txt",sep=seperator),
+       col.names = T, row.names = F, quote = F, sep="\t",eol="\n",na = "NA")
+
 
 

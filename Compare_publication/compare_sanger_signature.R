@@ -82,22 +82,32 @@ create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
 base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
 # sanger_signature <- read_excel(paste(base,"Sanger_mutation.xlsx",sep ="\\"),
 #                                 sheet ="Canine", skip = 29)
-
-sanger_signature <- fread(paste(base,"Sanger_Mutation.txt",sep ="\\"))
+seperator <- "/"
+sanger_signature <- fread(paste(base,"DbSNP_sanger_mut_file.txt",sep ="\\"))
 clean_sanger <- sanger_signature
-clean_sanger$Chromosome <- paste("chr",clean_sanger$Chromosome,sep="")
+
+#clean_sanger$Chromosome <- paste("chr",clean_sanger$Chromosome,sep="")
 #clean_sanger <- sanger_signature[,c("#Chr","Position","Ref","Alt","Sample")]
 #clean_sanger$Chromosome <- paste("chr",clean_sanger$`#Chr`,sep ="")
 clean_sanger$chrom_loc <- paste(clean_sanger$Chromosome,clean_sanger$Position,sep = "_")
 clean_sanger <- setDT(clean_sanger)
 
 samples <- sort(unique(sanger_signature$Sample))
-our_data <- fread(paste(base,"our_totalSangerOM_mutation.txt",sep="\\"))
-colnames(our_data) <- c("Chromosome","Position","Ref","Alt","Sample")
-
-our_data_sample_convert <- sapply(our_data$Sample,convert_sample)
+our_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep = seperator));
+our_data <- our_Burair[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt)]
+our_data_sample_convert <- sapply(our_data$sample_names,convert_sample)
 our_data$Sample <- our_data_sample_convert
-our_data$chrom_loc <- paste(our_data$Chromosome,our_data$Position,sep ="_")
+our_data$chrom_loc <- paste(our_data$chrom,our_data$pos,sep ="_")
+
+samples <- unique(clean_sanger$Sample)
+our_sample <- unique(our_data$Sample)
+their_sample <- unique(clean_sanger$Sample)
+intercet_sample <- intersect(their_sample,our_sample)
+
+#our_data <- fread(paste(base,"our_totalSangerOM_mutation.txt",sep="\\"))
+#colnames(our_data) <- c("Chromosome","Position","Ref","Alt","Sample")
+
+
 
 total_uniq_num_to_them <- NULL
 total_uniq_num_to_us <- NULL
@@ -107,7 +117,7 @@ total_uniq_ratio_to_us <- NULL
 total_share_ratio <- NULL
 total_sample <- NULL
 total_denomitor <- NULL
-for (samp in samples){
+for (samp in intercet_sample){
 
 our_each_mut <- our_data[Sample == samp, .(chrom_loc)]
 sanger_each_mut <- clean_sanger[Sample == samp,.(chrom_loc)]
@@ -151,7 +161,7 @@ data <- data.frame(share_ratio = as.numeric(total_share_ratio),
                    total_denomitor= as.numeric(total_denomitor))
 data <- setDT(data)
 
-pdf(paste(base,"no_germline_filtering_bar_OM_Mutation_overlap_ratio.pdf",sep="\\")
+pdf(paste(base,"Burair_filtering_bar_OM_Mutation_overlap_ratio.pdf",sep="\\")
     , height=12.94, width=12.94);
 
 

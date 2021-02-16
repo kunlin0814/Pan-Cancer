@@ -402,12 +402,26 @@ whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 
-mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator)
+SNV <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator)
                           ,fill = T,na.strings="")
-mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude,]
-total_breeds <- unique( mutect_after_vaf$Breeds)
+SNV <- SNV[status!= "synonymous",]
+SNV <- SNV[!sample_names %in% exclude,]
+total_breeds <- unique( SNV$Breeds)
 clean_breeds <- na.omit(total_breeds)
+indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
+indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
+setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
+indel_file <- indel_file[,emsembl_id:=NULL]
+
+Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table )
+indel_file$Subtype <- Subtype
+breed <- match_vector_table(indel_file$sample_names,"Breed_info",whole_wes_clean_breed_table )
+indel_file$Breeds <- breed
+final_SNV <- SNV[,.(sample_names,gene_name,status,Subtype,Breeds)]
+
+mutect_after_vaf <- rbindlist(list(final_SNV,indel_file))
+
+mutect_after_vaf <- mutect_after_vaf[Subtype!="UCL" & !sample_names %in% exclude,]
 
 #### Breeds within each tumor type 
 # need at least 10 dogs,
@@ -526,11 +540,6 @@ for (index in 1:length(tumor_type)) {
 
 meet_cut_off <- total_tumor_type_summary[target_breeds_with >number_sample_mut_cutoff,]
 
-
-
-unique(unlist(meet_cut_off[tumor_type =="MT",.(breeds)]$breeds))
-a <- meet_cut_off[tumor_type == "MT" & breeds == "Maltese"]
-a[order(p_value)]
 ## within each tumor type, do p adjustment for each breed
 
 Total_tumor_info <- NULL
@@ -547,7 +556,7 @@ for (each_tumor_type in tumor_type){
   Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_breed_info))
 }
 
-fwrite(Total_tumor_info, file = paste(base_dir,"WithBH_breed_significant_Tumor_wide_02_11.txt",sep=seperator),
+fwrite(Total_tumor_info, file = paste(base_dir,"WithBH_breed_significant_Tumor_wide_02_15.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n",
        sep = "\t")
 
