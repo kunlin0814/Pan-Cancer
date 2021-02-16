@@ -158,7 +158,27 @@ for (each_tumor in tumor_type) {
   total_gene_summary <- rbindlist(list(total_gene_summary, each_tumor_info_sum))
 }
 
+#### adjust pvalue with BH methods ####
 
+
+total_summary <- NULL
+tumor_type <- sort(unique(amp_delete$tumor_type))
+
+for (each_tumor in tumor_type) {
+  each_tumor_sum <- NULL
+  each_tumor_info <- amp_delete[tumor_type==each_tumor]
+  #gene_name <- sort(unique(each_tumor_info[,.(gene_name)]$gene_name))
+  #each_mut_type_tumor <- each_tumor_info[gene_name==each_mut_type,]
+  each_mut_type_tumor <- each_tumor_info[order(p_value)]
+  each_mut_type_tumor$BH_pvalue <- p.adjust(each_mut_type_tumor$p_value, method = "BH")
+  each_tumor_sum <- rbindlist(list(each_tumor_sum,each_mut_type_tumor))
+  
+  
+  total_summary <- rbindlist(list(total_summary,each_tumor_sum))
+}
+
+
+## amp delete tumor wide end ##
 
 #### Breeds within each tumor type 
 # need at least 10 dogs,
@@ -337,25 +357,6 @@ different_type <- as.data.table(str_split_fixed(amp_delete$gene_mut,"_",2))
 colnames(different_type) <- c("gene_name","mut_type")
 amp_delete <- cbind(amp_delete,different_type)
 
-
-#### adjust pvalue with BH methods ####
-
-
-total_summary <- NULL
-tumor_type <- sort(unique(amp_delete$tumor_type))
-
-for (each_tumor in tumor_type) {
-    each_tumor_sum <- NULL
-    each_tumor_info <- amp_delete[tumor_type==each_tumor]
-    #gene_name <- sort(unique(each_tumor_info[,.(gene_name)]$gene_name))
-    #each_mut_type_tumor <- each_tumor_info[gene_name==each_mut_type,]
-    each_mut_type_tumor <- each_tumor_info[order(p_value)]
-    each_mut_type_tumor$BH_pvalue <- p.adjust(each_mut_type_tumor$p_value, method = "BH")
-    each_tumor_sum <- rbindlist(list(each_tumor_sum,each_mut_type_tumor))
-    
-
-  total_summary <- rbindlist(list(total_summary,each_tumor_sum))
-}
 
 # fwrite(total_summary, file = paste(base_dir,"02_11", "With_BH_sep_amp_delete_merged_adjust_Pan_cancer_amp_delete_02_11.txt",
 #                                         sep = seperator),
