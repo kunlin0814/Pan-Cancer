@@ -203,8 +203,6 @@ amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subty
 amp_delete <- amp_delete[!sample_names %in% exclude]
 amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
 
-amp_delete$
-
 number_breeds_cutoff <- 10
 number_sample_mut_cutoff <- 2
 ### breedwide variants ##
