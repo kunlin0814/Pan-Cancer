@@ -195,7 +195,7 @@ python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added
 ## With 5 steps filtering 
 grep -w KEEP ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > ${MuTect_out}/${SampleName}_PASS.stat
 
-python $scripts/Filter_MutectStat_5steps.py \
+python $script/Filter_MutectStat_5steps.py \
 ${MuTect_out}/${SampleName}_PASS.stat \
 ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
 ${MuTect_out}/${SampleName}_vaf_before.txt \
