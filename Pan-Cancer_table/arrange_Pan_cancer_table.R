@@ -5,11 +5,11 @@ library(readxl)
 base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 seperator <- "/"
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-#"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
 
-#source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
-
+source(#"C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
+"/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
 ### WES table ###
 
 whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
@@ -60,50 +60,32 @@ setdiff(notpass,excel_not_pass)
 
 ## Breed prediction and assignment
 ## from excel WESQCdata
-whole_table <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
-whole_table <- setDT(whole_table)
-#Breed <- as.data.table(table(whole_table$Breeds))
-fwrite(whole_table, file = "C:/Users/abc73/Desktop/breed_4WGS_meta_result.txt",
-       col.names = T, row.names = F, quote = F, sep = "\t")
-
-breed_cluster_info <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
+whole_wes_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")
+whole_wes_table <- setDT(whole_wes_table)
+#Breed <- as.data.table(table(whole_wes_table$Breeds))
+breed_cluster_info <- read.table(pipe("pbpaste"),sep = "\t",header = T, stringsAsFactors = F)
 breed_cluster_info <- setDT(breed_cluster_info)
-colnames(breed_cluster_info)[1] <-"sample_names" 
 
-fwrite(breed_cluster_info, file = "C:/Users/abc73/Desktop/breed_cluster_result.txt",
-       col.names = T, row.names = F, quote = F, sep = "\t")
+breed_cluster_info<- assign_final_breeds(breed_cluster_info)
 
-breed_cluster <- match_vector_table(whole_table$SampleName,"BreedCluster", breed_cluster_info)
-whole_table$BreedCluster <- breed_cluster
-breed_QC <- match_vector_table(whole_table$SampleName,"BreedQC", breed_cluster_info)
-whole_table$BreedQC <- breed_QC
-final_breed <- match_vector_table(whole_table$SampleName,"FinalBreed", breed_cluster_info)
-whole_table$FinalBreed <- final_breed
+fwrite(breed_cluster_info, file = "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure2/val_WGS/final_57WGS_final_assignment.txt",
+       col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")
 
 
-assign_breed_prediction_results(whole_table)
-whole_table$SampleName
+#breed_info <- sapply(whole_wes_table$Breeds, simpleCap)
+#whole_wes_table$Breeds <- breed_info
+# meta_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/metadata_summary_02_01_2021.txt")
+# colnames(meta_table)[1] <- "sample_names"
+# target_col <- c("DiseaseAcronym1","DiseaseAcronym2","DiseaseSubtype/Tissue")
+# 
+# meta_file <- lapply(whole_wes_table$Case_ID,FUN = match_table, column = target_col,table = meta_table)
+# 
+# whole_wes_table$DiseaseAcronym2 <- meta_file
+# write.table(whole_wes_table, file = "C:/Users/abc73/Desktop/whole_new_wgs_with_clean_breed.txt",
+#             sep = "\t", col.names = T, row.names = F, quote = F)
+# length(unique(whole_wes_table$Case_ID))
 
-# fwrite(whole_table, file = "C:/Users/abc73/Desktop/4WGS_allWES_meta.txt",
-#        col.names = T, row.names = F, quote = F, sep = "\t",eol = "\n",
-#        na = "NA")
-
-
-colnames(breed_cluster_info)
-breed_info <- sapply(whole_table$Breeds, simpleCap)
-whole_table$Breeds <- breed_info
-meta_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/metadata_summary_02_01_2021.txt")
-colnames(meta_table)[1] <- "sample_names"
-target_col <- c("DiseaseAcronym1","DiseaseAcronym2","DiseaseSubtype/Tissue")
-
-meta_file <- lapply(whole_table$Case_ID,FUN = match_table, column = target_col,table = meta_table)
-
-whole_table$DiseaseAcronym2 <- meta_file
-write.table(whole_table, file = "C:/Users/abc73/Desktop/whole_new_wgs_with_clean_breed.txt",
-            sep = "\t", col.names = T, row.names = F, quote = F)
-# length(unique(whole_table$Case_ID))
-
-pass <- unique(whole_table[The_reason_to_exclude=="Pass QC" & Case_ID!="No-Pair",])
+pass <- unique(whole_wes_table[The_reason_to_exclude=="Pass QC" & Case_ID!="No-Pair",])
 pass <- setDT(pass)
 pass_breed <- unique(pass[, .(Case_ID,Breeds)])
 
@@ -114,13 +96,13 @@ write.table(a, file = "C:/Users/abc73/Desktop/Breeds_merge_WGS_info.txt",
 
 symbol_sum <- NULL
 for (sample in GLM_WES){
-  symbol_sum <- c(symbol_sum,unlist(whole_table[Case_ID==sample, .(Symbol)])[1])
+  symbol_sum <- c(symbol_sum,unlist(whole_wes_table[Case_ID==sample, .(Symbol)])[1])
 }
 
 write.table(symbol_sum,file = "C:/Users/abc73/Desktop/breed_WES_info.txt",
             sep = "\n",quote = F, col.names = T, row.names = F)
 
-target <- whole_table[,.(Sample_ID,Case_ID,Tumor_Type,Breeds,Status,The_reason_to_exclude,Symbol)]
+target <- whole_wes_table[,.(Sample_ID,Case_ID,Tumor_Type,Breeds,Status,The_reason_to_exclude,Symbol)]
 fwrite(target, file = "C:/Users/abc73/Desktop/target_WGS_info.txt",
        sep ="\t", quote = F, col.names = T, row.names = F)
 
@@ -200,7 +182,7 @@ whole_wes_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_can
 pass_wes_table <- unique(whole_wes_table[Case_ID!="No-Pair" & The_reason_to_exclude=="Pass QC",.(Case_ID,Breed_info)])
 
 
-total_file <- fread(paste(base_dir,"whole_table.txt",sep = seperator))
+total_file <- fread(paste(base_dir,"whole_wes_table.txt",sep = seperator))
 
 a <- unique(total_file[Total_pairs>=5000000 & Uniquely_coordinatly_mapped_rate>=0.6 & Target_CDS_Mapping_Rates>=0.3 & Mean_Coverage<30, .(The_reason_to_exclude,Case_ID,Mean_Coverage,Symbol)])
 a$Case_ID
@@ -226,7 +208,7 @@ fina_pass_wes_breed <- as.data.frame(table(pass_wes_table$Breed_info))
 write.table(fina_pass_wes_breed, file = paste(base_dir,"final_pass_total_breed.txt", sep = "/"),
             sep ="\t",col.names = T,row.names = F,quote = F )
 match_file <- fread(paste(base_dir,"tumor_normal_pair_QC_results.txt",sep = seperator))
-whole_table <- fread(paste(base_dir,"whole_table.txt",sep=seperator))
+whole_wes_table <- fread(paste(base_dir,"whole_wes_table.txt",sep=seperator))
 
 
 breed <- tgen_meta[`Sample Name` %in% tgen_sample$V1,.(Breed)]
@@ -235,7 +217,7 @@ fwrite(breed, file= paste(base_dir,"Tgne_WGS_breed.txt",sep = seperator),col.nam
 
 
 match_file <- fread(paste(base_dir,"tumor_normal_pair_QC_results.txt",sep = seperator))
-whole_table <- fread(paste(base_dir,"whole_GLM_tgne_cases.txt",sep=seperator),header = F)
+whole_wes_table <- fread(paste(base_dir,"whole_GLM_tgne_cases.txt",sep=seperator),header = F)
 breed_info <- fread(paste(base_dir,"pan-cancer_breeds.txt",sep=seperator))
 breed_info[,Original_label_breeds]
 sample_status <- fread(paste(base_dir,"Pan-cancer_sample.txt",sep=seperator),header = F)
@@ -279,22 +261,22 @@ extract_sample_status_info_by_case <- function(x){
 
 
 
-#brd_info <- unlist(sapply(whole_table$Case_ID,FUN = extract_breed_info_by_case))
+#brd_info <- unlist(sapply(whole_wes_table$Case_ID,FUN = extract_breed_info_by_case))
 
-sample_status_info <- unlist(sapply(whole_table$V1,FUN = extract_sample_status_info_by_case))
-whole_table$sample_status <- sample_status_info
+sample_status_info <- unlist(sapply(whole_wes_table$V1,FUN = extract_sample_status_info_by_case))
+whole_wes_table$sample_status <- sample_status_info
 
-  fwrite(whole_table, file = paste(base_dir,"whole_sample_status.txt",sep=seperator),quote = F,
+  fwrite(whole_wes_table, file = paste(base_dir,"whole_sample_status.txt",sep=seperator),quote = F,
          col.names = T, row.names = F, sep = "\t", na = "NA")
 
 
 
-whole_table$Breed_info <- brd_info
-whole_table$Sample_status <- sample_status_info
-fwrite(whole_table, file = paste(base_dir,"whole_new_table.txt",sep=seperator),quote = F,
+whole_wes_table$Breed_info <- brd_info
+whole_wes_table$Sample_status <- sample_status_info
+fwrite(whole_wes_table, file = paste(base_dir,"whole_new_table.txt",sep=seperator),quote = F,
        col.names = T, row.names = F, sep = "\t", na = "NA")
 
-pair_info <- as.data.frame(sapply(whole_table$Case_ID,FUN = extract_info_by_case))
+pair_info <- as.data.frame(sapply(whole_wes_table$Case_ID,FUN = extract_info_by_case))
 pair_info <- as.data.frame(t(pair_info))
 fwrite(pair_info,file = paste(base_dir,"total_pair_info.txt",sep =seperator), col.names = T,
        row.names = T,
