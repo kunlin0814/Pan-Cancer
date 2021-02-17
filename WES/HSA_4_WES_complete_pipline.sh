@@ -191,15 +191,19 @@ python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added
 
 ### Sanger 5 steps filtering ###
 # 5 Steps filtering
-grep -w KEEP ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,26,27,38,39 > ${MuTect_out}/${SampleName}_PASS.stat
+
+## With 5 steps filtering 
+grep -w KEEP ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.bam_call_stats.txt | cut -f1,2,4,5,26,27,38,39 > ${MuTect_out}/${SampleName}_PASS.stat
 
 python $script/Filter_MutectStat_5steps.py \
 ${MuTect_out}/${SampleName}_PASS.stat \
 ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS \
 ${MuTect_out}/${SampleName}_vaf_before.txt \
 ${MuTect_out}/${SampleName}_vaf_after.txt \
-${MuTect_out}/${SampleName}_whyout.txt 
+${MuTect_out}/${SampleName}_whyout.txt \
+$SampleName 
 
+## 5 steps filtering created XXX_filterMut file 
 
 # annovar input preparation
 perl $annovar_index/convert2annovar.pl -format vcf4old ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut > ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput
@@ -209,6 +213,7 @@ perl $annovar_index/annotate_variation.pl --buildver canFam3 ${MuTect_out}/${Sam
 
 # add gene name
 python2 $script/Add_GeneName_N_Signature.py ${MuTect_out}/${SampleName}_rg_added_sorted_dedupped_removed.MuTect.vcf-PASS_filteredMut-avinput.exonic_variant_function ${reference}/Canis_familiaris.CanFam3.1.99.chr.gtf_geneNamePair.txt
+
 
 
 ############################## Germline mutation preparation Start ######################################

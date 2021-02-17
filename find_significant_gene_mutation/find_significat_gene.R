@@ -21,7 +21,11 @@ exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pas
 
 # fill up with NA string 
 mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator))
-                          
+ 
+a <- unique(mutect_after_vaf[Subtype=="MT",.(sample_names,Breeds)])
+as.data.frame(table(a$Breeds))
+
+sum(mutect_after_vaf[gene_name=="TP53",.N, keyby= Subtype]$N)             
 
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]

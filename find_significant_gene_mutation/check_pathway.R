@@ -39,6 +39,8 @@ total_sample <- unique(total_mut$sample_names)
 pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
 path_col <- colnames(pathway)
 
+
+total_mut[Subtype=="MT",.N ,keyby = breed]
 # need to put sample wide and tumor wide
 
 Other_PI3K_AKT <- numeric(length(total_sample))
