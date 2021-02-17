@@ -5,8 +5,8 @@ library(readxl)
 base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 seperator <- "/"
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-"/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+#"/Volumes/Research/GitHub/R_util/my_util.R")
 
 #source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
 
@@ -62,8 +62,34 @@ setdiff(notpass,excel_not_pass)
 ## from excel WESQCdata
 whole_table <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
 whole_table <- setDT(whole_table)
-Breed <- as.data.table(table(whole_table$Breeds))
+#Breed <- as.data.table(table(whole_table$Breeds))
+fwrite(whole_table, file = "C:/Users/abc73/Desktop/breed_4WGS_meta_result.txt",
+       col.names = T, row.names = F, quote = F, sep = "\t")
 
+breed_cluster_info <- read.table("clipboard",sep = "\t",header = T, stringsAsFactors = F)
+breed_cluster_info <- setDT(breed_cluster_info)
+colnames(breed_cluster_info)[1] <-"sample_names" 
+
+fwrite(breed_cluster_info, file = "C:/Users/abc73/Desktop/breed_cluster_result.txt",
+       col.names = T, row.names = F, quote = F, sep = "\t")
+
+breed_cluster <- match_vector_table(whole_table$SampleName,"BreedCluster", breed_cluster_info)
+whole_table$BreedCluster <- breed_cluster
+breed_QC <- match_vector_table(whole_table$SampleName,"BreedQC", breed_cluster_info)
+whole_table$BreedQC <- breed_QC
+final_breed <- match_vector_table(whole_table$SampleName,"FinalBreed", breed_cluster_info)
+whole_table$FinalBreed <- final_breed
+
+
+assign_breed_prediction_results(whole_table)
+whole_table$SampleName
+
+# fwrite(whole_table, file = "C:/Users/abc73/Desktop/4WGS_allWES_meta.txt",
+#        col.names = T, row.names = F, quote = F, sep = "\t",eol = "\n",
+#        na = "NA")
+
+
+colnames(breed_cluster_info)
 breed_info <- sapply(whole_table$Breeds, simpleCap)
 whole_table$Breeds <- breed_info
 meta_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/metadata_summary_02_01_2021.txt")
