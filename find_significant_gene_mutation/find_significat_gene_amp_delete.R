@@ -24,24 +24,24 @@ amp_delete <- amp_delete[!sample_names %in% exclude]
 amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
 #
 # ## append the column
-breed <- match_vector_table(amp_delete$sample_names, "final_breed_label",
-                            table=whole_wes_clean_breed_table, string_value = T)
-amp_delete$breeds <- breed
-subtype <- match_vector_table(amp_delete$sample_names, "DiseaseAcronym2",
-                              table=whole_wes_clean_breed_table, string_value = T)
-amp_delete$subtype <- subtype
-
-symbol <- match_vector_table(amp_delete$sample_names, "Symbol",
-                             table=whole_wes_clean_breed_table, string_value = T)
-amp_delete$symbol <- symbol
-## append end
-
-amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mut_type,sep = "_")]
-
-
-fwrite(amp_delete,file = paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_18.txt",sep = seperator),
-       col.names = T, row.names = F, quote = F, sep = "\t",
-       eol = "\n")
+# breed <- match_vector_table(amp_delete$sample_names, "final_breed_label",
+#                             table=whole_wes_clean_breed_table, string_value = T)
+# amp_delete$breeds <- breed
+# subtype <- match_vector_table(amp_delete$sample_names, "DiseaseAcronym2",
+#                               table=whole_wes_clean_breed_table, string_value = T)
+# amp_delete$subtype <- subtype
+# 
+# symbol <- match_vector_table(amp_delete$sample_names, "Symbol",
+#                              table=whole_wes_clean_breed_table, string_value = T)
+# amp_delete$symbol <- symbol
+# ## append end
+# 
+# amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mut_type,sep = "_")]
+# 
+# 
+# fwrite(amp_delete,file = paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_18.txt",sep = seperator),
+#        col.names = T, row.names = F, quote = F, sep = "\t",
+#        eol = "\n")
 
 #dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
