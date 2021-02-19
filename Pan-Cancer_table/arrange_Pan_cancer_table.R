@@ -60,13 +60,24 @@ setdiff(notpass,excel_not_pass)
 
 ## Breed prediction and assignment
 ## from excel WESQCdata
-whole_wes_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")
+whole_wes_table <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
 whole_wes_table <- setDT(whole_wes_table)
+
+#exclude <- unique(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]$Case_ID)
+# Breed QC info and final Breed info
+final_breed_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/merge_breed_4WGS/merge_dis_val_4WGS/assignment_clusters.txt")
+whole_wes_table<- assign_final_breeds_for_WES_table(whole_wes_table,final_breed_data)
+
+
+fwrite(whole_wes_table, file = "C:/Users/abc73/Desktop/whole_wes_table_0218.txt",
+       col.names = T, row.names = F, quote = F, sep = "\t", na = "NA", eol = "\n")
+
+
 #Breed <- as.data.table(table(whole_wes_table$Breeds))
 breed_cluster_info <- read.table(pipe("pbpaste"),sep = "\t",header = T, stringsAsFactors = F)
 breed_cluster_info <- setDT(breed_cluster_info)
 
-breed_cluster_info<- assign_final_breeds(breed_cluster_info)
+a <-  assign_final_breeds(breed_cluster_info)
 
 fwrite(breed_cluster_info, file = "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure2/val_WGS/final_57WGS_final_assignment.txt",
        col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")

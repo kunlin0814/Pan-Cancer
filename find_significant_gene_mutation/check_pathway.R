@@ -9,7 +9,7 @@ base_dir <-
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt") 
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
@@ -39,8 +39,6 @@ total_sample <- unique(total_mut$sample_names)
 pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
 path_col <- colnames(pathway)
 
-
-total_mut[Subtype=="MT",.N ,keyby = breed]
 # need to put sample wide and tumor wide
 
 Other_PI3K_AKT <- numeric(length(total_sample))
