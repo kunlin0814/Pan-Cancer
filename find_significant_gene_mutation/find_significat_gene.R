@@ -38,7 +38,7 @@ mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 ### append column ###
 # subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
 # mutect_after_vaf$Subtype <- subtype
-# breed <- match_vector_table(mutect_after_vaf$sample_names,column="Breed_info",table=whole_wes_clean_breed_table)
+# breed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 # mutect_after_vaf$Breeds <- breed
 # 
 # mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
@@ -419,7 +419,7 @@ indel_file <- indel_file[,emsembl_id:=NULL]
 
 Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table )
 indel_file$Subtype <- Subtype
-breed <- match_vector_table(indel_file$sample_names,"Breed_info",whole_wes_clean_breed_table )
+breed <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table )
 indel_file$Breeds <- breed
 final_SNV <- SNV[,.(sample_names,gene_name,status,Subtype,Breeds)]
 
@@ -548,19 +548,19 @@ meet_cut_off <- total_tumor_type_summary[target_breeds_with >number_sample_mut_c
 
 Total_tumor_info <- NULL
 for (each_tumor_type in tumor_type){
-  each_tumor_breed_info <- NULL
+  each_tumor_final_breed_label <- NULL
   #each_tumor_type <- "MT"
   candidate_breed_each_tumor_type <- unique(unlist(meet_cut_off[tumor_type ==each_tumor_type,.(breeds)]$breeds))
   for ( each_breed in candidate_breed_each_tumor_type){
     each_breed_pvalue_for_each_tumor <- meet_cut_off[tumor_type == each_tumor_type & breeds == each_breed]
     each_breed_pvalue_for_each_tumor <- each_breed_pvalue_for_each_tumor[order(p_value)]
     each_breed_pvalue_for_each_tumor$BH_pvalue = p.adjust(each_breed_pvalue_for_each_tumor$p_value, method = "BH")
-    each_tumor_breed_info <- rbindlist(list(each_tumor_breed_info, each_breed_pvalue_for_each_tumor))
+    each_tumor_final_breed_label <- rbindlist(list(each_tumor_final_breed_label, each_breed_pvalue_for_each_tumor))
   }
-  Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_breed_info))
+  Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_final_breed_label))
 }
 
-fwrite(Total_tumor_info, file = paste(base_dir,"WithBH_breed_significant_Tumor_wide_02_15.txt",sep=seperator),
+fwrite(Total_tumor_info, file = paste(base_dir,"WithBH_breed_significant_Tumor_wide_02_18.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n",
        sep = "\t")
 
