@@ -197,7 +197,7 @@ fwrite(total_tumor_p_value_sum, file=paste(base_dir,"02_14","Pathway","With_pVal
 # breed <- match_vector_table(total_mut$sample_names, "Breed_info", whole_wes_clean_breed_table)
 # total_mut$Breeds <-breed 
 
-breed <- match_vector_table(total_sum$sample_names, "Breed_info", whole_wes_clean_breed_table)
+breed <- match_vector_table(total_sum$sample_names, "final_breed_label", whole_wes_clean_breed_table)
 total_sum$Breeds <- breed
 #total_mut <- total_mut[Subtype!="UCL",]
 
@@ -207,7 +207,7 @@ base_dir <-
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 total_sum <- fread(paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator))
-breed <- match_vector_table(total_sum$sample_names, "Breed_info", whole_wes_clean_breed_table)
+breed <- match_vector_table(total_sum$sample_names, "final_breed_label", whole_wes_clean_breed_table)
 total_sum$Breeds <- breed
 
 number_breeds_cutoff <- 10
@@ -339,7 +339,7 @@ target_info$enr_score
 # matrix <- t(matrix)
 
 
-fwrite(target_info, file = paste(base_dir,"02_14","Pathway","with_Pvalue_target_Breeds_sig_pan_tumor_02_14.txt",sep = seperator),
+fwrite(target_info, file = paste(base_dir,"02_14","Pathway","with_Pvalue_target_Breeds_sig_pan_tumor_02_18.txt",sep = seperator),
        col.names = T, row.names = F, quote = F,sep = "\t",
        na = "NA")
 
@@ -352,7 +352,7 @@ base_dir <-
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 total_sum <- fread(paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator))
-breed <- match_vector_table(total_sum$sample_names, "Breed_info", whole_wes_clean_breed_table)
+breed <- match_vector_table(total_sum$sample_names, "final_breed_label", whole_wes_clean_breed_table)
 total_sum$Breeds <- breed
 
 number_breeds_cutoff <- 10
@@ -415,7 +415,7 @@ for (tumor in target_tumor){
   tumor_sum <- rbindlist(list(tumor_sum, path_way_sum))
 }
 
-fwrite(tumor_sum, file=paste(base_dir,"02_15","Pathway","GoldenWith_pValue_pathway_02_15.txt",sep=seperator),
+fwrite(tumor_sum, file=paste(base_dir,"02_15","Pathway","GoldenWith_pValue_pathway_02_18.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, sep="\t",eol="\n",na = "NA")
 
 
