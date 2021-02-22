@@ -14,33 +14,33 @@ seperator <- "/"
 ## check duplicated
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt") 
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+
+
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 
 # fill up with NA string 
-mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator))
- 
-a <- unique(mutect_after_vaf[Subtype=="MT",.(sample_names,Breeds)])
-as.data.frame(table(a$Breeds))
-
-sum(mutect_after_vaf[gene_name=="TP53",.N, keyby= Subtype]$N)             
+mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator),
+                          na.strings = "")
 
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 
+ 
 
-# fwrite(mutect_after_vaf, file = paste(base_dir,"02_11","NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",sep = seperator),
+# fwrite(mutect_after_vaf, file = paste(base_dir,"02_18","NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_18.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t")
 
 
 ### append column ###
 # subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
 # mutect_after_vaf$Subtype <- subtype
-# breed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
-# mutect_after_vaf$Breeds <- breed
-# 
+
+finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
+mutect_after_vaf$Breeds <- finalbreed
+
 # mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude & gene_name!="-", ]
 # mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 # 
@@ -74,10 +74,11 @@ for (index in 1:length(total_sample)) {
 }
 
 fwrite(total_info_sum,
-       file = paste(base_dir,"02_11","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
+       file = paste(base_dir,"02_18","final_breed_variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator)
        ,col.names = T,
        row.names = F,
        quote = F,
+       na = "NA",
        eol = "\n",
        sep ="\t")
 
@@ -118,10 +119,10 @@ for (index in 1:length(total_sample)) {
                        tumor_type = tumor,
                        subtype = subtype,
                        p_value = p_value,
-                       ensembl_mut_number =ensembl_mut_number,
-                       ensembl_callable = ensembl_callable,
-                       sample_genome_wide_mut_number = sample_genome_wide_mut_number,
-                       sample_genome_wide_mut_callable = sample_genome_wide_mut_callable,
+                       #ensembl_mut_number =ensembl_mut_number,
+                       #ensembl_callable = ensembl_callable,
+                       #sample_genome_wide_mut_number = sample_genome_wide_mut_number,
+                       #sample_genome_wide_mut_callable = sample_genome_wide_mut_callable,
                        mut_type = mut_status
                        )
     info_sum <- rbindlist(list(info_sum,info))
@@ -131,36 +132,43 @@ for (index in 1:length(total_sample)) {
   gene_total_info_sum <- rbindlist(list(gene_total_info_sum,info_sum))
 }
 
-gene_total_info_sum$gene_TMB <- (gene_total_info_sum$ensembl_mut_number*1000000)/gene_total_info_sum$ensembl_callable
-gene_total_info_sum$genome_TMB <- (gene_total_info_sum$sample_genome_wide_mut_number*1000000)/gene_total_info_sum$sample_genome_wide_mut_callable
+#gene_total_info_sum$gene_TMB <- (gene_total_info_sum$ensembl_mut_number*1000000)/gene_total_info_sum$ensembl_callable
+#gene_total_info_sum$genome_TMB <- (gene_total_info_sum$sample_genome_wide_mut_number*1000000)/gene_total_info_sum$sample_genome_wide_mut_callable
 
 # taifang_data <- gene_total_info_sum[,.(sample_names,gene_name,tumor_type,mut_type)]
 
 
 fwrite(gene_total_info_sum,
-       file = paste(base_dir,"02_11","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
+       file = paste(base_dir,"02_18","final_breeds_gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
-       sep ="\t")
+       sep ="\t",
+       na = "NA")
 
 #### Tumor wide analysis ####
 
-sig_variants_sample_wide <- fread(file = paste(base_dir,"02_11","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator))
+sig_variants_sample_wide <- fread(file = paste(base_dir,"02_18","final_breed_variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator))
 
-sig_gene_sample_wide <- fread(paste(base_dir,"02_11","gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator))
+sig_gene_sample_wide <- fread(paste(base_dir,"02_18","final_breeds_gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator))
 
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt") 
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 
-mutect_after_vaf <- fread(paste(base_dir,"02_11","Burair_WithBreeds_Subtypes_QCpass_filtering3_mutect_after_vaf_02_11.txt",sep =seperator)
-                          ,fill = T,na.strings="")
+
+
+# fill up with NA string 
+mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator),
+                          na.strings = "")
 
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude,]
+mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
+## change breed info into final breed info
+finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
+mutect_after_vaf$Breeds <- finalbreed
 
 ## Tumorwide
 tumor_type <- unique(mutect_after_vaf$Subtype)
@@ -246,11 +254,11 @@ for (each_tumor in tumor_type) {
                                      numbersamples_withgene = numbersamples_withgene_sum,
                                      numbersamples_withoutgene = numbersamples_withoutgene_sum,
                                      total_others = total_others_sum,
-                                     total_others_withoutgene = total_others_without_sum,
-                                     total_gene_mut_number = sum_target_samples_mut_number,
-                                     total_gene_mut_callable = sum_target_samples_mut_callable,
-                                     target_sample_genome_mut_number = sum_target_sample_mut_genome_mut_number,
-                                     target_sample_genome_mut_callable = sum_target_sample_mut_genome_mut_callable
+                                     total_others_withoutgene = total_others_without_sum
+                                     #total_gene_mut_number = sum_target_samples_mut_number,
+                                     #total_gene_mut_callable = sum_target_samples_mut_callable,
+                                     #target_sample_genome_mut_number = sum_target_sample_mut_genome_mut_number,
+                                     #target_sample_genome_mut_callable = sum_target_sample_mut_genome_mut_callable
                                      
   )
   
@@ -273,11 +281,12 @@ for (each_tumor in tumor_type) {
 
 
 fwrite(total_variant_summary,
-       file = paste(base_dir,"02_11","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
+       file = paste(base_dir,"02_18","final_breed_variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator)
        ,col.names = T,row.names = F,
        eol = "\n",
        quote = F,
-       sep ="\t")
+       sep ="\t",
+       na = "NA")
 
 
 ## Tumorwide
@@ -361,12 +370,12 @@ for (each_tumor in tumor_type) {
                                      numbersamples_withgene = numbersamples_withgene_sum,
                                      numbersamples_withoutgene = numbersamples_withoutgene_sum,
                                      total_others = total_others_sum,
-                                     total_others_withoutgene = total_others_without_sum,
-                                     total_gene_mut_number = sum_target_samples_mut_number,
-                                     total_gene_mut_callable = sum_target_samples_mut_callable,
-                                     target_sample_genome_mut_number = sum_target_sample_mut_genome_mut_number,
-                                     target_sample_genome_mut_callable = sum_target_sample_mut_genome_mut_callable)
-  
+                                     total_others_withoutgene = total_others_without_sum
+                                     #total_gene_mut_number = sum_target_samples_mut_number,
+                                     #total_gene_mut_callable = sum_target_samples_mut_callable,
+                                     #target_sample_genome_mut_number = sum_target_sample_mut_genome_mut_number,
+                                     #target_sample_genome_mut_callable = sum_target_sample_mut_genome_mut_callable)
+  )
   
   p_value_sum <- numeric(length(each_tumor_sign_uniq_genes))
   for ( i in 1:nrow(each_tumor_info_sum)) {
@@ -387,7 +396,7 @@ for (each_tumor in tumor_type) {
 
 
 fwrite(total_gene_summary,
-       file = paste(base_dir,"02_11","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",sep = seperator)
+       file = paste(base_dir,"02_18","final_breed_gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator)
       ,col.names = T,row.names = F,
        quote = F,
       eol = "\n",
@@ -401,7 +410,7 @@ base_dir <-
 #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt") 
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -410,8 +419,11 @@ SNV <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.t
                           ,fill = T,na.strings="")
 SNV <- SNV[status!= "synonymous",]
 SNV <- SNV[!sample_names %in% exclude,]
-total_breeds <- unique( SNV$Breeds)
-clean_breeds <- na.omit(total_breeds)
+finalbreed <- match_vector_table(SNV$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
+SNV$Breeds <- finalbreed
+
+# total_breeds <- unique( SNV$Breeds)
+# clean_breeds <- na.omit(total_breeds)
 indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
 indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
 setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
@@ -560,8 +572,8 @@ for (each_tumor_type in tumor_type){
   Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_final_breed_label))
 }
 
-fwrite(Total_tumor_info, file = paste(base_dir,"WithBH_breed_significant_Tumor_wide_02_18.txt",sep=seperator),
-       col.names = T, row.names = F, quote = F, eol = "\n",
+fwrite(Total_tumor_info, file = paste(base_dir,"02_18","final_breed_WithBH_breed_significant_Tumor_wide_02_18.txt",sep=seperator),
+       col.names = T, row.names = F, quote = F, eol = "\n", na = "NA",
        sep = "\t")
 
 
@@ -577,13 +589,13 @@ base_dir <-
 seperator <- "/"
 
 
-variant_sample <- fread(paste(base_dir,"02_11","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",
+variant_sample <- fread(paste(base_dir,"02_18","variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",
                               sep = seperator))
-variant_tumor <- fread(paste(base_dir,"02_11","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",
+variant_tumor <- fread(paste(base_dir,"02_18","variant_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_18.txt",
                              sep = seperator))
-gene_sample <- fread(paste(base_dir,"02_11","gene_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_11.txt",
+gene_sample <- fread(paste(base_dir,"02_18","gene_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",
                            sep = seperator))
-gene_tumor <- fread(paste(base_dir,"02_11","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_11.txt",
+gene_tumor <- fread(paste(base_dir,"02_18","gene_nonsyn_tumorwide_p_value_VAF_Mutect_orientBias3_02_18.txt",
                           sep = seperator))
 
 
@@ -593,12 +605,12 @@ gene_tumor <- fread(paste(base_dir,"02_11","gene_nonsyn_tumorwide_p_value_VAF_Mu
 top_6_tumor_variants <- variant_tumor[, head(.SD, 5), by=tumor_type]
 top_6_tumor_gene <- gene_tumor[, head(.SD, 5), by=tumor_type]
 
-fwrite(top_6_tumor_variants, file = paste(base_dir,"02_11","top_6_tumor_variants.txt",sep=seperator),
+fwrite(top_6_tumor_variants, file = paste(base_dir,"02_18","top_6_tumor_variants.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n",
        sep = "\t")
 
 
-fwrite(top_6_tumor_gene, file = paste(base_dir,"02_11","top_6_tumor_genes.txt",sep=seperator),
+fwrite(top_6_tumor_gene, file = paste(base_dir,"02_18","top_6_tumor_genes.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n",
        sep = "\t")
 
