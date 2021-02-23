@@ -63,6 +63,14 @@ setdiff(notpass,excel_not_pass)
 whole_wes_table <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
 whole_wes_table <- setDT(whole_wes_table)
 
+
+info <- unique(whole_wes_table[,.(Case_ID,DiseaseAcronym2)])
+
+tumor_info <- info[,.N, keyby= .(DiseaseAcronym2)]
+
+a = unique(whole_wes_table[DiseaseAcronym2 =="TCL" & The_reason_to_exclude!="Pass QC",.(Case_ID,The_reason_to_exclude)])
+
+
 #exclude <- unique(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]$Case_ID)
 # Breed QC info and final Breed info
 final_breed_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/merge_breed_4WGS/merge_dis_val_4WGS/assignment_clusters.txt")
