@@ -19,6 +19,11 @@ exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pas
 
 mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
                                 sep =seperator))
+
+s1_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
+exclude <- c(exclude, s1_high_sample)
+
 ## indel
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude,]
 indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
@@ -81,6 +86,7 @@ for( index in 1:length(all_tumor_type)){
 fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_19","include_amp_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
+## Use candidate gene to compare tmb
 base_dir <- 
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
@@ -89,6 +95,9 @@ seperator <- "/"
 whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
+s1_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
+exclude <- c(exclude, s1_high_sample)
 
 ## excldue NA and UCL
 tmb_l <- c("MT", "GLM","BCL")
@@ -110,13 +119,20 @@ total_tumor_normalize <- NULL
 for (each_tumor in total_tumor_type){
   each_tumor_info <- total_mut[Subtype==each_tumor,]
   each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
-  each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']]) 
-  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb-each_median)/each_sd]
+  # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']]) 
+  each_tumor_info <- each_tumor_info[, normalizetmb:= log10((tmb/each_median)+0.1)]
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
 
 total_mut <- total_tumor_normalize
 
+
+# each_median <- median(total_mut[Subtype=="MT", .(tmb)][['tmb']])
+# each_tumor_info <- total_mut[Subtype=="MT", .(tmb)]
+# # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']]) 
+# each_tumor_info[, normalizetmb:= log10((tmb/each_median)+0.1)]
+# 
+# log10(each_tumor_info$tmb/each_median+0.1)
 ## Normalize end 
 
 
