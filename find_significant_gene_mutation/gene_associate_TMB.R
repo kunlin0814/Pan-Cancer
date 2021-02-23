@@ -70,7 +70,7 @@ for( index in 1:length(all_tumor_type)){
     total_sample_sum <- as.data.table(table(total_sample$Subtype))
     total_sample_number <- sum(total_sample_sum$N)
     each_tumor_sample_sum <- total_sample_sum[which(total_sample_sum$V1==each_tumor)]$N
-    if (each_tumor_sample_sum > signle_tumor_cut && total_sample_number> all_tumor_cut){
+    if (each_tumor_sample_sum >= signle_tumor_cut && total_sample_number>= all_tumor_cut){
       target_gene_sample_number <- c(target_gene_sample_number,each_tumor_sample_sum)
       target_gene_total_sample_number <- c(target_gene_total_sample_number,total_sample_number)
       each_tumor_gene_candidate <- c(each_tumor_gene_candidate,each_gene)
