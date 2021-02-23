@@ -16,8 +16,6 @@ mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Su
                                 sep =seperator))
 
 
-a <- unique(mutect_after_vaf[Subtype=="HSA",.(Breeds,sample_names)])
-as.data.frame(table(a$Breeds))
 ## indel
   
 indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
@@ -38,6 +36,9 @@ total_mut <- rbindlist(list(SNV,CNV,indel_file))
 total_sample <- unique(total_mut$sample_names)
 pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
 path_col <- colnames(pathway)
+
+
+target_pathway <- c("TP53","MDM2","CDKN2A","Other_Cell_cycle","PIK3CA","Other_PI3K_AKT","BCR","TCR")
 
 # need to put sample wide and tumor wide
 
@@ -94,7 +95,7 @@ total_sum$Subtype <- subtype
 total_tumor_p_value_sum <- NULL
 no_UCL <- total_sum[Subtype!="UCL",]
 
-fwrite(no_UCL,file = paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator),
+fwrite(no_UCL,file = paste(base_dir,"02_23","no_UCL_pathway_summary_02_23.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", na="NA")
 
 total_tumor_type <- unique(no_UCL$Subtype)
@@ -164,8 +165,9 @@ for (index in 1:length(total_tumor_type)){
   total_tumor_p_value_sum <- rbind(total_tumor_p_value_sum, each_tumor_sum)
   
 }
+total_tumor_p_value_sum <- total_tumor_p_value_sum[gene_pathway %in% target_pathway,]
 
-fwrite(total_tumor_p_value_sum, file=paste(base_dir,"02_14","Pathway","With_pValue_pan-tumor_pathway_02_14.txt",sep=seperator),
+fwrite(total_tumor_p_value_sum, file=paste(base_dir,"02_23","With_pValue_pan-tumor_pathway_02_23.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, sep="\t",eol="\n",na = "NA")
 
 #### reshape and heatmap ###
@@ -206,9 +208,12 @@ base_dir <-
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
-total_sum <- fread(paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator))
+total_sum <- fread(paste(base_dir,"02_23","no_UCL_pathway_summary_02_23.txt",sep = seperator))
 breed <- match_vector_table(total_sum$sample_names, "final_breed_label", whole_wes_clean_breed_table)
 total_sum$Breeds <- breed
+total_sum <- total_sum[!Breeds %in% c(NA),]
+
+
 
 number_breeds_cutoff <- 10
 number_sample_mut_cutoff <- 2
@@ -220,7 +225,7 @@ for (index in 1:length(tumor_type)) {
   each_tumor_sum <- NULL
   print(paste( "Processing the ",index," tumor with total tumor",length(tumor_type),sep = " "))
   # each tumor type
-  each_tumor_info <- total_sum[Subtype == each_tumor & !Breeds %in% c("Mixed", NA)]
+  each_tumor_info <- total_sum[Subtype == each_tumor,]
   if (nrow(each_tumor_info) > 0) {
     ## check breeds number
     each_tumor_all_breeds <-
@@ -229,9 +234,11 @@ for (index in 1:length(tumor_type)) {
       data.table(table(each_tumor_all_breeds$Breeds))
     candidate_breeds <-
       sort(each_tumor_breed_number[N >= number_breeds_cutoff,]$V1)
+    candidate_breeds <- candidate_breeds[!candidate_breeds %in% c("Mixed")]
+    
     total_breed_total_pathway <- NULL
     
-    each_tumor_info <- each_tumor_info[Breeds %in% candidate_breeds,]
+    each_tumor_candidate_breed_info <- each_tumor_info[Breeds %in% candidate_breeds,]
     
     each_breed_each_pathway <- NULL
     for (index in 1:length(path_col)) {
@@ -243,10 +250,10 @@ for (index in 1:length(tumor_type)) {
       #each_tumor_breed_uniq_gene <- unique(each_tumor_breed_gene)
       #### check gene mut for each breed ( at least two dogs)
       for (candidate_breed in candidate_breeds){
-        total_target_breed_number <- nrow(unique(each_tumor_info[Breeds==candidate_breed,.(sample_names)]))
+        total_target_breed_number <- nrow(unique(each_tumor_candidate_breed_info[Breeds==candidate_breed,.(sample_names)]))
         total_other_breeds_number <- nrow(unique(each_tumor_info[Breeds!=candidate_breed,.(sample_names)]))
         
-        target_breed_with <-sum(each_tumor_info[Breeds==candidate_breed,][[each_pathway]])
+        target_breed_with <-sum(each_tumor_candidate_breed_info[Breeds==candidate_breed,][[each_pathway]])
         target_breed_without <- total_target_breed_number-target_breed_with
         
         other_breeds_with <- sum(each_tumor_info[Breeds!=candidate_breed,][[each_pathway]])
@@ -260,17 +267,17 @@ for (index in 1:length(tumor_type)) {
         
         enr_score <- min(5, (log10(p_value) * -1));
         
-        if (target_breed_with <number_sample_mut_cutoff){
-          enr_score <- NA
+        # if (target_breed_with <number_sample_mut_cutoff){
+        #   enr_score <- NA
+        # 
+        # }
+        # else{
           
-        }
-        else{
-        
-        if(odds_ratio < 1) {
-          enr_score <- 0-enr_score;
-        }
+          if(odds_ratio < 1) {
+            enr_score <- 0-enr_score;
+          }
           
-        }
+        # }
         # enrich_p_value <- fisher.test(testor, alternative = "greater")$p.value
         # deplete_p_value <- fisher.test(testor, alternative = "less")$p.value
         # enrich_p_value <- fisher.test(testor, alternative = "greater")$p.value
@@ -303,6 +310,7 @@ for (index in 1:length(tumor_type)) {
   }
   total_tumor_type_summary <- rbindlist(list(total_tumor_type_summary,each_tumor_sum))
 }
+
 
 #meet_cut_off <- total_tumor_type_summary[target_breed_with >number_sample_mut_cutoff,]
 
@@ -339,7 +347,7 @@ target_info$enr_score
 # matrix <- t(matrix)
 
 
-fwrite(target_info, file = paste(base_dir,"02_14","Pathway","with_Pvalue_target_Breeds_sig_pan_tumor_02_18.txt",sep = seperator),
+fwrite(target_info, file = paste(base_dir,"02_23","with_Pvalue_target_Breeds_sig_pan_tumor_02_23.txt",sep = seperator),
        col.names = T, row.names = F, quote = F,sep = "\t",
        na = "NA")
 
@@ -351,7 +359,7 @@ base_dir <-
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
-total_sum <- fread(paste(base_dir,"02_14","no_UCL_pathway_summary_02_14.txt",sep = seperator))
+total_sum <- fread(paste(base_dir,"02_23","no_UCL_pathway_summary_02_23.txt",sep = seperator))
 breed <- match_vector_table(total_sum$sample_names, "final_breed_label", whole_wes_clean_breed_table)
 total_sum$Breeds <- breed
 
@@ -387,16 +395,16 @@ for (tumor in target_tumor){
     
     enr_score <- min(5, (log10(p_value) * -1));
     
-    if (target_tumor_target_pathway_with <number_sample_mut_cutoff){
-      enr_score <- NA
-      
-    } 
-    else{
+    # if (target_tumor_target_pathway_with <number_sample_mut_cutoff){
+    #   enr_score <- NA
+    #   
+    # } 
+    # else{
       
       if(odds_ratio < 1) {
         enr_score <- 0-enr_score;
       }
-    }
+    # }
     each_pathway <- data.table(pathway = each_pathway,
                                tumor_with = target_tumor_target_pathway_with,
                                tumor_without= target_tumor_target_pathway_without,
@@ -415,8 +423,9 @@ for (tumor in target_tumor){
   tumor_sum <- rbindlist(list(tumor_sum, path_way_sum))
 }
 
-fwrite(tumor_sum, file=paste(base_dir,"02_15","Pathway","GoldenWith_pValue_pathway_02_18.txt",sep=seperator),
+fwrite(tumor_sum, file=paste(base_dir,"02_23","GoldenWith_pValue_pathway_02_23.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, sep="\t",eol="\n",na = "NA")
 
 
-
+a = unique(total_sum[Subtype=="OSA",.(sample_names,Breeds)])
+as.data.table(table(a$Breeds))
