@@ -1,17 +1,17 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-#"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_23.txt")
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
 
 # dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
@@ -185,15 +185,15 @@ fwrite(total_summary, file = paste(base_dir,"02_23","With_BH_sep_amp_delete_merg
 #### Breeds within each tumor type 
 # need at least 10 dogs,
 # need at least two certain dogs have that mutation (gene or variants)
-base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_23.txt")       
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")       
 
 # dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
@@ -209,8 +209,8 @@ amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ig
 # change into final breeds
 finalbreed <- match_vector_table(amp_delete$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 amp_delete$breeds <- finalbreed
-amp_delete <- amp_delete[breeds!="No breed provided and unable to do the breed-prediction",]
-
+amp_delete <- amp_delete[subtype!="UCL" & !sample_names %in% exclude & breeds!="No breed provided and unable to do the breed-prediction",]
+amp_delete <- na.omit(amp_delete)
 number_breeds_cutoff <- 10
 number_sample_mut_cutoff <- 2
 ### breedwide variants ##
@@ -228,8 +228,8 @@ for (index in 1:length(tumor_type)) {
   ))
   # each tumor type
   each_tumor_info <-
-    amp_delete[subtype == each_tumor &
-                 !breeds %in% c("Mixed", NA)]
+    amp_delete[subtype == each_tumor,]
+                
   if (nrow(each_tumor_info) > 0) {
     ## check breeds number
     each_tumor_all_breeds <-
@@ -238,10 +238,11 @@ for (index in 1:length(tumor_type)) {
       data.table(table(each_tumor_all_breeds$breeds))
     candidate_breeds <-
       sort(each_tumor_breed_number[N >= number_breeds_cutoff,]$V1)
+    candidate_breeds <- candidate_breeds[!candidate_breeds %in% c("Mixed")]
     candidate_breeds_uniq_gene_mut <-
       unique(amp_delete[breeds %in% candidate_breeds, .(gene_mutation)]$gene_mutation)
     all_gene_summary <- NULL
-    if (length(candidate_breeds)>=number_sample_mut_cutoff){
+    if (length(candidate_breeds)>=2){
       for (index in 1:length(candidate_breeds_uniq_gene_mut)) {
         #print(paste("Processing the ",index," gene mutation with total gene mutation",length(candidate_breeds_uniq_gene_mut),sep = " "))
         each_gene_mut = candidate_breeds_uniq_gene_mut[index]
@@ -265,8 +266,9 @@ for (index in 1:length(tumor_type)) {
           }
           number_gene_mut_in_breeds <-
             number_gene_mut_in_breeds[breeds %in% candidate_breeds]
+          ####### here total candidate dogs become total dogs #####
           total_candidate_dogs <-
-            length(unique(each_tumor_info[breeds %in% candidate_breeds]$sample_names))
+            length(unique(each_tumor_info$sample_names))
           total_candidate_breeds_with <- sum(number_gene_mut_in_breeds$N)
           total_candidate_breeds_without <-
             total_candidate_dogs - total_candidate_breeds_with
@@ -320,13 +322,13 @@ for (index in 1:length(tumor_type)) {
 }
 # fwrite(total_tumor_type_summary, file = "C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt",
 #        col.names = T, row.names = F, quote = F, sep = "\t")
-
+a <- unique(amp_delete[subtype=="MT",.(sample_names,breeds)])
 
 # total_tumor_type_summary <- fread("C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt")
 unique(total_tumor_type_summary$tumor_type)
 
 meet_cut_off <- total_tumor_type_summary[target_breeds_with >number_sample_mut_cutoff,]
-
+a <- meet_cut_off[tumor_type == "MT"]
 ## within each tumor type, do p adjustment for each breed
 
 Total_tumor_info <- NULL
