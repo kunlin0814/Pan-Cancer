@@ -48,9 +48,13 @@ amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ig
 amp_delete_data <- amp_delete[gene_name %in% target_pathway_gene$target_pathway_gene,.(sample_names,gene_name,mut_type,subtype)]
 colnames(amp_delete_data) <- c("sample_names","gene_name","status","Subtype")
 total_mut <- rbindlist(list(SNV,indel_file,amp_delete_data))
+
 #total_mut <- rbindlist(list(SNV,indel_file))
 
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
+
+a= total_mut[gene_name =="MDM2",]
+a= amp_delete[gene_name=="ATM"]
 
 ## identify candidate genes (gene is 10 samples of all tumor and 5 samples within each tumor)
 ## need to normalize with median for each tumor
@@ -88,7 +92,7 @@ for( index in 1:length(all_tumor_type)){
     
     total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_sum),fill = T)
 }
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_23","include_amp_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_23","not_include_amp_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ## Use candidate gene to compare tmb
@@ -118,6 +122,7 @@ TMB_info <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation
                   "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
 colnames(TMB_info)
 total_mut$tmb <- match_vector_table(total_mut$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
+tmb_sum <- total_mut[, .(median_tmb = median(tmb)),keyby = .(Subtype)]
 
 ## Normalize TMB with regards to each tumor median (x-u/std)
 total_tumor_type <- unique(total_mut$Subtype)
@@ -132,7 +137,7 @@ for (each_tumor in total_tumor_type){
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
 total_mut <- total_tumor_normalize
-
+(total_mut[Subtype=="MT",.(tmb)]/0.5398122)[['tmb']]
 
 # each_median <- median(total_mut[Subtype=="MT", .(tmb)][['tmb']])
 # each_tumor_info <- total_mut[Subtype=="MT",][['tmb']]
@@ -208,6 +213,11 @@ for (each_gene in candidate_gene){
   
   total_gene_sum <- rbindlist(list(total_gene_sum,each_gene_sum))
 }
+total_gene_sum$tmb_l_pvalue
+total_gene_sum <- total_gene_sum[order(tmb_l_pvalue)]
+total_gene_sum$tmb_l_BH_pvalue = p.adjust(total_gene_sum$tmb_l_pvalue, method = "BH")
+total_gene_sum <- total_gene_sum[order(tmb_h_pvalue)]
+total_gene_sum$tmb_h_BH_pvalue = p.adjust(total_gene_sum$tmb_h_pvalue, method = "BH")
 
 fwrite(total_gene_sum, file = paste(output_dir,"02_23","include_amp_normalize_p_value_candidate_gene_associated_TMB_02_23.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
