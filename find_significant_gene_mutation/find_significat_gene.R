@@ -461,7 +461,7 @@ for (index in 1:length(tumor_type)) {
   # each tumor type
   each_tumor_info <-
     mutect_after_vaf[Subtype == each_tumor &
-                       !Breeds %in% c("Mixed", NA)]
+                       !Breeds %in% c("Mixed",NA)]
   if (nrow(each_tumor_info) > 0) {
     ## check breeds number
     each_tumor_all_breeds <-
@@ -470,6 +470,7 @@ for (index in 1:length(tumor_type)) {
       data.table(table(each_tumor_all_breeds$Breeds))
     candidate_breeds <-
       sort(each_tumor_breed_number[N >= number_breeds_cutoff,]$V1)
+    #candidate_breeds <- candidate_breeds[!candidate_breeds %in% c("Mixed")]
     candidate_breeds_uniq_gene_mut <-
       unique(mutect_after_vaf[Breeds %in% candidate_breeds, .(gene_name)]$gene_name)
     all_gene_summary <- NULL

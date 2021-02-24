@@ -173,7 +173,7 @@ for (each_tumor in tumor_type) {
   total_summary <- rbindlist(list(total_summary,each_tumor_sum))
 }
 
-fwrite(total_summary, file = paste(base_dir,"02_12","With_BH_sep_amp_delete_merged_adjust_Pan_cancer_amp_delete_02_23.txt",sep=seperator),
+fwrite(total_summary, file = paste(base_dir,"02_23","With_BH_sep_amp_delete_merged_adjust_Pan_cancer_amp_delete_02_23.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n", na = "NA",
        sep = "\t")
 
