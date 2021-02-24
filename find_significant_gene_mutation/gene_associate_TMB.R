@@ -127,11 +127,10 @@ for (each_tumor in total_tumor_type){
   each_tumor_info <- total_mut[Subtype==each_tumor,]
   each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
   # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']]) 
-  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)]
+  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)+0.1]
   #each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
-
 total_mut <- total_tumor_normalize
 
 
