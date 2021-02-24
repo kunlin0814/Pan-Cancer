@@ -11,22 +11,18 @@ seperator <- "/"
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
 whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt")
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_23.txt")
 
 # dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_18.txt",sep = seperator),
-                    header = T)
+amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_23.txt",sep = seperator),
+                    header = T,na.strings = "")
 
 amp_delete <- amp_delete[!sample_names %in% exclude]
 amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
-#
-# ## append the column
-# breed <- match_vector_table(amp_delete$sample_names, "final_breed_label",
-#                             table=whole_wes_clean_breed_table, string_value = T)
-# amp_delete$breeds <- breed
+
 # subtype <- match_vector_table(amp_delete$sample_names, "DiseaseAcronym2",
 #                               table=whole_wes_clean_breed_table, string_value = T)
 # amp_delete$subtype <- subtype
@@ -39,7 +35,7 @@ amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ig
 # amp_delete <- amp_delete[,gene_mutation:=paste(gene_name,mut_type,sep = "_")]
 # 
 # 
-# fwrite(amp_delete,file = paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_18.txt",sep = seperator),
+# fwrite(amp_delete,file = paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_23.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t",
 #        eol = "\n")
 
@@ -177,7 +173,7 @@ for (each_tumor in tumor_type) {
   total_summary <- rbindlist(list(total_summary,each_tumor_sum))
 }
 
-fwrite(total_summary, file = paste(base_dir,"02_18","With_BH_sep_amp_delete_merged_adjust_Pan_cancer_amp_delete_02_18.txt",sep=seperator),
+fwrite(total_summary, file = paste(base_dir,"02_12","With_BH_sep_amp_delete_merged_adjust_Pan_cancer_amp_delete_02_23.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n", na = "NA",
        sep = "\t")
 
@@ -197,7 +193,7 @@ seperator <- "/"
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
 whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt")       
+#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_23.txt")       
 
 # dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
@@ -213,7 +209,7 @@ amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ig
 # change into final breeds
 finalbreed <- match_vector_table(amp_delete$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 amp_delete$breeds <- finalbreed
-
+amp_delete <- amp_delete[breeds!="No breed provided and unable to do the breed-prediction",]
 
 number_breeds_cutoff <- 10
 number_sample_mut_cutoff <- 2
@@ -351,7 +347,7 @@ split_col <- as.data.frame(str_split_fixed(Total_tumor_info$gene_mut,"_",2))
 colnames(split_col) <- c("gene_name","mut_type")
 Total_tumor_info <- cbind(Total_tumor_info,split_col)
 
-fwrite(Total_tumor_info, file = paste(base_dir,"02_18","final_breeds_WithBH_amp_delete_breed_significant_Tumor_wide_02_18.txt",sep=seperator),
+fwrite(Total_tumor_info, file = paste(base_dir,"02_23","final_breeds_WithBH_amp_delete_breed_significant_Tumor_wide_02_23.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n",na = "NA",
        sep = "\t")
 
