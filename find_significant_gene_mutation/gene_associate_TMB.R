@@ -1,26 +1,29 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-#"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
 
 base_dir <- 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-output_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
-
+output_dir <- #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
+              "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
 pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
 target_pathway_gene <- fread(paste(base_dir,"target_pathway_total_genes.txt",sep = seperator), na.strings = "")
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
                                 sep =seperator))
 
-s1_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 exclude <- c(exclude, s1_high_sample)
 
@@ -85,19 +88,20 @@ for( index in 1:length(all_tumor_type)){
     
     total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_sum),fill = T)
 }
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_19","include_amp_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_23","include_amp_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ## Use candidate gene to compare tmb
 base_dir <- 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_18.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-s1_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 exclude <- c(exclude, s1_high_sample)
 
@@ -105,12 +109,13 @@ exclude <- c(exclude, s1_high_sample)
 tmb_l <- c("MT", "GLM","BCL")
 tmb_h <- c("OM","OSA","HSA","TCL")
 
-total_tumor_gene_sum <- fread(paste(output_dir,"02_19","include_amp_candidate_gene_associated_TMB_02_22.txt",sep = seperator))
+total_tumor_gene_sum <- fread(paste(output_dir,"02_23","include_amp_candidate_gene_associated_TMB_02_23.txt",sep = seperator))
 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
 candidate_gene <- unique(total_tumor_gene_sum$gene_name)
 ## append TMB info
-TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+TMB_info <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+                  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
 colnames(TMB_info)
 total_mut$tmb <- match_vector_table(total_mut$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
 
@@ -122,8 +127,8 @@ for (each_tumor in total_tumor_type){
   each_tumor_info <- total_mut[Subtype==each_tumor,]
   each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
   # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']]) 
-  #each_tumor_info <- each_tumor_info[, normalizetmb:= log10((tmb/each_median)+0.1)]
-  each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
+  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)]
+  #each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
 
@@ -159,12 +164,13 @@ for (each_gene in candidate_gene){
     tmb_l_pvalue <- tmb_l_test$p.value
     median_tmb_l_gene_mut_tmb <- median(tmb_l_gene_mut_tmb)
     median_tmb_l_gene_no_mut_tmb <- median(tmb_l_gene_no_mut_tmb)
+    tmb_l_fold_change <- median_tmb_l_gene_mut_tmb/median_tmb_l_gene_no_mut_tmb
   }
-  else{
-    tmb_l_pvalue <- "No tmb_l_gene_mut_samples or tmb_l_gene_no_mut_samples"
-    median_tmb_l_gene_mut_tmb <- "No tmb_l_gene_mut_samples or tmb_l_gene_no_mut_samples"
-    median_tmb_l_gene_no_mut_tmb <-"No tmb_l_gene_mut_samples or tmb_l_gene_no_mut_samples"
-  }
+  # else{
+  #   tmb_l_pvalue <- "No tmb_l_gene_mut_samples or tmb_l_gene_no_mut_samples"
+  #   median_tmb_l_gene_mut_tmb <- "No tmb_l_gene_mut_samples or tmb_l_gene_no_mut_samples"
+  #   median_tmb_l_gene_no_mut_tmb <-"No tmb_l_gene_mut_samples or tmb_l_gene_no_mut_samples"
+  # }
   
   tmb_h_group <- total_mut[Subtype %in%tmb_h, ]
   tmb_h_group_total_samples <- unique(tmb_h_group$sample_names)
@@ -179,21 +185,24 @@ for (each_gene in candidate_gene){
     tmb_h_pvalue <- tmb_h_test$p.value
     median_tmb_h_gene_mut_tmb <- median(tmb_h_gene_mut_tmb)
     median_tmb_h_gene_no_mut_tmb <- median(tmb_h_gene_no_mut_tmb)
+    tmb_h_fold_change <- median_tmb_h_gene_mut_tmb/median_tmb_h_gene_no_mut_tmb
   }
   
-  else{
-    tmb_h_pvalue <-"No tmb_h_gene_mut_samples or tmb_h_gene_no_mut_samples"
-    median_tmb_h_gene_mut_tmb <- "No tmb_h_gene_mut_samples or tmb_h_gene_no_mut_samples"
-    median_tmb_h_gene_no_mut_tmb <-"No tmb_h_gene_mut_samples or tmb_h_gene_no_mut_samples"
-  }
+  # else{
+  #   tmb_h_pvalue <-"No tmb_h_gene_mut_samples or tmb_h_gene_no_mut_samples"
+  #   median_tmb_h_gene_mut_tmb <- "No tmb_h_gene_mut_samples or tmb_h_gene_no_mut_samples"
+  #   median_tmb_h_gene_no_mut_tmb <-"No tmb_h_gene_mut_samples or tmb_h_gene_no_mut_samples"
+  # }
   
   # if (length(tmb_h_gene_mut_samples)!=0 && length(tmb_h_gene_no_mut_samples)!=0 
   #     && length(tmb_l_gene_mut_samples)!=0 && length(tmb_l_gene_no_mut_samples)!=0){
   each_gene_sum <- list(gene = each_gene,
                         median_tmb_l_gene_mut_tmb=median_tmb_l_gene_mut_tmb,
                         median_tmb_l_gene_no_mut_tmb=median_tmb_l_gene_no_mut_tmb,
+                        tmb_l_fold_change = tmb_l_fold_change,
                         median_tmb_h_gene_mut_tmb= median_tmb_h_gene_mut_tmb,
                         median_tmb_h_gene_no_mut_tmb=median_tmb_h_gene_no_mut_tmb,
+                        tmb_h_fold_change =tmb_h_fold_change,
                         tmb_l_pvalue=tmb_l_pvalue,
                         tmb_h_pvalue=tmb_h_pvalue)
   
@@ -201,7 +210,7 @@ for (each_gene in candidate_gene){
   total_gene_sum <- rbindlist(list(total_gene_sum,each_gene_sum))
 }
 
-fwrite(total_gene_sum, file = paste(output_dir,"02_19","include_amp_not_normalize_p_value_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
+fwrite(total_gene_sum, file = paste(output_dir,"02_23","include_amp_normalize_p_value_candidate_gene_associated_TMB_02_23.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 # 
 # 
