@@ -45,6 +45,8 @@ amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ig
 amp_delete_data <- amp_delete[gene_name %in% target_pathway_gene$target_pathway_gene,.(sample_names,gene_name,mut_type,subtype)]
 colnames(amp_delete_data) <- c("sample_names","gene_name","status","Subtype")
 total_mut <- rbindlist(list(SNV,indel_file,amp_delete_data))
+#total_mut <- rbindlist(list(SNV,indel_file))
+
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
 
 ## identify candidate genes (gene is 10 samples of all tumor and 5 samples within each tumor)
@@ -120,7 +122,8 @@ for (each_tumor in total_tumor_type){
   each_tumor_info <- total_mut[Subtype==each_tumor,]
   each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
   # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']]) 
-  each_tumor_info <- each_tumor_info[, normalizetmb:= log10((tmb/each_median)+0.1)]
+  #each_tumor_info <- each_tumor_info[, normalizetmb:= log10((tmb/each_median)+0.1)]
+  each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
 
@@ -128,9 +131,11 @@ total_mut <- total_tumor_normalize
 
 
 # each_median <- median(total_mut[Subtype=="MT", .(tmb)][['tmb']])
-# each_tumor_info <- total_mut[Subtype=="MT", .(tmb)]
-# # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']]) 
+# each_tumor_info <- total_mut[Subtype=="MT",][['tmb']]
+# # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
 # each_tumor_info[, normalizetmb:= log10((tmb/each_median)+0.1)]
+# a <- each_tumor_info/each_median
+# log10(a+0.1)
 # 
 # log10(each_tumor_info$tmb/each_median+0.1)
 ## Normalize end 
@@ -140,7 +145,7 @@ total_mut <- total_tumor_normalize
 total_gene_sum <- NULL
 for (each_gene in candidate_gene){
   #print(each_gene)
-  #each_gene <- "TRAV19"
+  #each_gene <- "PIK3CA"
   tmb_l_group <- total_mut[Subtype %in%tmb_l, ]
   tmb_l_group_total_samples <- unique(tmb_l_group$sample_names)
   tmb_l_gene_mut_samples <- unique(tmb_l_group[gene_name==each_gene,.(sample_names)][["sample_names"]])
@@ -196,7 +201,7 @@ for (each_gene in candidate_gene){
   total_gene_sum <- rbindlist(list(total_gene_sum,each_gene_sum))
 }
 
-fwrite(total_gene_sum, file = paste(output_dir,"02_19","include_amp_normalize_p_value_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
+fwrite(total_gene_sum, file = paste(output_dir,"02_19","include_amp_not_normalize_p_value_candidate_gene_associated_TMB_02_22.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 # 
 # 
