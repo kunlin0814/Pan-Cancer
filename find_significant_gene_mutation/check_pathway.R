@@ -1,16 +1,16 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-"/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+#"/Volumes/Research/GitHub/R_util/my_util.R")
 
 base_dir <- 
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -39,37 +39,43 @@ total_sample <- unique(total_mut$sample_names)
 pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
 path_col <- colnames(pathway)
 
-
-target_pathway <- c("TP53","MDM2","CDKN2A","Other_Cell_cycle","PIK3CA","Other_PI3K_AKT","BCR","TCR")
+#target_pathway <- c("TP53","MDM2","CDKN2A","Other_Cell_cycle","PIK3CA","Other_PI3K_AKT","BCR","TCR")
 
 # need to put sample wide and tumor wide
 
-Other_PI3K_AKT <- numeric(length(total_sample))
-MAPK <- numeric(length(total_sample))
-RTK <- numeric(length(total_sample))
-Other_Cell_cycle <- numeric(length(total_sample))
-p53 <- numeric(length(total_sample))
-BCR <- numeric(length(total_sample))
-Chromatin_remodeler <- numeric(length(total_sample))
-Other_p53 <- numeric(length(total_sample))
-CDKN2A <- numeric(length(total_sample))
-TCR <- numeric(length(total_sample))
-MDM2 <- numeric(length(total_sample))
-PIK3CA <- numeric(length(total_sample))
-sample_names <- character(length(total_sample))
-total_sum <- list(sample_names=sample_names, 
-                  Other_PI3K_AKT= Other_PI3K_AKT,
-                  MAPK = MAPK,
-                  RTK = RTK,
-                  Other_Cell_cycle = Other_Cell_cycle,
-                  p53 = p53,
-                  BCR = BCR,
-                  Chromatin_remodeler = Chromatin_remodeler,
-                  Other_p53 = Other_p53,
-                  CDKN2A = CDKN2A,
-                  TCR = TCR,
-                  MDM2 = MDM2,
-                  PIK3CA = PIK3CA)
+# Other_PI3K_AKT <- numeric(length(total_sample))
+# MAPK <- numeric(length(total_sample))
+# RTK <- numeric(length(total_sample))
+# Other_Cell_cycle <- numeric(length(total_sample))
+# p53 <- numeric(length(total_sample))
+# BCR <- numeric(length(total_sample))
+# Chromatin_remodeler <- numeric(length(total_sample))
+# Other_p53 <- numeric(length(total_sample))
+# CDKN2A <- numeric(length(total_sample))
+# TCR <- numeric(length(total_sample))
+# MDM2 <- numeric(length(total_sample))
+# PIK3CA <- numeric(length(total_sample))
+# sample_names <- character(length(total_sample))
+# total_sum <- list(sample_names=sample_names, 
+#                   Other_PI3K_AKT= Other_PI3K_AKT,
+#                   MAPK = MAPK,
+#                   RTK = RTK,
+#                   Other_Cell_cycle = Other_Cell_cycle,
+#                   p53 = p53,
+#                   BCR = BCR,
+#                   Chromatin_remodeler = Chromatin_remodeler,
+#                   Other_p53 = Other_p53,
+#                   CDKN2A = CDKN2A,
+#                   TCR = TCR,
+#                   MDM2 = MDM2,
+#                   PIK3CA = PIK3CA)
+
+total_sum <- list()
+for (i in path_col){
+  total_sum[[i]] =numeric(length(total_sample))  
+}
+total_sum[["sample_names"]] =  character(length(total_sample))
+
 
 #each_sample_gene <- total_mut[sample_names=="004"]$gene_name
 for (index in 1:length(total_sample)){
@@ -94,7 +100,7 @@ total_sum<- setDT(total_sum)
 subtype <- match_vector_table(total_sum$sample_name,"DiseaseAcronym2", whole_wes_clean_breed_table)
 total_sum$Subtype <- subtype
 
-total_tumor_p_value_sum <- NULL
+
 no_UCL <- total_sum[Subtype!="UCL",]
 
 # ## append TMB info
@@ -127,6 +133,7 @@ no_UCL <- total_sum[Subtype!="UCL",]
 fwrite(no_UCL,file = paste(base_dir,"02_23","no_UCL_pathway_summary_02_23.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", na="NA")
 
+total_tumor_p_value_sum <- NULL
 total_tumor_type <- unique(no_UCL$Subtype)
 for (index in 1:length(total_tumor_type)){
   
@@ -138,6 +145,8 @@ for (index in 1:length(total_tumor_type)){
   each_tumor_other_with <- numeric(length(path_col))
   each_tumor_other_without <- numeric(length(path_col))
   each_tumor_enrich_scores <- numeric(length(path_col))
+  p_value_arr <- numeric(length(path_col))
+  odds_ratio_arr <- numeric(length(path_col))
   #each_tumor_enrich_p_value <- numeric(length(path_col))
   #each_tumor_deplete_p_value <- numeric(length(path_col))
   each_tumor_col <- character(length(path_col))
@@ -160,8 +169,9 @@ for (index in 1:length(total_tumor_type)){
     
     fisher_test <- fisher.test(testor)
     p_value <- fisher_test[["p.value"]];
+    p_value_arr[col_index] <- p_value
     odds_ratio <- fisher_test[["estimate"]];
-    
+    odds_ratio_arr[col_index] <- odds_ratio
     enr_score <- min(5, (log10(p_value) * -1));
     if(odds_ratio < 1) {
       enr_score <- 0-enr_score;
@@ -179,8 +189,8 @@ for (index in 1:length(total_tumor_type)){
                                each_gene_without = each_tumor_target_without,
                                each_gene_other_with = each_tumor_other_with,
                                each_gene_other_without = each_tumor_other_without,
-                               fisher_pvalue = p_value,
-                               odds_ratio = odds_ratio,
+                               fisher_pvalue = p_value_arr,
+                               odds_ratio = odds_ratio_arr,
                                each_tumor_enrich_scores= each_tumor_enrich_scores)
                                # each_gene_enrich_pvalue = each_tumor_enrich_p_value,
                                # each_gene_deplete_pvalue= each_tumor_deplete_p_value
@@ -194,7 +204,7 @@ for (index in 1:length(total_tumor_type)){
   total_tumor_p_value_sum <- rbind(total_tumor_p_value_sum, each_tumor_sum)
   
 }
-total_tumor_p_value_sum <- total_tumor_p_value_sum[gene_pathway %in% target_pathway,]
+#total_tumor_p_value_sum <- total_tumor_p_value_sum[gene_pathway %in% target_pathway,]
 
 fwrite(total_tumor_p_value_sum, file=paste(base_dir,"02_23","With_pValue_pan-tumor_pathway_02_23.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, sep="\t",eol="\n",na = "NA")
@@ -241,7 +251,6 @@ total_sum <- fread(paste(base_dir,"02_23","no_UCL_pathway_summary_02_23.txt",sep
 breed <- match_vector_table(total_sum$sample_names, "final_breed_label", whole_wes_clean_breed_table)
 total_sum$Breeds <- breed
 total_sum <- total_sum[!Breeds %in% c(NA),]
-
 
 
 number_breeds_cutoff <- 10
