@@ -43,7 +43,7 @@ colnames(CNV)<- c("sample_names","gene_name","status","Subtype")
 
 
 ## combine snv, cnv, amp
-total_mut <- rbindlist(list(SNV,CNV,indel_file))
+total_mut <- rbindlist(list(SNV,indel_file,CNV))
 
 total_sample <- unique(total_mut$sample_names)
 
@@ -84,32 +84,32 @@ total_sum$Subtype <- subtype
 ## exclude UCL tumor
 no_UCL <- total_sum[Subtype!="UCL",]
 
-# ## append TMB info
-## check PIK3CA mut between tmb-h and tmb-l
-# 
-# TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-# colnames(TMB_info)
-# no_UCL$tmb <- match_vector_table(no_UCL$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
-# 
-# 
-# tmb_l <- c("MT", "GLM","BCL")
-# tmb_h <- c("OM","OSA","HSA","TCL")
-# 
-# # tmbl
-# tmb_l_group <- no_UCL[Subtype %in% tmb_l]
-# 
-# withmut_l <- tmb_l_group[PIK3CA ==1,]$tmb
-# withoutmut_l <- tmb_l_group[PIK3CA ==0,]$tmb
-# wilcox.test(withmut_l,withoutmut_l)
-# median(withmut_l)
-# median(withoutmut_l)
-# # tmbh
-# tmb_h_group <- no_UCL[Subtype %in% tmb_h]
-# withmut_h <- tmb_h_group[PIK3CA ==1,]$tmb
-# withoutmut_h <- tmb_h_group[PIK3CA ==0,]$tmb
-# wilcox.test(withmut_h,withoutmut_h)
-# median(withmut_h)
-# median(withoutmut_h)
+## append TMB info
+# check PIK3CA mut between tmb-h and tmb-l
+
+TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+colnames(TMB_info)
+no_UCL$tmb <- match_vector_table(no_UCL$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
+
+
+tmb_l <- c("MT", "GLM","BCL")
+tmb_h <- c("OM","OSA","HSA","TCL")
+#tmb_l_group
+# tmbl
+tmb_l_group <- no_UCL[Subtype %in% tmb_l]
+
+withmut_l <- tmb_l_group[PIK3CA_Gene ==1,]$tmb
+withoutmut_l <- tmb_l_group[PIK3CA_Gene ==0,]$tmb
+wilcox.test(withmut_l,withoutmut_l)
+median(withmut_l)
+median(withoutmut_l)
+# tmbh
+tmb_h_group <- no_UCL[Subtype %in% tmb_h]
+withmut_h <- tmb_h_group[PIK3CA_Gene ==1,]$tmb
+withoutmut_h <- tmb_h_group[PIK3CA_Gene ==0,]$tmb
+wilcox.test(withmut_h,withoutmut_h)
+median(withmut_h)
+median(withoutmut_h)
 # 
 # fwrite(no_UCL,file = paste(base_dir,"02_25","no_UCL_pathway_summary_02_25.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t", na="NA")
