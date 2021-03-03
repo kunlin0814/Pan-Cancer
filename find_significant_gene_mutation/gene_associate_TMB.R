@@ -4,6 +4,8 @@ library(readxl)
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 #"/Volumes/Research/GitHub/R_util/my_util.R")
 
+
+## Gene assocaited TMB only exam somatic mutation
 base_dir <- 
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
@@ -11,16 +13,7 @@ seperator <- "/"
 
 output_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
-pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
 
-target_pathway_gene <- NULL
-for (each_pathway in colnames(pathway)){
-  each_path_gene <- pathway[, each_pathway, with = F][[each_pathway]]
-  each_path_clean_gene <- each_path_gene[!is.na(each_path_gene)]
-  target_pathway_gene <- c(target_pathway_gene,each_path_clean_gene)
-}
-
-#target_pathway_gene <- fread(paste(base_dir,"target_pathway_total_genes.txt",sep = seperator), na.strings = "")
 
 whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
@@ -40,19 +33,95 @@ indel_file$Subtype <- Subtype
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
 total_mut <- rbindlist(list(SNV,indel_file))
 
-#total_mut <- rbindlist(list(SNV,indel_file))
 
-# ## exclude s1 high
-# s1_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
-# s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
-# exclude <- c(exclude, s1_high_sample)
-# ##
+## exclude s1 high and UCL samples
+s1_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
+exclude <- c(exclude, s1_high_sample)
 
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
+## append TMB 
+TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+colnames(TMB_info)
+total_mut$tmb <- match_vector_table(total_mut$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
 
-## identify candidate genes (gene is 10 samples of all tumor and 5 samples within each tumor)
-## need to normalize with median for each tumor
-all_tumor_cut <- 10
+## Normalize TMB with regards to each tumor median (in pan-tumor analysis)
+## now decide not normalize 2/25
+total_tumor_type <- unique(total_mut$Subtype)
+total_tumor_normalize <- NULL
+
+for (each_tumor in total_tumor_type){
+  each_tumor_info <- total_mut[Subtype==each_tumor,]
+  each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
+  # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
+  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)+0.1]
+  #each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
+  total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
+}
+
+total_mut <- total_tumor_normalize
+
+## Normalize end 
+
+## identify candidate genes (5 samples within each tumor)
+## need to normalize with median for each tumor in pan tumor analysis
+
+## Pan_tumor
+compare_gene <- "TP53"
+signle_tumor_cut <- 5
+total_tumor_gene_sum <- NULL
+pan_tumor_uniq_gene <- unique(total_mut$gene_name)
+total_sample_number <- length(unique(total_mut$sample_names))
+for (gene_index in 1:length(pan_tumor_uniq_gene)){
+  each_gene_summary <- list()
+  each_gene <- pan_tumor_uniq_gene[gene_index]
+  #each_gene <- "PIK3CA"
+  each_gene_total_sample <- unique(total_mut[gene_name==each_gene, .(sample_names)])
+  each_gene_total_sample_number <- nrow(each_gene_total_sample)
+  if (each_gene_total_sample_number >= signle_tumor_cut ){
+    candidate_gene <- each_gene
+    gene_mut_tmb <- unique(total_mut[gene_name==candidate_gene, .(sample_names,normalizetmb)])[['normalizetmb']]
+    gene_mut_sample <- unique(total_mut[gene_name==candidate_gene, .(sample_names)])[['sample_names']]
+    
+    gene_no_mut_tmb <-  unique(total_mut[!sample_names %in% gene_mut_sample, .(sample_names,normalizetmb)])[['normalizetmb']]
+    tmb_test <- wilcox.test(gene_mut_tmb,gene_no_mut_tmb)
+    p_value <- tmb_test$p.value
+    fold_change <- median(gene_mut_tmb)/median(gene_no_mut_tmb)
+    
+    compare_gene_sample <- unique(total_mut[gene_name==compare_gene,][['sample_names']])
+    candidate_gene_sample<- unique(total_mut[gene_name==candidate_gene][['sample_names']])
+    alt_alt <- length(intersect(compare_gene_sample,candidate_gene_sample)) #TP53 and another gene sample
+    alt_no_alt <- length(setdiff(compare_gene_sample,candidate_gene_sample)) # TP53 but not other gene mut sample
+    no_alt_alt <- length(setdiff(candidate_gene_sample,compare_gene_sample))# other gene mut sample but not tp53 mut sample
+    no_alt_no_alt <- total_sample_number-alt_alt-alt_no_alt-no_alt_alt
+    tp53_fisher_test <- fisher.test(rbind(c(alt_alt, alt_no_alt), c(no_alt_alt, no_alt_no_alt))); 
+    tp53_fisher_p <- tp53_fisher_test[["p.value"]];
+    tp53_relation_type <- ifelse(tp53_fisher_test[["estimate"]] > 1, "Inclusive", "Exclusive");
+    tp53_relation_sign <- ifelse(tp53_fisher_p <= 0.05, "Yes", "No");
+    each_gene_summary <- list(Gene = candidate_gene,
+                              Mutated_samples = each_gene_total_sample_number,
+                              P_value=p_value,
+                              Fold_change= fold_change,
+                              TP53_mutual_P_value=tp53_fisher_p,
+                              TP53_Incl_Excl=tp53_relation_type,
+                              TP53_mutual_significant = tp53_relation_sign)
+    
+    
+  }
+  total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_gene_summary))
+}
+total_tumor_gene_sum <- setDT(total_tumor_gene_sum)
+total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
+total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
+
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","pan_tumor_gene_assication_TMB.txt",sep = seperator),
+       col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
+## Pan tumor end
+
+
+
+## TMB-l and TMB-h gene associated tmb
+all_tumor_cut <- 0
 signle_tumor_cut <- 5
 
 all_tumor_type <- unique(total_mut$Subtype)
@@ -86,7 +155,7 @@ for( index in 1:length(all_tumor_type)){
     total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_sum),fill = T)
 }
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_25","Not_include_amp_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","Not_include_amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ## Use candidate gene to compare tmb
@@ -107,7 +176,7 @@ exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pas
 tmb_l <- c("MT", "GLM","BCL")
 tmb_h <- c("OM","OSA","HSA","TCL")
 
-# total_tumor_gene_sum <- fread(paste(output_dir,"02_25","Not_include_amp_candidate_gene_associated_TMB_02_25.txt",sep = seperator))
+# total_tumor_gene_sum <- fread(paste(output_dir,"03_02","Not_include_amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator))
 # 
 # total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
 candidate_gene <- unique(total_tumor_gene_sum$gene_name)
@@ -206,7 +275,7 @@ total_gene_sum <- total_gene_sum[order(tmb_h_pvalue)]
 total_gene_sum$tmb_h_BH_pvalue <- p.adjust(total_gene_sum$tmb_h_pvalue,method = "BH")
 
 
-fwrite(total_gene_sum, file = paste(output_dir,"02_25","Not_include_amp_not_normalize_p_value_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+fwrite(total_gene_sum, file = paste(output_dir,"03_02","Not_include_amp_not_normalize_p_value_candidate_gene_associated_TMB_03_02.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ### now seperate snv and amp
@@ -263,7 +332,7 @@ for( index in 1:length(all_tumor_type)){
   total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_sum),fill = T)
 }
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_25","amp_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ## Use candidate gene to compare tmb
@@ -277,7 +346,7 @@ fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_25","amp_candidate_gene
 tmb_l <- c("MT", "GLM","BCL")
 tmb_h <- c("OM","OSA","HSA","TCL")
 
-# total_tumor_gene_sum <- fread(paste(output_dir,"02_25","Not_include_amp_candidate_gene_associated_TMB_02_25.txt",sep = seperator))
+# total_tumor_gene_sum <- fread(paste(output_dir,"03_02","Not_include_amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator))
 # 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
 
@@ -378,12 +447,14 @@ total_gene_sum <- total_gene_sum[order(tmb_h_pvalue)]
 total_gene_sum$tmb_h_BH_pvalue <- p.adjust(total_gene_sum$tmb_h_pvalue,method = "BH")
 
 
-fwrite(total_gene_sum, file = paste(output_dir,"02_25","amp_not_normalize_p_value_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+fwrite(total_gene_sum, file = paste(output_dir,"03_02","amp_not_normalize_p_value_candidate_gene_associated_TMB_03_02.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 
 
 #################### Combine SNV CNV indel  ################################
+## 03_02 only examine pathway tp53 and cell cycle
+
 base_dir <- 
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
@@ -392,13 +463,14 @@ seperator <- "/"
 output_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
 pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
-
+target_path_way <- pathway[,c("TP53","Cell cycle"), with =F]
 target_pathway_gene <- NULL
-for (each_pathway in colnames(pathway)){
+for (each_pathway in colnames(target_path_way)){
   each_path_gene <- pathway[, each_pathway, with = F][[each_pathway]]
   each_path_clean_gene <- each_path_gene[!is.na(each_path_gene)]
   target_pathway_gene <- c(target_pathway_gene,each_path_clean_gene)
 }
+
 
 #target_pathway_gene <- fread(paste(base_dir,"target_pathway_total_genes.txt",sep = seperator), na.strings = "")
 
@@ -418,8 +490,6 @@ indel_file <- indel_file[,emsembl_id:=NULL]
 Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table )
 indel_file$Subtype <- Subtype
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
-total_mut <- rbindlist(list(SNV,indel_file))
-
 
 ## amp_delete
 amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_18.txt",sep = seperator),
@@ -429,12 +499,17 @@ amp_delete <- amp_delete[!sample_names %in% exclude]
 amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
 CNV <- unique(amp_delete[,c("sample_names","gene_name","mut_type","subtype"),with =F])
 colnames(CNV)<- c("sample_names","gene_name","status","Subtype")
+CNV <- CNV[gene_name %in% target_pathway_gene, ]
 
+## exclude s1 high
+s1_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
+exclude <- c(exclude, s1_high_sample)
+##
 total_snv_cnv <- rbindlist(list(SNV,indel_file, CNV))
 total_snv_cnv <- total_snv_cnv[!sample_names %in% exclude & Subtype !="UCL",]
 
-
-all_tumor_cut <- 10
+all_tumor_cut <- 0
 signle_tumor_cut <- 5
 
 all_tumor_type <- unique(total_snv_cnv$Subtype)
@@ -452,12 +527,14 @@ for( index in 1:length(all_tumor_type)){
     # each_gene <- "PIK3CA"
     total_sample <- unique(total_snv_cnv[gene_name==each_gene, .(sample_names,Subtype)])
     total_sample_sum <- as.data.table(table(total_sample$Subtype))
-    total_sample_number <- sum(total_sample_sum$N)
+    #total_sample_number <- sum(total_sample_sum$N)
     each_tumor_sample_sum <- total_sample_sum[which(total_sample_sum$V1==each_tumor)]$N
+    
     if (each_tumor_sample_sum >= signle_tumor_cut && total_sample_number>= all_tumor_cut){
+      candidate_gene <- each_gene
       target_gene_sample_number <- c(target_gene_sample_number,each_tumor_sample_sum)
-      target_gene_total_sample_number <- c(target_gene_total_sample_number,total_sample_number)
-      each_tumor_gene_candidate <- c(each_tumor_gene_candidate,each_gene)
+     
+      each_tumor_gene_candidate <- c(each_tumor_gene_candidate,candidate_gene)
     }
   }
   each_tumor_sum <-  data.table(Subtype = each_tumor,
@@ -468,7 +545,7 @@ for( index in 1:length(all_tumor_type)){
   total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_sum),fill = T)
 }
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_25","include_amp_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","include_amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ## Use candidate gene to compare tmb
@@ -482,15 +559,15 @@ fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_25","include_amp_candid
 tmb_l <- c("MT", "GLM","BCL")
 tmb_h <- c("OM","OSA","HSA","TCL")
 
-# total_tumor_gene_sum <- fread(paste(output_dir,"02_25","Not_include_amp_candidate_gene_associated_TMB_02_25.txt",sep = seperator))
+# total_tumor_gene_sum <- fread(paste(output_dir,"03_02","Not_include_amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator))
 # 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
 
 ## append TMB info
 TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
 colnames(TMB_info)
-total_cnv$tmb <- match_vector_table(total_cnv$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
-total_tumor_type <- unique(total_cnv$Subtype)
+total_snv_cnv$tmb <- match_vector_table(total_snv_cnv$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
+total_tumor_type <- unique(total_snv_cnv$Subtype)
 
 candidate_gene <- unique(total_tumor_gene_sum$gene_name)
 # each tumor type seperate tmbl and tmbh
@@ -565,8 +642,10 @@ total_gene_sum$tmb_l_BH_pvalue <-  p.adjust(total_gene_sum$tmb_l_pvalue, method 
 total_gene_sum <- total_gene_sum[order(tmb_h_pvalue)]
 total_gene_sum$tmb_h_BH_pvalue <- p.adjust(total_gene_sum$tmb_h_pvalue,method = "BH")
 
+a = total_gene_sum[total_gene_sum$gene=="MDM2",]
 
-fwrite(total_gene_sum, file = paste(output_dir,"02_25","include_amp_not_normalize_p_value_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+
+fwrite(total_gene_sum, file = paste(output_dir,"03_02","include_amp_not_normalize_p_value_candidate_gene_associated_TMB_03_02.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 
