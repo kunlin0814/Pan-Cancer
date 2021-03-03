@@ -291,13 +291,32 @@ for (each_gene in candidate_gene){
   tmb_l_gene_no_mut_samples <- unique(setdiff(tmb_l_group_total_samples,tmb_l_gene_mut_samples))
   tmb_l_gene_mut_tmb <- unique(total_mut[sample_names %in% tmb_l_gene_mut_samples,.(sample_names,tmb)])[["tmb"]]
   tmb_l_gene_no_mut_tmb <- unique(total_mut[sample_names %in% tmb_l_gene_no_mut_samples,.(sample_names,tmb)])[["tmb"]]
-  
-  
+
   if (length(tmb_l_gene_mut_samples)!=0 || length(tmb_l_gene_no_mut_samples)!=0){
-    tmb_l_test <- wilcox.test(tmb_l_gene_mut_tmb,tmb_l_gene_no_mut_tmb)
-    tmb_l_pvalue <- tmb_l_test$p.value
     median_tmb_l_gene_mut_tmb <- median(tmb_l_gene_mut_tmb)
     median_tmb_l_gene_no_mut_tmb <- median(tmb_l_gene_no_mut_tmb)
+    tmb_l_fold_change <- median(median_tmb_l_gene_mut_tmb)/median(median_tmb_l_gene_no_mut_tmb)
+    tmb_l_test <- wilcox.test(tmb_l_gene_mut_tmb,tmb_l_gene_no_mut_tmb)
+    tmb_l_pvalue <- tmb_l_test$p.value
+  
+    tmb_l_compare_gene_sample <- unique(tmb_l_group[gene_name==compare_gene,][['sample_names']])
+    tmb_l_candidate_gene_sample<- unique(tmb_l_group[gene_name==candidate_gene][['sample_names']])
+    alt_alt <- length(intersect(compare_gene_sample,candidate_gene_sample)) #TP53 and another gene sample
+    alt_no_alt <- length(setdiff(compare_gene_sample,candidate_gene_sample)) # TP53 but not other gene mut sample
+    no_alt_alt <- length(setdiff(candidate_gene_sample,compare_gene_sample))# other gene mut sample but not tp53 mut sample
+    no_alt_no_alt <- total_sample_number-alt_alt-alt_no_alt-no_alt_alt
+    tp53_fisher_test <- fisher.test(rbind(c(alt_alt, alt_no_alt), c(no_alt_alt, no_alt_no_alt))); 
+    tp53_fisher_p <- tp53_fisher_test[["p.value"]];
+    tp53_relation_type <- ifelse(tp53_fisher_test[["estimate"]] > 1, "Inclusive", "Exclusive");
+    tp53_relation_sign <- ifelse(tp53_fisher_p <= 0.05, "Yes", "No");
+    each_tumor_each_gene_summary <- list(Tumor_type= each_tumor,
+                                         Gene = candidate_gene,
+                                         Mutated_samples = each_tumor_gene_total_sample_number,
+                                         P_value=p_value,
+                                         Fold_change= fold_change,
+                                         TP53_mutual_P_value=tp53_fisher_p,
+                                         TP53_Incl_Excl=tp53_relation_type,
+                                         TP53_mutual_significant = tp53_relation_sign)
   }
   # else{
   #   tmb_l_pvalue <- "No tmb_l_gene_mut_samples or tmb_l_gene_no_mut_samples"
