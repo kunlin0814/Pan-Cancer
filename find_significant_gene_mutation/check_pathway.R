@@ -49,6 +49,9 @@ total_sample <- unique(total_mut$sample_names)
 
 total_mut <- total_mut[!sample_names %in% exclude,]
 
+# a = unique(total_mut[Subtype=="GLM",.(sample_names)])
+# b = unique(total_mut[Subtype=="HSA",.(sample_names)])
+
 # create a total pathway list (0 and 1 in the list for each sample)
 total_sum <- list()
 for (i in path_col){
