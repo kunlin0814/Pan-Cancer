@@ -279,7 +279,7 @@ total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
 fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","tmb_l_Not_include_amp_candidate_gene_associated_TMB_03_02_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
-### TMB-h candidate genes
+### TMB-h 
 tmb_h_group <- total_mut[Subtype %in% tmb_h,] 
 total_tumor_gene_sum <- NULL
 tmb_h_unique_gene <- unique(tmb_h_group$gene_name)
@@ -328,131 +328,6 @@ total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, metho
 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
 fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","tmb_h_Not_include_amp_candidate_gene_associated_TMB_03_02_summary.txt",sep = seperator),
-       col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
-
-## Use candidate gene to compare tmb
-tmb_l_total_tumor_gene_sum <- fread(paste(output_dir,"03_02","tmb_l_Not_include_amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator))
-tmb_l_total_tumor_gene_sum <- na.omit(tmb_l_total_tumor_gene_sum)
-## excldue NA and UCL
-tmb_l <- c("MT", "GLM","BCL")
-tmb_h <- c("OM","OSA","HSA","TCL")
-compare_gene <- "TP53"
-
-## now decide not normalize 2/25
-# each tumor type seperate tmbl and tmbh
-# tmb-l
-tmb_l_total_gene_sum <- NULL
-for (each_gene in tmb_l_candidate_genes){
-  print(each_gene)
-  tmb_l_group <- total_mut[Subtype %in%tmb_l, ]
-  tmb_l_group_total_samples <- unique(tmb_l_group$sample_names)
-  tmb_l_gene_mut_samples <- unique(tmb_l_group[gene_name==each_gene,.(sample_names)][["sample_names"]])
-  tmb_l_gene_no_mut_samples <- unique(setdiff(tmb_l_group_total_samples,tmb_l_gene_mut_samples))
-  tmb_l_gene_mut_tmb <- unique(total_mut[sample_names %in% tmb_l_gene_mut_samples,.(sample_names,tmb)])[["tmb"]]
-  tmb_l_gene_no_mut_tmb <- unique(total_mut[sample_names %in% tmb_l_gene_no_mut_samples,.(sample_names,tmb)])[["tmb"]]
-  each_gene_summary <- list()
-  if (length(tmb_l_gene_mut_samples)!=0 || length(tmb_l_gene_no_mut_samples)!=0){
-    candidate_gene <- each_gene
-    tmb_l_group_total_samples_number <- length(tmb_l_group_total_samples)
-    median_tmb_l_gene_mut_tmb <- median(tmb_l_gene_mut_tmb)
-    median_tmb_l_gene_no_mut_tmb <- median(tmb_l_gene_no_mut_tmb)
-    tmb_l_fold_change <- median(median_tmb_l_gene_mut_tmb)/median(median_tmb_l_gene_no_mut_tmb)
-    tmb_l_test <- wilcox.test(tmb_l_gene_mut_tmb,tmb_l_gene_no_mut_tmb)
-    tmb_l_pvalue <- tmb_l_test$p.value
-    
-    tmb_l_compare_gene_sample <- unique(tmb_l_group[gene_name==compare_gene,][['sample_names']])
-    tmb_l_candidate_gene_sample<- unique(tmb_l_group[gene_name==candidate_gene][['sample_names']])
-    tmb_l_alt_alt <- length(intersect(tmb_l_compare_gene_sample,tmb_l_candidate_gene_sample)) #TP53 and another gene sample
-    tmb_l_alt_no_alt <- length(setdiff(tmb_l_compare_gene_sample,tmb_l_candidate_gene_sample)) # TP53 but not other gene mut sample
-    tmb_l_no_alt_alt <- length(setdiff(tmb_l_candidate_gene_sample,tmb_l_compare_gene_sample))# other gene mut sample but not tp53 mut sample
-    tmb_l_no_alt_no_alt <- tmb_l_group_total_samples_number-tmb_l_alt_alt-tmb_l_alt_no_alt-tmb_l_no_alt_alt
-    tmb_l_tp53_fisher_test <- fisher.test(rbind(c(tmb_l_alt_alt, tmb_l_alt_no_alt), c(tmb_l_no_alt_alt, tmb_l_no_alt_no_alt))); 
-    tmb_l_tp53_fisher_p <- tmb_l_tp53_fisher_test[["p.value"]];
-    tmb_l_tp53_relation_type <- ifelse(tmb_l_tp53_fisher_test[["estimate"]] > 1, "Inclusive", "Exclusive");
-    tmb_l_tp53_relation_sign <- ifelse(tmb_l_tp53_fisher_p <= 0.05, "Yes", "No");
-    
-    each_gene_summary <- list(
-      Gene = candidate_gene,
-      Mutated_samples = length(tmb_l_gene_mut_samples),
-      P_value=tmb_l_pvalue,
-      Fold_change= tmb_l_fold_change,
-      TP53_mutual_P_value=tmb_l_tp53_fisher_p,
-      TP53_Incl_Excl=tmb_l_tp53_relation_type,
-      TP53_mutual_significant = tmb_l_tp53_relation_sign)
-    
-  }
-  tmb_l_total_gene_sum <- rbindlist(list(tmb_l_total_gene_sum,each_gene_summary))
-}
-
-tmb_l_total_gene_sum <- setDT(tmb_l_total_gene_sum)
-tmb_l_total_gene_sum <- tmb_l_total_gene_sum[order(P_value)]
-tmb_l_total_gene_sum$tmb_l_BH_pvalue <-  p.adjust(tmb_l_total_gene_sum$P_value, method = "BH")
-fwrite(tmb_l_total_gene_sum, file = paste(output_dir,"03_02","tmb_l_Not_include_amp_candidate_gene_associated_TMB_03_02_data_summary.txt",sep = seperator),
-       col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
-
-## tmb-l end 
-
-# tmb-h  
-## Use candidate gene to compare tmb
-tmb_h_total_tumor_gene_sum <- fread(paste(output_dir,"03_02","tmb_h_Not_include_amp_candidate_gene_associated_TMB_03_02.txt",sep = seperator))
-tmb_h_total_tumor_gene_sum <- na.omit(tmb_h_total_tumor_gene_sum)
-## excldue NA and UCL
-tmb_h <- c("OM","OSA","HSA","TCL")
-compare_gene <- "TP53"
-total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
-## append TMB 
-TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-
-tmb_h_candidate_genes <- unique(tmb_h_total_tumor_gene_sum$gene_name)
-# tmb-h
-tmb_h_total_gene_sum <- NULL
-for (each_gene in tmb_h_candidate_genes){
-  print(each_gene)
-  tmb_h_group <- total_mut[Subtype %in%tmb_h, ]
-  tmb_h_group_total_samples <- unique(tmb_h_group$sample_names)
-  tmb_h_gene_mut_samples <- unique(tmb_h_group[gene_name==each_gene,.(sample_names)][["sample_names"]])
-  tmb_h_gene_no_mut_samples <- unique(setdiff(tmb_h_group_total_samples,tmb_h_gene_mut_samples))
-  tmb_h_gene_mut_tmb <- unique(total_mut[sample_names %in% tmb_h_gene_mut_samples,.(sample_names,tmb)])[["tmb"]]
-  tmb_h_gene_no_mut_tmb <- unique(total_mut[sample_names %in% tmb_h_gene_no_mut_samples,.(sample_names,tmb)])[["tmb"]]
-  each_gene_summary <- list()
-  if (length(tmb_h_gene_mut_samples)!=0 || length(tmb_h_gene_no_mut_samples)!=0){
-    candidate_gene <- each_gene
-    tmb_h_group_total_samples_number <- length(tmb_h_group_total_samples)
-    median_tmb_h_gene_mut_tmb <- median(tmb_h_gene_mut_tmb)
-    median_tmb_h_gene_no_mut_tmb <- median(tmb_h_gene_no_mut_tmb)
-    tmb_h_fold_change <- median(median_tmb_h_gene_mut_tmb)/median(median_tmb_h_gene_no_mut_tmb)
-    tmb_h_test <- wilcox.test(tmb_h_gene_mut_tmb,tmb_h_gene_no_mut_tmb)
-    tmb_h_pvalue <- tmb_h_test$p.value
-    
-    tmb_h_compare_gene_sample <- unique(tmb_h_group[gene_name==compare_gene,][['sample_names']])
-    tmb_h_candidate_gene_sample<- unique(tmb_h_group[gene_name==candidate_gene][['sample_names']])
-    tmb_h_alt_alt <- length(intersect(tmb_h_compare_gene_sample,tmb_h_candidate_gene_sample)) #TP53 and another gene sample
-    tmb_h_alt_no_alt <- length(setdiff(tmb_h_compare_gene_sample,tmb_h_candidate_gene_sample)) # TP53 but not other gene mut sample
-    tmb_h_no_alt_alt <- length(setdiff(tmb_h_candidate_gene_sample,tmb_h_compare_gene_sample))# other gene mut sample but not tp53 mut sample
-    tmb_h_no_alt_no_alt <- tmb_h_group_total_samples_number-tmb_h_alt_alt-tmb_h_alt_no_alt-tmb_h_no_alt_alt
-    tmb_h_tp53_fisher_test <- fisher.test(rbind(c(tmb_h_alt_alt, tmb_h_alt_no_alt), c(tmb_h_no_alt_alt, tmb_h_no_alt_no_alt))); 
-    tmb_h_tp53_fisher_p <- tmb_h_tp53_fisher_test[["p.value"]];
-    tmb_h_tp53_relation_type <- ifelse(tmb_h_tp53_fisher_test[["estimate"]] > 1, "Inclusive", "Exclusive");
-    tmb_h_tp53_relation_sign <- ifelse(tmb_h_tp53_fisher_p <= 0.05, "Yes", "No");
-    
-    each_gene_summary <- list(
-      Gene = candidate_gene,
-      Mutated_samples = length(tmb_h_gene_mut_samples),
-      P_value=tmb_h_pvalue,
-      Fold_change= tmb_h_fold_change,
-      TP53_mutual_P_value=tmb_h_tp53_fisher_p,
-      TP53_Incl_Excl=tmb_h_tp53_relation_type,
-      TP53_mutual_significant = tmb_h_tp53_relation_sign)
-    
-  }
-  tmb_h_total_gene_sum <- rbindlist(list(tmb_h_total_gene_sum,each_gene_summary))
-}
-
-tmb_h_total_gene_sum <- setDT(tmb_h_total_gene_sum)
-tmb_h_total_gene_sum <- tmb_h_total_gene_sum[order(P_value)]
-tmb_h_total_gene_sum$tmb_h_BH_pvalue <-  p.adjust(tmb_h_total_gene_sum$P_value, method = "BH")
-fwrite(tmb_h_total_gene_sum, file = paste(output_dir,"03_02","tmb_h_Not_include_amp_candidate_gene_associated_TMB_03_02_data_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 
