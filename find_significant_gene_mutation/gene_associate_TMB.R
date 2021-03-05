@@ -35,15 +35,15 @@ total_mut <- rbindlist(list(SNV,indel_file))
 
 
 ## exclude s1 high and UCL samples
-s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 exclude <- c(exclude, s1_high_sample)
 
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
 ## append TMB 
-TMB_info <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
 colnames(TMB_info)
 total_mut$tmb <- match_vector_table(total_mut$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
 
@@ -333,90 +333,6 @@ fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","tmb_h_Not_include_
 
 ############################ TMB-l and TMB-h gene associated end ############################
 
-############################ Breed assoicated TMB ############################
-## Normalize TMB with regards to each tumor median (in breed associated analysis)
-whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
-total_tumor_type <- unique(total_mut$Subtype)
-total_tumor_normalize <- NULL
-
-for (each_tumor in total_tumor_type){
-  each_tumor_info <- total_mut[Subtype==each_tumor,]
-  each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
-  # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
-  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)+0.1]
-  #each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
-  total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
-}
-total_mut <- total_tumor_normalize
-### append breeds information ###
-breed <- match_vector_table(total_mut$sample_names,"final_breed_label",whole_wes_clean_breed_table,string_value = T)
-total_mut$breeds <- breed
-
-## select 5 sample of all genes
-
-signle_tumor_cut <- 5
-breed_cut_off <- 3
-pan_tumor_uniq_gene <- unique(total_mut$gene_name)
-total_sample_number <- length(unique(total_mut$sample_names))
-candidate_gene_list <- c()
-for (gene_index in 1:length(pan_tumor_uniq_gene)){
-  each_gene_summary <- list()
-  each_gene <- pan_tumor_uniq_gene[gene_index]
-  #print(each_gene)
-  each_gene_total_sample <- unique(total_mut[gene_name==each_gene, .(sample_names)])
-  each_gene_total_sample_number <- nrow(each_gene_total_sample)
-  if (each_gene_total_sample_number >= signle_tumor_cut ){
-    candidate_gene_list <- c(candidate_gene_list,each_gene)
-  }
-}
-## each gene need 3 samples in each breed
-target_breeds <- c("Boxer","Cocker Spaniel","Golden Retriever","Greyhound","Maltese",
-                   "Poodle","Rottweiler","Schnauzer",
-                   "Yorkshire Terrier")
-total_breed_sum <- NULL
-for (each_candidate_breed in target_breeds){
-  each_breed_sum <- NULL
-  for (each_gene in candidate_gene_list){          
-    each_breed_each_gene <- NULL  
-  each_breed_number <- nrow(unique(total_mut[gene_name==each_gene & breeds==each_candidate_breed,.(sample_names)]))
-  
-  if (each_breed_number >=breed_cut_off){
-    candidate_gene <- each_gene
-    target_breed_with_mut_tmb <- unique(total_mut[gene==candidate_gene & breeds==each_candidate_breed,.(sample_names,normalizetmb)])[['normalizetmb']]
-    other_total_breeds <- unique(total_mut$breeds)
-    clean_other_breed <- other_total_breeds[!other_total_breeds %in% c(each_candidate_breed, "No breed provided and unable to do the breed-prediction")]
-    other_breed_with_mut_tmb <-unique(total_mut[gene==candidate_gene & breeds %in% clean_other_breed,.(sample_names,normalizetmb)])[['normalizetmb']]
-    
-    compare_gene_sample <- unique(total_mut[gene_name==compare_gene & breeds==each_candidate_breed,][['sample_names']])
-    candidate_gene_sample<- unique(tmb_l_group[gene_name==candidate_gene & breeds==each_candidate_breed][['sample_names']])
-    alt_alt <- length(intersect(compare_gene_sample,candidate_gene_sample)) #TP53 and another gene sample
-    alt_no_alt <- length(setdiff(compare_gene_sample,candidate_gene_sample)) # TP53 but not other gene mut sample
-    no_alt_alt <- length(setdiff(candidate_gene_sample,compare_gene_sample))# other gene mut sample but not tp53 mut sample
-    no_alt_no_alt <- total_sample_number-alt_alt-alt_no_alt-no_alt_alt
-    tp53_fisher_test <- fisher.test(rbind(c(alt_alt, alt_no_alt), c(no_alt_alt, no_alt_no_alt))); 
-    tp53_fisher_p <- tp53_fisher_test[["p.value"]];
-    tp53_relation_type <- ifelse(tp53_fisher_test[["estimate"]] > 1, "Inclusive", "Exclusive");
-    tp53_relation_sign <- ifelse(tp53_fisher_p <= 0.05, "Yes", "No");
-    each_breed_each_gene <- list(Breeds = each_candidate_breed,
-                                 Gene = candidate_gene,
-                                 Mutated_samples = each_gene_total_sample_number,
-                                 P_value=p_value,
-                                 Fold_change= fold_change,
-                                 TP53_mutual_P_value=tp53_fisher_p,
-                                 TP53_Incl_Excl=tp53_relation_type,
-                                 TP53_mutual_significant = tp53_relation_sign)
-    
-    
-  }
-  each_breed_sum <- rbindlist(list(each_breed_sum, each_breed_each_gene))
-    }
-  total_breed_sum <- rbindlist(list(total_breed_sum,each_breed_sum))
-  }
-
-# "No breed provided and unable to do the breed-prediction"
-
-############################ Breed assoicated TMB end ############################
 ### now seperate snv and amp
 base_dir <- 
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1"
