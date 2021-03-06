@@ -75,7 +75,7 @@ for (each_tumor in all_tumor_type){
 }
 
 total_snv_cnv <- total_tumor_normalize
-total_snv_cnv$status
+
 ## Normalize end 
 ## need to normalize with median for each tumor in pan tumor analysis
 
