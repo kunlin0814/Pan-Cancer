@@ -1,3 +1,4 @@
+# the script is for table and figure3 in pan-cancer
 library(data.table)
 library(tidyverse)
 library(readxl)
