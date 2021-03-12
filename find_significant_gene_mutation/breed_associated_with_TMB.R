@@ -47,12 +47,14 @@ total_tumor_normalize <- NULL
 
 for (each_tumor in total_tumor_type){
   each_tumor_info <- total_mut[Subtype==each_tumor,]
-  each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
+  each_median <- median(unique(total_mut[Subtype==each_tumor,.(sample_names,tmb)])[['tmb']])
+  #median(total_mut[Subtype==each_tumor, .(sample_names,tmb)][['tmb']])
   # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
-  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)+0.1]
+  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)]
   #each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
+
 
 total_mut <- total_tumor_normalize
 
@@ -90,7 +92,7 @@ for (gene_index in 1:length(pan_tumor_uniq_gene)){
 }
 ## each gene need 3 samples in each breed
 target_breeds <- c("Boxer","Cocker Spaniel","Golden Retriever","Greyhound","Maltese",
-                   "Poodle","Rottweiler","Schnauzer",
+                   "Poodle","Rottweiler","Schnauzer","Shih Tzu",
                    "Yorkshire Terrier")
 candidate_gene_list <- unique(candidate_gene_list)
 total_breed_sum <- NULL

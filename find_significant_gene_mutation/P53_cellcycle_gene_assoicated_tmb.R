@@ -63,19 +63,20 @@ TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-an
 total_snv_cnv$tmb <- match_vector_table(total_snv_cnv$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
 
 ## Normalize TMB with regards to each tumor median (in breed associated analysis)
-all_tumor_type <- unique(total_snv_cnv$Subtype)
+total_tumor_type <- unique(total_mut$Subtype)
 total_tumor_normalize <- NULL
 
-for (each_tumor in all_tumor_type){
-  each_tumor_info <- total_snv_cnv[Subtype==each_tumor,]
-  each_median <- median(total_snv_cnv[Subtype==each_tumor, .(tmb)][['tmb']])
-  # each_sd <- sd(total_snv_cnv[Subtype==each_tumor, .(tmb)][['tmb']])
-  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)+0.1]
+for (each_tumor in total_tumor_type){
+  each_tumor_info <- total_mut[Subtype==each_tumor,]
+  each_median <- median(unique(total_mut[Subtype==each_tumor,.(sample_names,tmb)])[['tmb']])
+  #median(total_mut[Subtype==each_tumor, .(sample_names,tmb)][['tmb']])
+  # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
+  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)]
   #each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
 
-total_snv_cnv <- total_tumor_normalize
+total_mut <- total_tumor_normalize
 
 
 

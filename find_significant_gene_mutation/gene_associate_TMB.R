@@ -54,14 +54,27 @@ total_tumor_normalize <- NULL
 
 for (each_tumor in total_tumor_type){
   each_tumor_info <- total_mut[Subtype==each_tumor,]
-  each_median <- median(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
+  each_median <- median(unique(total_mut[Subtype==each_tumor,.(sample_names,tmb)])[['tmb']])
+    #median(total_mut[Subtype==each_tumor, .(sample_names,tmb)][['tmb']])
   # each_sd <- sd(total_mut[Subtype==each_tumor, .(tmb)][['tmb']])
-  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)+0.1]
+  each_tumor_info <- each_tumor_info[, normalizetmb:= (tmb/each_median)]
   #each_tumor_info <- each_tumor_info[, normalizetmb:= tmb]
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
 
 total_mut <- total_tumor_normalize
+
+#check result#
+tp53 <- unique(total_mut[gene_name =="TP53",.(sample_names,normalizetmb)])
+tp53_sample <- tp53$sample_names
+no_tp53 <- setdiff(unique(total_mut$sample_names), tp53_sample)
+tp53_tmb <- tp53$normalizetmb
+no_tp53_tmb <- unique(total_mut[sample_names %in%no_tp53, .(sample_names,normalizetmb)])
+
+wilcox.test(tp53_tmb,no_tp53_tmb$normalizetmb)
+median(tp53_tmb)/median(no_tp53_tmb$normalizetmb)
+
+##
 
 ## Normalize end 
 
