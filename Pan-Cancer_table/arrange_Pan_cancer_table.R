@@ -2,25 +2,46 @@ library(data.table)
 library(tidyverse)
 library(readxl)
 
-base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 seperator <- "/"
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-"/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+#"/Volumes/Research/GitHub/R_util/my_util.R")
 
-source(#"C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
-"/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
+source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
+#"/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
 ### WES table ###
 
-whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
+#whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
 
-excel_wes_table <- read_excel("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_TableS1_02-01-21.xlsx",
-                              sheet = "WESQCdata",skip=1)
+#excel_wes_table <- read_excel("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_TableS1_02-01-21.xlsx",
+                              #sheet = "WESQCdata",skip=1)
 # mac version
-excel_wes_table <- read.table(pipe("pbpaste"), sep="\t", header=TRUE, stringsAsFactors = F) 
+excel_wes_table <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F) 
+excel_wes_table <- setDF(excel_wes_table)
+output_dir <- "C:/Users/abc73/Desktop/need_to_revised/tableS1"
 
-excel_wes_table <- setDT(excel_wes_table)
-excel_wes_table$The_reason_to_exclude
+####
+target_column <- c("Case_ID","Sample_ID","SelfMatch","DiffFromBest",
+                   "DiseaseAcronym2","Status"	,"Symbol"	,"Bioproject")
+
+output <- excel_wes_table %>% 
+  filter(Total_pairs>=5000000) %>%
+  filter(Gt_30_fraction >=0) %>%
+  filter(Uniquely_coordinatly_mapped_rate >=0.6) %>%
+  filter(Target_CDS_Mapping_Rates >=0.3) %>%
+  filter(Mean_Coverage >=30) %>%
+  filter(RMSE <= 0.01) %>%
+  filter(Callable_bases!= "Normal_sample" & Callable_bases >=10000000)
+ 
+
+final_out <- output[, target_column]
+
+fwrite(final_out,file = paste(output_dir,"match.txt",sep = "/"),
+       col.names = T, row.names = F, quote = F, sep = "\t")
+
+
+#excel_wes_table$The_reason_to_exclude
 # total_sample, column, table, string_value = T
 QC <- match_vector_table(whole_wes_clean_breed_table$Case_ID,"The_reason_to_exclude", excel_wes_table)
 whole_wes_clean_breed_table$The_reason_to_exclude <- QC
