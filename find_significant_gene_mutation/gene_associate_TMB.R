@@ -129,7 +129,7 @@ total_tumor_gene_sum <- setDT(total_tumor_gene_sum)
 total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
 total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
 
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","pan_tumor_gene_assication_TMB.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","pan_tumor_gene_assication_TMB.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 ## cross tumor end
 
@@ -191,7 +191,7 @@ for (tumor_index in 1:length(total_tumor_type)){
   total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_total_gene_summary))
   }
  
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","all_tumor_type_gene_assication_TMB.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","all_tumor_type_gene_assication_TMB.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ############################ TMB-l and TMB-h gene associated tmb ############################
@@ -289,7 +289,7 @@ total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
 total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","tmb_l_Not_include_amp_candidate_gene_associated_TMB_03_02_summary.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","tmb_l_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ### TMB-h 
@@ -340,8 +340,11 @@ total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
 total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_02","tmb_h_Not_include_amp_candidate_gene_associated_TMB_03_02_summary.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","tmb_h_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
+
+
+## P53 and cell cycle write in a different script 03/02
 
 ### P53 and cell cycle gene 
 
@@ -352,9 +355,9 @@ seperator <- "/"
 
 output_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
-pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
+pathway <- fread(paste(base_dir,"all_pathway_03_19.txt",sep = seperator), na.strings = "")
 
-target_path_way <- pathway[,c("TP53","Cell cycle"), with =F]
+target_path_way <- pathway[,c("p53","Cell cycle"), with =F]
 target_pathway_gene <- NULL
 for (each_pathway in colnames(target_path_way)){
   each_path_gene <- pathway[, each_pathway, with = F][[each_pathway]]
@@ -422,8 +425,8 @@ total_snv_cnv <- total_tumor_normalize
 all_tumor_cut <- 0
 signle_tumor_cut <- 5
 
-all_tumor_cut <- 10
-signle_tumor_cut <- 5
+# all_tumor_cut <- 10
+# signle_tumor_cut <- 5
 
 all_tumor_type <- unique(total_snv_cnv$Subtype)
 # might only have one sample has that
