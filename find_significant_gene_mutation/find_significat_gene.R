@@ -1,11 +1,11 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  "/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  #"/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- 
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
@@ -14,8 +14,8 @@ seperator <- "/"
 ## check duplicated
 # a <- gene[sample_names=="CCB040105"& ensembl_id=="ENSCAFG00000001781"]
 
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
@@ -72,15 +72,16 @@ for (index in 1:length(total_sample)) {
   info_sum$BH_pvalue = p.adjust(info_sum$p_value, method = "BH")
   total_info_sum <- rbindlist(list(total_info_sum,info_sum))
 }
+total_info_sum[tumor_type=="GLM" & gene_name=="PIK3CA"]$p_value
 
-fwrite(total_info_sum,
-       file = paste(base_dir,"02_18","final_breed_variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator)
-       ,col.names = T,
-       row.names = F,
-       quote = F,
-       na = "NA",
-       eol = "\n",
-       sep ="\t")
+# fwrite(total_info_sum,
+#        file = paste(base_dir,"02_18","final_breed_variant_nonsyn_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator)
+#        ,col.names = T,
+#        row.names = F,
+#        quote = F,
+#        na = "NA",
+#        eol = "\n",
+#        sep ="\t")
 
 
 ### samplewide gene_name ##
