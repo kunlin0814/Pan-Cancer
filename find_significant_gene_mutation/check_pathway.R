@@ -16,7 +16,7 @@ whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 ## pathway data
-pathway <- fread(paste(base_dir,"all_pathway.txt",sep = seperator), na.strings = "")
+pathway <- fread(paste(base_dir,"all_pathway_03_19.txt",sep = seperator), na.strings = "")
 path_col <- colnames(pathway)
 
 ## mutation Data
@@ -95,25 +95,38 @@ TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_
 colnames(TMB_info)
 no_UCL$tmb <- match_vector_table(no_UCL$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
 
-
+no_UCL[no_UCL==1] <- "Alter"
+no_UCL[no_UCL==0] <- "No Alter"
 tmb_l <- c("MT", "GLM","BCL")
 tmb_h <- c("OM","OSA","HSA","TCL")
+
+insert = character(length(no_UCL$Subtype))
+tmb_l_index <- which(no_UCL$Subtype %in% tmb_l)
+tmb_h_index <- which(no_UCL$Subtype %in% tmb_h)
+insert[tmb_l_index] <- "tmb_l"
+insert[tmb_h_index] <- "tmb_h"
+no_UCL$class <- insert
+
+
+fwrite(no_UCL, file=paste(base_dir,"02_25","figureS6B_TMB_pathway_03_21.txt",sep=seperator),
+       col.names = T, row.names = F, quote = F, sep="\t",eol="\n",na = "NA")
+
 #tmb_l_group
 # tmbl
 tmb_l_group <- no_UCL[Subtype %in% tmb_l]
 
-withmut_l <- tmb_l_group[PIK3CA_Gene ==1,]$tmb
-withoutmut_l <- tmb_l_group[PIK3CA_Gene ==0,]$tmb
-wilcox.test(withmut_l,withoutmut_l)
-median(withmut_l)
-median(withoutmut_l)
+#withmut_l <- tmb_l_group[PIK3CA_Gene ==1,]$tmb
+#withoutmut_l <- tmb_l_group[PIK3CA_Gene ==0,]$tmb
+#wilcox.test(withmut_l,withoutmut_l)
+#median(withmut_l)
+#median(withoutmut_l)
 # tmbh
 tmb_h_group <- no_UCL[Subtype %in% tmb_h]
-withmut_h <- tmb_h_group[PIK3CA_Gene ==1,]$tmb
-withoutmut_h <- tmb_h_group[PIK3CA_Gene ==0,]$tmb
-wilcox.test(withmut_h,withoutmut_h)
-median(withmut_h)
-median(withoutmut_h)
+#withmut_h <- tmb_h_group[PIK3CA_Gene ==1,]$tmb
+#withoutmut_h <- tmb_h_group[PIK3CA_Gene ==0,]$tmb
+#wilcox.test(withmut_h,withoutmut_h)
+#median(withmut_h)
+#median(withoutmut_h)
 # 
 # fwrite(no_UCL,file = paste(base_dir,"02_25","no_UCL_pathway_summary_02_25.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t", na="NA")
