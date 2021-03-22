@@ -90,7 +90,7 @@ colnames(our_MT) <- colnames(publishMT)
 # 
 our_MT_after <- fread(paste(base,"MT_mutect2_after.txt",sep = seperator));
 our_MT_before <- fread(paste(base,"MT_mutect2_before.txt",sep = seperator));
-publishMT$Chromosome <- paste("chr",publishMT$Chromosome,sep = "")
+#publishMT$Chromosome <- paste("chr",publishMT$Chromosome,sep = "")
 publishMT$chrom_loc <- paste(publishMT$Chromosome,publishMT$Position,sep = "_")
 publisMT <- setDT(publishMT)
 our_MT$Case <- sapply(our_MT$Case, convert_MT_sample)
@@ -117,9 +117,11 @@ setdiff(their_sample,our_sample)
 
 #### Analyzed the ratio use bar plot after 5steps
 ### Mutect2
-pdf(paste(base,"Burair_filtering_bar_MT_Mutation_overlap_ratio_for_mutect2.pdf",sep="\\")
-    , height=12.94, width=12.94);
+# pdf(paste(base,"Burair_filtering_bar_MT_Mutation_overlap_ratio_for_mutect2.pdf",sep="\\")
+#     , height=12.94, width=12.94);
 
+png(file = paste(base,"Burair_filtering_compare_with_MT_publication.png",sep =seperator),
+    width = 4800, height =2700, units = "px", res = 500)
 
 data <- create_overlap_summary(our_MT,publisMT,intercet_sample)
 
@@ -137,12 +139,17 @@ samples <- unique(x);
 sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
+plot_data <- plot_data[-which(plot_data$x =="CMT-033"),]
+
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="After MT mutation number overlapped with MT CUK mutect2",fontsize=20)
+                     title="UGA MT mutation number overlapped with MT CUK mutect2",fontsize=20)
 print(p)
+dev.off()
 
+png(file = paste(base,"Burair_filtering_compare_with_MT_publication_ratio.png",sep =seperator),
+    width = 4800, height =2700, units = "px", res = 500)
 ratio_data <- melt(data, id.vars = c("sample"),
                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
                    variable.name = "fill")
@@ -158,10 +165,11 @@ samples <- unique(x);
 sample_order <-sample_order;
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
+plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
 fill_colors <- c("cyan","black","red");
 
 p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="After MT mutation ratio overlapped with MT CUK mutect2",fontsize=20)
+                     title="UGA MT mutation ratio overlapped with MT CUK mutect2",fontsize=20)
 print(p1)
 dev.off()
 #### Analyzed the ratio use bar plot before 5steps

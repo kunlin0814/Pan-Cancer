@@ -20,7 +20,7 @@ xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 regular.text <- element_text(colour="black",size=20)
 
 
-create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
+create_overlap_summary <- function(our_data,publish_data,intercet_sample){
   
   total_uniq_num_to_them <- NULL
   total_uniq_num_to_us <- NULL
@@ -31,24 +31,24 @@ create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
   total_sample <- NULL
   total_denomitor <- NULL
   for (samp in intercet_sample){
+    #samp = "DD0007a"
+    our_each_mut <- our_data[Sample == samp, .(chrom_loc)]
+    publish_each_mut <- publish_data[Sample == samp,.(chrom_loc)]
     
-    our_each_mut <- our_MT[sample_name == samp, .(chrom_loc)]
-    publish_each_mut <- publisMT[Case == samp,.(chrom_loc)]
     
-    
-    our_each <- nrow(our_MT[sample_name==samp,])
-    sanger_each <- nrow(publisMT[Case==samp,])
-    intercet_data <- nrow(intersect(our_each_mut,publish_each_mut))
+    our_each <- nrow(unique(our_data[Sample==samp,]))
+    sanger_each <- nrow(unique(publish_data[Sample==samp,]))
+    intercet_data <- nrow(unique(intersect(our_each_mut,publish_each_mut)))
     denominator <- our_each+sanger_each-intercet_data
     
     # count
-    number_overlap <- nrow(intersect(our_each_mut,publish_each_mut))
-    uniq_number_to_us <-nrow(setdiff(our_each_mut,publish_each_mut)) 
-    uniq_number_to_them <- nrow(setdiff(publish_each_mut,our_each_mut)) 
-    
+    number_overlap <- nrow(unique(intersect(our_each_mut,publish_each_mut)))
+    uniq_number_to_us <-nrow(unique(setdiff(our_each_mut,publish_each_mut))) 
+    uniq_number_to_them <- nrow(unique(setdiff(publish_each_mut,our_each_mut))) 
+                                                                                
     # ratio
-    uniq_ratio_to_them <- nrow(setdiff(publish_each_mut,our_each_mut))/(denominator)
-    uniq_ratio_to_us <- nrow(setdiff(our_each_mut,publish_each_mut))/(denominator)
+    uniq_ratio_to_them <- nrow(unique(setdiff(publish_each_mut,our_each_mut)))/(denominator)
+    uniq_ratio_to_us <- nrow(unique(setdiff(our_each_mut,publish_each_mut)))/(denominator)
     overlap_ratio <- number_overlap/(denominator)
     
     
@@ -107,134 +107,106 @@ intercet_sample <- intersect(their_sample,our_sample)
 #our_data <- fread(paste(base,"our_totalSangerOM_mutation.txt",sep="\\"))
 #colnames(our_data) <- c("Chromosome","Position","Ref","Alt","Sample")
 
+# 
+# 
+# total_uniq_num_to_them <- NULL
+# total_uniq_num_to_us <- NULL
+# total_share_number <- NULL
+# total_uniq_ratio_to_them <- NULL
+# total_uniq_ratio_to_us <- NULL
+# total_share_ratio <- NULL
+# total_sample <- NULL
+# total_denomitor <- NULL
+# for (samp in intercet_sample){
+# 
+# our_each_mut <- our_data[Sample == samp, .(chrom_loc)]
+# sanger_each_mut <- clean_sanger[Sample == samp,.(chrom_loc)]
+# 
+# 
+# our_each <- nrow(our_data[Sample==samp,])
+# sanger_each <- nrow(clean_sanger[Sample==samp,])
+# intercet_data <- nrow(intersect(our_each_mut,sanger_each_mut))
+# denominator <- our_each+sanger_each-intercet_data
+# 
+# # count
+# number_overlap <- nrow(intersect(our_each_mut,sanger_each_mut))
+# uniq_number_to_us <-nrow(setdiff(our_each_mut,sanger_each_mut)) 
+# uniq_number_to_them <- nrow(setdiff(sanger_each_mut,our_each_mut)) 
+# 
+# # ratio
+# uniq_ratio_to_them <- nrow(setdiff(sanger_each_mut,our_each_mut))/(denominator)
+# uniq_ratio_to_us <- nrow(setdiff(our_each_mut,sanger_each_mut))/(denominator)
+# overlap_ratio <- number_overlap/(denominator)
+# 
+# 
+# # summary
+# total_share_ratio <- c(total_share_ratio,overlap_ratio)
+# total_uniq_ratio_to_us <- c(total_uniq_ratio_to_us,uniq_ratio_to_us)
+# total_uniq_ratio_to_them <- c(total_uniq_ratio_to_them,uniq_ratio_to_them)
+# total_uniq_num_to_them <- c(total_uniq_num_to_them,uniq_number_to_them)
+# total_uniq_num_to_us <- c(total_uniq_num_to_us,uniq_number_to_us)
+# total_share_number <- c(total_share_number,number_overlap)
+# total_sample <- c(total_sample,samp)
+# total_denomitor <- c(total_denomitor,denominator)
+# 
+# }
 
 
-total_uniq_num_to_them <- NULL
-total_uniq_num_to_us <- NULL
-total_share_number <- NULL
-total_uniq_ratio_to_them <- NULL
-total_uniq_ratio_to_us <- NULL
-total_share_ratio <- NULL
-total_sample <- NULL
-total_denomitor <- NULL
-for (samp in intercet_sample){
 
-our_each_mut <- our_data[Sample == samp, .(chrom_loc)]
-sanger_each_mut <- clean_sanger[Sample == samp,.(chrom_loc)]
-
-
-our_each <- nrow(our_data[Sample==samp,])
-sanger_each <- nrow(clean_sanger[Sample==samp,])
-intercet_data <- nrow(intersect(our_each_mut,sanger_each_mut))
-denominator <- our_each+sanger_each-intercet_data
-
-# count
-number_overlap <- nrow(intersect(our_each_mut,sanger_each_mut))
-uniq_number_to_us <-nrow(setdiff(our_each_mut,sanger_each_mut)) 
-uniq_number_to_them <- nrow(setdiff(sanger_each_mut,our_each_mut)) 
-
-# ratio
-uniq_ratio_to_them <- nrow(setdiff(sanger_each_mut,our_each_mut))/(denominator)
-uniq_ratio_to_us <- nrow(setdiff(our_each_mut,sanger_each_mut))/(denominator)
-overlap_ratio <- number_overlap/(denominator)
-
-
-# summary
-total_share_ratio <- c(total_share_ratio,overlap_ratio)
-total_uniq_ratio_to_us <- c(total_uniq_ratio_to_us,uniq_ratio_to_us)
-total_uniq_ratio_to_them <- c(total_uniq_ratio_to_them,uniq_ratio_to_them)
-total_uniq_num_to_them <- c(total_uniq_num_to_them,uniq_number_to_them)
-total_uniq_num_to_us <- c(total_uniq_num_to_us,uniq_number_to_us)
-total_share_number <- c(total_share_number,number_overlap)
-total_sample <- c(total_sample,samp)
-total_denomitor <- c(total_denomitor,denominator)
-
-}
-
-data <- data.frame(share_ratio = as.numeric(total_share_ratio), 
-                   sample = total_sample,
-                   uniq_ratio_to_uga = as.numeric(total_uniq_ratio_to_us),
-                   uniq_ratio_to_sanger = as.numeric(total_uniq_ratio_to_them),
-                   uniq_num_to_sanger = as.numeric(total_uniq_num_to_them),
-                   uniq_num_to_uga = as.numeric(total_uniq_num_to_us),
-                   share_number = as.numeric(total_share_number),
-                   total_denomitor= as.numeric(total_denomitor))
-data <- setDT(data)
-
-pdf(paste(base,"Burair_filtering_bar_OM_Mutation_overlap_ratio.pdf",sep="\\")
-    , height=12.94, width=12.94);
-
+# pdf(paste(base,"Burair_filtering_bar_OM_Mutation_overlap_ratio.pdf",sep="\\")
+#     , height=12.94, width=12.94);
+png(file = paste(base,"Burair_filtering_Mutation_number_compare_with_OM_publication.png",sep =seperator),
+    width = 4800, height =2700, units = "px", res = 500)
+data <- create_overlap_summary(our_data,clean_sanger,intercet_sample)
 
 count_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("uniq_num_to_uga","uniq_num_to_sanger","share_number"),
+                   measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("uniq_num_to_uga","uniq_num_to_sanger","share_number");
+classify <- c("uniq_num_to_uga","uniq_num_to_publication","share_number");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
 sample_order <- order(sapply(samples, function(s) {sum(y[which(x == s)])}), decreasing=T);
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
+#plot_data <- plot_data[-which(plot_data$x =="CMT-033"),]
+
 fill_colors <- c("cyan","black","red");
 
-
-p <- ggplot(plot_data, aes(x=x, y=y, fill=fill)) + 
-  geom_bar(stat="identity",position='stack', width=0.6)+
-  ggtitle("OM count ratio overlapped with Sanger")+
-  scale_fill_manual(values=fill_colors)+
-  theme(
-    plot.title = element_text(size = 20, face = "bold"),
-    axis.title.x = element_blank(),
-    #element_text(face="plain",colour="black",size=fontsize),
-    axis.title.y = element_blank(),
-    #element_text(face="plain",colour="black",size=fontsize),
-    axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank(),
-    axis.text.y = element_text(size=fontsize,face="plain",colour="black"),
-    legend.position="bottom",
-    legend.title= element_blank(), legend.text = element_text(size=fontsize,face="plain",colour="black"))
-
+p <- my_bar_function(plot_data,fill_colors = fill_colors,
+                     title="UGA OM mutation number overlapped with Sanger Publication",fontsize=20)
 print(p)
 
+dev.off()
+
+png(file = paste(base,"Burair_filtering_Mutation_ratio_compare_with_OM_publication.png",sep =seperator),
+    width = 4800, height =2700, units = "px", res = 500)
 
 ratio_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_sanger","share_ratio"),
+                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
                    variable.name = "fill")
+
 ratio_data <- ratio_data[order(sample)]
 
 x <- ratio_data$sample
 y <- ratio_data$value
-classify <- c("uniq_ratio_to_uga","uniq_ratio_to_sanger","share_ratio");
+classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
 fill <- ratio_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
 sample_order <-sample_order;
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
+#plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
 fill_colors <- c("cyan","black","red");
 
-p <- ggplot(plot_data, aes(x=x, y=y, fill=fill)) + 
-  geom_bar(stat="identity",position='stack', width=0.6)+
-  ggtitle("OM mutation ratio overlapped with Sanger")+
-  scale_fill_manual(values=fill_colors)+
-  theme(
-    plot.title = element_text(size = 20, face = "bold"),
-    axis.title.x = element_blank(),
-    #element_text(face="plain",colour="black",size=fontsize),
-    axis.title.y = element_blank(),
-    #element_text(face="plain",colour="black",size=fontsize),
-    axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank(),
-    axis.text.y = element_text(size=fontsize,face="plain",colour="black"),
-    legend.position="bottom",
-    legend.title= element_blank(), legend.text = element_text(size=fontsize,face="plain",colour="black"))
-
-print(p)
-
+p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
+                      title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
+print(p1)
 dev.off()
 ############# Plot the sanger six bases #############
 
