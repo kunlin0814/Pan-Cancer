@@ -25,10 +25,17 @@ exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pas
 mutect_after_vaf <- fread(paste(base_dir,"02_11","mutect_noucl_vaf_withBreeds_callable_0210.txt",sep =seperator),
                           na.strings = "")
 
+# mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
+#                                 sep =seperator))
+
 mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 
- 
+
+indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
+indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
+setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
+indel_file <- indel_file[,emsembl_id:=NULL] 
 
 # fwrite(mutect_after_vaf, file = paste(base_dir,"02_18","NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_18.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t")
@@ -153,8 +160,8 @@ sig_variants_sample_wide <- fread(file = paste(base_dir,"02_18","final_breed_var
 
 sig_gene_sample_wide <- fread(paste(base_dir,"02_18","final_breeds_gene_nonsym_samplewide_p_value_VAF_Mutect_orientBias3_02_18.txt",sep = seperator))
 
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+ # "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
