@@ -100,6 +100,8 @@ publishMT <- fread(paste(base,"PON_DbSNP_CDS_combineChrompublishMT.txt",sep=sepe
 
 our_MT_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep = seperator));
 our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt)]
+
+
 #colnames(our_MT) <- colnames(publishMT)
 # 
 our_MT$sample_names
@@ -134,11 +136,11 @@ setdiff(their_sample,our_sample)
 # pdf(paste(base,"Burair_filtering_bar_MT_Mutation_overlap_ratio_for_mutect2.pdf",sep="\\")
 #     , height=12.94, width=12.94);
 
-png(file = paste(base,"Burair_filtering_compare_with_MT_publication.png",sep =seperator),
+png(file = paste(base,"remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 data <- create_overlap_summary(our_MT,publisMT,intercet_sample)
-
+data <-data[sample!="CMT-033"]
 count_data <- melt(data, id.vars = c("sample"),
                    measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
                    variable.name = "fill")
@@ -163,7 +165,7 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
 print(p)
 dev.off()
 
-png(file = paste(base,"Burair_filtering_compare_with_MT_publication_ratio.png",sep =seperator),
+png(file = paste(base,"remove_Burair_filtering_compare_with_MT_publication_ratio.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 ratio_data <- melt(data, id.vars = c("sample"),
                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
