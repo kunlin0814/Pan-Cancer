@@ -33,6 +33,17 @@ indel_file$Subtype <- Subtype
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
 total_mut <- rbindlist(list(SNV,indel_file))
 
+total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
+
+
+breed <- match_vector_table(total_mut$sample_names,"final_breed_label",whole_wes_clean_breed_table)
+
+total_mut$breed <- breed
+
+a = unique(total_mut[Subtype=="MT",.(sample_names,breed)])
+a <- setDT(a)
+b = a[,.N,keyby= .(breed)]
+
 
 ## exclude s1 high and UCL samples
 s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
