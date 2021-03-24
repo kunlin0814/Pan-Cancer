@@ -5,16 +5,16 @@ library(ggrepel)
 library(readxl)
 library(ggpubr)
 library(grid)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-source("C:\\Users\\abc73\\Documents\\GitHub\\VAF\\six_base_function_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  "/Volumes/Research/GitHub/R_util/my_util.R")
 
+source(#"C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
+  "/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
+source("/Volumes/Research/GitHub/VAF/six_base_function_util.R")
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
-#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
 
-
-excldue <- read_excel("G:\\MAC_Research_Data\\Pan_cancer\\Pan-Cancer-Manuscript\\Figure1\\Original_Data_summary.xlsx",
-                      sheet = "Before_Matching_excluded")
 fontsize=20
 dot_size <- 1.4;
 abs_text_size <- 16;
@@ -23,7 +23,6 @@ xangle <- 45;
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 regular.text <- element_text(colour="black",size=20)
-
 
 create_overlap_summary <- function(our_data,publish_data,intercet_sample){
   
@@ -35,6 +34,8 @@ create_overlap_summary <- function(our_data,publish_data,intercet_sample){
   total_share_ratio <- NULL
   total_sample <- NULL
   total_denomitor <- NULL
+  total_their_mut_number <- NULL
+  total_UGA_mut_number <- NULL
   for (samp in intercet_sample){
     #samp = "DD0007a"
     our_each_mut <- our_data[Sample == samp, .(chrom_loc)]
@@ -49,8 +50,9 @@ create_overlap_summary <- function(our_data,publish_data,intercet_sample){
     # count
     number_overlap <- nrow(unique(intersect(our_each_mut,publish_each_mut)))
     uniq_number_to_us <-nrow(unique(setdiff(our_each_mut,publish_each_mut))) 
-    uniq_number_to_them <- nrow(unique(setdiff(publish_each_mut,our_each_mut))) 
-                                                                                
+    uniq_number_to_them <- nrow(unique(setdiff(publish_each_mut,our_each_mut)))
+    their_mut_number <- nrow(unique(publish_each_mut))
+    UGA_mut_number <- nrow(unique(our_each_mut))
     # ratio
     uniq_ratio_to_them <- nrow(unique(setdiff(publish_each_mut,our_each_mut)))/(denominator)
     uniq_ratio_to_us <- nrow(unique(setdiff(our_each_mut,publish_each_mut)))/(denominator)
@@ -66,6 +68,8 @@ create_overlap_summary <- function(our_data,publish_data,intercet_sample){
     total_share_number <- c(total_share_number,number_overlap)
     total_sample <- c(total_sample,samp)
     total_denomitor <- c(total_denomitor,denominator)
+    total_their_mut_number <- c(total_their_mut_number,their_mut_number)
+    total_UGA_mut_number <- c(total_UGA_mut_number,UGA_mut_number)
     
   }
   
@@ -76,16 +80,19 @@ create_overlap_summary <- function(our_data,publish_data,intercet_sample){
                      uniq_num_to_publication = as.numeric(total_uniq_num_to_them),
                      uniq_num_to_uga = as.numeric(total_uniq_num_to_us),
                      share_number = as.numeric(total_share_number),
-                     total_denomitor= as.numeric(total_denomitor))
+                     total_denomitor= as.numeric(total_denomitor),
+                     total_their_mut_number=as.numeric(total_their_mut_number),
+                     total_UGA_mut_number=as.numeric(total_UGA_mut_number))
   data <- setDT(data)
   
   return (data)
 }
 
 #### Analyzed the ratio that overlap
-
-base <- "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
-original_signature <- read_excel(paste(base,"Sanger_mutation.xlsx",sep ="\\"),
+seperator <- "/"
+base <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/OM_mutation_compare_with_Sanger"
+   #"G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
+original_signature <- read_excel(paste(base,"Sanger_mutation.xlsx",sep =seperator),
                                 sheet ="Canine", skip = 29)
 original_signature <- setDT(original_signature)
 original_signature$Chromosome <- paste("chr",original_signature$`#Chr`,sep="")
@@ -96,7 +103,7 @@ target_original <- original_signature[,.(Sample,Chromosome,Position,Ref,Alt,Cons
 #colnames(original_signature)[5] <- "sample_names"
 
 seperator <- "/"
-sanger_signature <- fread(paste(base,"DbSNP_sanger_mut_file_after_DBSNP_03_23.txt",sep ="\\"))
+sanger_signature <- fread(paste(base,"DbSNP_sanger_CDS_mut_file_after_DBSNP_03_23.txt",sep =seperator))
 sanger_filter_SNP <- sanger_signature
 
 sanger_filter_SNP$chrom_loc <- paste(sanger_filter_SNP$Chromosome,sanger_filter_SNP$Position,sep = "_")
@@ -123,6 +130,21 @@ our_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect
 #                "status","tumor_type","symbol")
 # colnames(our_Burair) <- col_names
 our_data <- our_Burair[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt,status)]
+
+check <- our_Burair[sample_names=="CMT-33"]
+a = check[vaf > 0.1,]
+
+data <- 
+hist(check$vaf,breaks = 1000)
+p <- ggplot(check, aes(x=sample_names, y=vaf, color='black')) + 
+  geom_jitter(size=1.6, shape=20, position=position_jitterdodge())+
+  ylab("Variant allele frequency")
+
+print(p)
+dev.off()
+
+
+
 our_data_sample_convert <- sapply(our_data$sample_names,convert_sample)
 our_data$Sample <- our_data_sample_convert
 our_data$chrom_loc <- paste(our_data$chrom,our_data$pos,sep ="_")
@@ -276,8 +298,15 @@ print(p1)
 dev.off()
 
 ### 5steps only end
-data <- data[order(share_ratio,decreasing = T)]
-data_5setps <- data_5setps[order(share_ratio,decreasing = T)]
+#data <- data[order(share_ratio,decreasing = T)]
+#data_5setps <- data_5setps[order(share_ratio,decreasing = T)]
+fwrite(clean_sanger,file = paste(base,"sanger_DBSNP_CDS_mutation.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+
+fwrite(our_data,file = paste(base,"Burair_filtering_Mut_results.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+fwrite(our_5steps,file=paste(base,"5steps_filtering_Mut_result.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 fwrite(data,file=paste(base,"Burair_filtering_with_sanger_result.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 fwrite(data_5setps,file = paste(base,"5steps_only_with_sanger_result.txt",sep = seperator),
