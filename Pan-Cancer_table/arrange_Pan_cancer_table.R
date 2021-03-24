@@ -22,22 +22,22 @@ excel_wes_table <- setDF(excel_wes_table)
 output_dir <- "C:/Users/abc73/Desktop/need_to_revised/tableS1"
 
 ####
-target_column <- c("Case_ID","Sample_ID","SelfMatch","DiffFromBest",
-                   "DiseaseAcronym2","Status"	,"Symbol"	,"Bioproject")
+target_column <- c("Case_ID","Sample_ID","callable_bases",
+                   "Tumor_Type","Status"	,"Symbol"	,"Bioproject")
 
 output <- excel_wes_table %>% 
   filter(Total_pairs>=5000000) %>%
-  filter(Gt_30_fraction >=0) %>%
-  filter(Uniquely_coordinatly_mapped_rate >=0.6) %>%
-  filter(Target_CDS_Mapping_Rates >=0.3) %>%
-  filter(Mean_Coverage >=30) %>%
+  filter(gt30 >=0) %>%
+  filter(Unique_mapped_rate >=0.6) %>%
+  #filter(Target_CDS_Mapping_Rates >=0.3) %>%
+  filter(total_mean_coverage >=30) %>%
   filter(RMSE <= 0.01) %>%
-  filter(Callable_bases!= "Normal_sample" & Callable_bases >=10000000)
+  filter(callable_bases!= "Normal_sample")
  
 
 final_out <- output[, target_column]
 
-fwrite(final_out,file = paste(output_dir,"match.txt",sep = "/"),
+fwrite(final_out,file = paste(output_dir,"wgs_callable.txt",sep = "/"),
        col.names = T, row.names = F, quote = F, sep = "\t")
 
 
