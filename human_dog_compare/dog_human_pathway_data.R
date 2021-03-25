@@ -174,11 +174,11 @@ all_sample_cna_sum <- setDT(all_sample_cna_sum)
 all_sample_cna_sum <- all_sample_cna_sum[order(numberOfsample,decreasing = T)]
 all_sample_snv_sum <- all_sample_snv_sum[order(numberOfsample,decreasing = T)]
 
-fwrite(all_sample_snv_sum, file= paste(base_dir,"TCL_snv_gene_mutation_sum_03_18.txt",sep =seperator),
+fwrite(all_sample_snv_sum, file= paste(base_dir,"TCL_snv_gene_mutation_sum_03_24.txt",sep =seperator),
        col.names = T, row.names = F, sep = "\t", quote = F, eol="\n")
 
 
-fwrite(all_sample_cna_sum, file= paste(base_dir,"TCL_cna_gene_mutation_sum_03_18.txt",sep =seperator),
+fwrite(all_sample_cna_sum, file= paste(base_dir,"TCL_cna_gene_mutation_sum_03_24.txt",sep =seperator),
        col.names = T, row.names = F, sep = "\t", quote = F, eol="\n")
 ################### find the gene mutation frequency end ################### 
 
@@ -243,7 +243,7 @@ colnames(merge_human_dog) <- c("Sample","Mut_type","tumorxsAfflicted","tumorsTot
 
 
 ## # ### exam each gene in the target pathway for human
-cut_off <- 5
+cut_off <- 0
 human_target_total_mut <- human_total_mut
 human_total_gene_sum <- NULL
 for (gene_index in 1:length(target_pathway_gene)){
@@ -261,7 +261,7 @@ for (gene_index in 1:length(target_pathway_gene)){
 human_gene_list <- human_total_gene_sum$Sample
 
 ## # ### exam each gene in the target pathway for dog
-cut_off <- 5
+cut_off <- 0
 dog_total_sample_number <- nrow(dog_target_tumor_pathway)
 dog_target_total_mut <- total_mut[Subtype==target_tumor_type,]
 dog_total_gene_sum <- NULL
@@ -280,7 +280,7 @@ dog_gene_list <- dog_total_gene_sum$Sample
 both_dog_human_gene_list <- union(dog_gene_list,human_gene_list)
 
 ### examine both human and dog in target_gene list##
-cut_off <- 5
+cut_off <- 0
 human_target_total_mut <- human_total_mut
 dog_human_total_gene_sum <- NULL
 for (gene_index in 1:length(both_dog_human_gene_list)){
@@ -373,7 +373,7 @@ HumanDogPlot<-
 print(HumanDogPlot)
 dev.off()
 
-fwrite(merge_human_dog, paste(human_base_dir,"Final_human_dog_tumor_summary.txt",sep = seperator),
+fwrite(merge_human_dog, paste(human_base_dir,"Final_human_dog_tumor_summary_03_24.txt",sep = seperator),
        quote = F, row.names = F,sep = "\t")
 
 
