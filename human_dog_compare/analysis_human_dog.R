@@ -5,7 +5,7 @@ library(readxl)
 library(gridExtra)
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 #"/Volumes/Research/GitHub/R_util/my_util.R")
-target_tumor_type <- ""
+target_tumor_type <- "BCL"
 human_total_sample <- 65
 ## Dog Data ###
 
@@ -13,7 +13,7 @@ base_dir <-
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
   "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 
-pathway_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/TCL"
+pathway_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/DLBCL"
 
 seperator <- "/"
 
