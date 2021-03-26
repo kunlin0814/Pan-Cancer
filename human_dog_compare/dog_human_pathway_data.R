@@ -1,13 +1,13 @@
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 ## create a target_gene_pathway_list
 seperator <- "/"
-target_tumor_type="TCL"
-human_base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/TCL"
+target_tumor_type="BCL"
+human_base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/DLBCL"
 
 pathway <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis/PathwayGeneList-03_19.xlsx",
                       sheet = "Pathway_gene_list")
 pathway <- setDT(pathway)
-target <- c("Cell cycle","p53","PI3K","Chromatin remodeler","NFKB")
+target <- c("PI3K","BCR signaling","NFKB","Chromatin remodeler","Cell cycle")
 target_pathway <- pathway[,target, with= F]
 
 path_col <- colnames(target_pathway)
@@ -302,7 +302,11 @@ for (gene_index in 1:length(both_dog_human_gene_list)){
 merge_human_dog <- rbind(merge_human_dog,dog_human_total_gene_sum)
 
 
-
+## dog only
+final_dog_only <- rbindlist(list(pathway_sum,dog_total_gene_sum))
+final_dog_only <- setDT(final_dog_only)
+fwrite(final_dog_only, paste(human_base_dir,"Final_dog_tumor_summary_03_25.txt",sep = seperator),
+       quote = F, row.names = F,sep = "\t")
 
 ############## Scatter plot ##############
 # get the data from human and dog
