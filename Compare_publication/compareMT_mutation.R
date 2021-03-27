@@ -198,10 +198,13 @@ Mutect2_before_order <- sample_order
 
 x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
+plot_data[plot_data$x=="CMT-495",]
 fill_colors <- c("cyan","black","red");
 p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Before MT mutation number overlapped with MT Korean mutect2",
+                      title="Before 5steps UGA MT mutation number overlapped with MT CUK",
                       fontsize=20)
+p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
+
 print(p2)
 dev.off()
 png(file = paste(base,"03_25","before_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
@@ -224,8 +227,9 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p3 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Before MT mutation ratio overlapped with MT Korean mutect2",
+                      title="Before MT mutation ratio overlapped with MT Korean",
                       fontsize=20)
+
 print(p3)
 
 fwrite(data,file=paste(base,"03_25","Mutect2_before_compare_publication.txt",sep = seperator),
@@ -268,8 +272,11 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Before MT mutation number overlapped with MT Korean mutect2",
+                      title="After 5steps UGA MT mutation number overlapped with MT CUK",
                       fontsize=20)
+p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
+plot_data[plot_data$x=="CMT-495",]
+
 print(p2)
 dev.off()
 png(file = paste(base,"03_25","after_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
@@ -292,7 +299,7 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p3 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Before MT mutation ratio overlapped with MT Korean mutect2",
+                      title="Before MT mutation ratio overlapped with MT Korean",
                       fontsize=20)
 print(p3)
 fwrite(data,file=paste(base,"03_25","Mutect2_after_compare_publication.txt",sep = seperator),
@@ -348,7 +355,8 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="UGA MT mutation number overlapped with MT CUK mutect2",fontsize=20)
+                     title="UGA MT mutation calling number overlapped with MT CUK",fontsize=20)
+p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 print(p)
 dev.off()
 
@@ -373,7 +381,7 @@ plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
 fill_colors <- c("cyan","black","red");
 
 p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="UGA MT mutation ratio overlapped with MT CUK mutect2",fontsize=20)
+                     title="UGA MT mutation ratio overlapped with MT CUK",fontsize=20)
 print(p1)
 fwrite(data,file=paste(base,"03_25","Mutect1_Burair_filtering_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
