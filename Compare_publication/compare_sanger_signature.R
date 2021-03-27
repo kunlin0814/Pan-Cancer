@@ -123,7 +123,10 @@ final_merge <- merge_table[Consequence %in% target_conseq,]
 clean_sanger <- setDT(final_merge)
 colnames(clean_sanger)[1] <- "Case"
 #### Analyzed the ratio use bar plot before 5steps
-our_OM_before <- fread(paste(base,"total_final_without_Gene_Burair_Filtering3_VAF_Mutect_Before_0201.txt.gz",sep = seperator));
+our_OM_before <- fread(paste(base,"Sanger_Total_Before_5step_Sanger_Mutect1_03_26.txt",sep = seperator));
+colnames(our_OM_before) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
+               "status","tumor_type","symbol")
+
 our_OM_before <- our_OM_before[symbol=="OM SC",]
 our_OM_before <- our_OM_before[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt)]
 our_data_sample_convert <- sapply(our_OM_before$sample_names,convert_sample)
@@ -135,9 +138,9 @@ OM_before_intercet_sample <- intersect(their_sample,our_sample)
 
 
 ### after 
-our_OM_after <- fread(paste(base,"Total_5steps_only_without_Gene_Burair_Filtering3_VAF_Mutect__0316.txt.gz",sep = seperator));
-colnames(our_OM_after) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names",
-                            "tumor_type","symbol")
+our_OM_after <- fread(paste(base,"Sanger_Total_After_5step_Sanger_Mutect1_03_26.txt",sep = seperator));
+colnames(our_OM_after) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
+                             "status","tumor_type","symbol")
 our_OM_after <- our_OM_after[symbol=="OM SC",.(sample_names,chrom,pos,ref,alt)]
 our_OM_after$Case <- sapply(our_OM_after$sample_names, convert_sample)
 our_OM_after$chrom_loc <- paste(our_OM_after$chrom,our_OM_after$pos,sep= "_")
@@ -190,7 +193,9 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="UGA OM mutation number overlapped with Sanger Publication",fontsize=20)
+                     title="After 5 steps UGA mut number overlapped with publication",fontsize=20)
+p <- p+scale_y_continuous(breaks=c(0,50,100,150))
+
 print(p)
 fwrite(data_5setps,file=paste(base,"03_25","5steps_only_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
@@ -249,7 +254,7 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="UGA OM mutation number overlapped with Sanger Publication",fontsize=20)
+                     title="Before 5 steps UGA mut number overlapped with publication",fontsize=20)
 print(p)
 
 dev.off()
