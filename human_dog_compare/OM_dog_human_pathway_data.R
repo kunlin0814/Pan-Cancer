@@ -66,8 +66,8 @@ CNV <- unique(amp_delete[,c("sample_names","gene_name","mut_type","subtype"),wit
 colnames(CNV)<- c("sample_names","gene_name","status","Subtype")
 
 ## combine snv, cnv, amp
-total_mut <- rbindlist(list(SNV,indel_file,CNV))
-# total_mut <- rbindlist(list(SNV,indel_file))
+#total_mut <- rbindlist(list(SNV,indel_file,CNV))
+total_mut <- rbindlist(list(SNV,indel_file))
 
 #total_sample <- unique(total_mut$sample_names)
 total_sample <- unique(total_mut[Subtype=="OM",]$sample_names)
@@ -185,7 +185,7 @@ all_sample_snv_sum <- setDT(all_sample_snv_sum)
 # all_sample_cna_sum <- all_sample_cna_sum[order(numberOfsample,decreasing = T)]
 # all_sample_snv_sum <- all_sample_snv_sum[order(numberOfsample,decreasing = T)]
 
-fwrite(all_sample_snv_sum, file= paste(base_dir,"OM_snv_cnv_gene_mutation_sum_03_24.txt",sep =seperator),
+fwrite(all_sample_snv_sum, file= paste(base_dir,"OM_snv_gene_mutation_sum_03_26.txt",sep =seperator),
        col.names = T, row.names = F, sep = "\t", quote = F, eol="\n")
 
 
@@ -321,6 +321,6 @@ adj_pval <- ifelse(BHcorrect<0.05, "< 0.05", ">=0.05" )
 merge_human_dog$Fisher_adj_pval <- adj_pval
 
 
-fwrite(merge_human_dog, paste(human_base_dir,"Final_human_dog_include_cnv_tumor_summary_OM_03_24.txt",sep = seperator),
+fwrite(merge_human_dog, paste(human_base_dir,"Final_human_dog_snv_only_tumor_summary_OM_03_26.txt",sep = seperator),
        quote = F, row.names = F,sep = "\t")
 
