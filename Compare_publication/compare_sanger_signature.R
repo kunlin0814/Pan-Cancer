@@ -315,7 +315,7 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="UGA OM mutation number overlapped with Sanger Publication",fontsize=20)
+                     title="UGA mutation calling number overlapped with publication",fontsize=20)
 print(p)
 
 dev.off()
