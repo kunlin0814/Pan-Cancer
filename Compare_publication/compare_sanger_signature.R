@@ -174,55 +174,58 @@ colnames(merge_table) <- c("Sample","Chromosome","Position","Ref","Alt","chrom_l
 
 #unique(target_original$Consequence)
 
-final_merge <- merge_table[Consequence %in% target_conseq,]
+final_merge <- merge_table
 clean_sanger <- setDT(final_merge)
 colnames(clean_sanger)[1] <- "Case"
 
-#### Analyzed the ratio use bar plot before 5steps
+#### Analyzed the before 5steps
+
+# ## indel file
+indel_file <- fread(paste(base,"total_CDS_indel_info_withGene.txt",sep =seperator))
+indel_col_names <- c("chrom","pos","ref","alt","gene_name","ensembl_id","status","sample_names")
+colnames(indel_file) <- indel_col_names
+indel_file$tumor_type <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
+final_indel <- indel_file[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt,status)]
+final_indel$chrom_loc <- paste(final_indel$chrom,final_indel$pos,sep ="_")
+final_indel$Case <-  sapply(final_indel$sample_names,convert_sample)
+
+
+
 our_OM_before <- fread(paste(base,"DbSNP_CDS_Total_Before_5step_Sanger_Mutect1_03_29.txt",sep = seperator));
 # colnames(our_OM_before) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
 #                "status","tumor_type","symbol")
-
 our_OM_before <- our_OM_before[symbol=="OM SC",]
-our_OM_before <- our_OM_before[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt)]
+our_OM_before <- our_OM_before[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt,status)]
 our_OM_before$Case <- sapply(our_OM_before$sample_names,convert_sample)
 our_OM_before$chrom_loc <- paste(our_OM_before$chrom,our_OM_before$pos,sep ="_")
+our_OM_before <- rbind(our_OM_before,final_indel)
 our_sample <- sort(unique(our_OM_before$Case))
 their_sample <- sort(unique(clean_sanger$Case))
 OM_before_intercet_sample <- intersect(their_sample,our_sample)
 
 
-### after 
+### after 5 steps
 our_OM_after <- fread(paste(base,"DbSNP_CDS_Total_After_5step_Sanger_Mutect1_03_29.txt",sep = seperator));
 # colnames(our_OM_after) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
 #                              "status","tumor_type","symbol")
-our_OM_after <- our_OM_after[symbol=="OM SC",.(sample_names,chrom,pos,ref,alt)]
+our_OM_after <- our_OM_after[symbol=="OM SC",.(sample_names,chrom,pos,ref,alt,status)]
 our_OM_after$Case <- sapply(our_OM_after$sample_names, convert_sample)
 our_OM_after$chrom_loc <- paste(our_OM_after$chrom,our_OM_after$pos,sep= "_")
-our_OM_after <- clean_table(our_OM_after)
+#our_OM_after <- clean_table(our_OM_after)
 our_OM_after$chrom_loc <- paste(our_OM_after$chrom,our_OM_after$pos,sep ="_")
+our_OM_after <- rbind(our_OM_after,final_indel)
 our_sample <- sort(unique(our_OM_after$Case))
 their_sample <- sort(unique(clean_sanger$Case))
 OM_after_intercet_sample <- intersect(their_sample,our_sample)
 
 
-# a = our_OM_after[Case=='DD0013a',]
-# b = clean_sanger[Case=='DD0013a']
-# 
-# setdiff(a$chrom_loc,b$chrom_loc)
-
-# fwrite(our_OM_after, paste(base,"our_om_after.txt",sep = "/"),
-#        col.names = T, row.names = F, sep = "\t",eol = "\n")
-# fwrite(clean_sanger, paste(base,"sanger_mut.txt",sep = "/"),
-#        col.names = T, row.names = F, sep = "\t",eol = "\n")
-
-
 ## Burair
 our_OM_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep = seperator));
-our_OM <- our_OM_Burair[symbol=="OM SC",.(sample_names,chrom,pos,ref,alt)]
+our_OM <- our_OM_Burair[symbol=="OM SC",.(sample_names,chrom,pos,ref,alt,status)]
 
 our_OM$Case <- sapply(our_OM$sample_names, convert_sample)
 our_OM$chrom_loc <- paste(our_OM$chrom,our_OM$pos,sep= "_")
+our_OM <- rbind(our_OM,final_indel)
 our_sample <- unique(our_OM$Case)
 their_sample <- sort(unique(clean_sanger$Case))
 Burair_intercet_sample <- intersect(their_sample,our_sample)
@@ -236,7 +239,7 @@ total_three_intercet <- intersect(intersect(OM_before_intercet_sample,OM_after_i
 # our_OM_before <- fread(paste(base,"total_final_without_Gene_Burair_Filtering3_VAF_Mutect_Before_0201.txt.gz",sep = seperator));
 # our_OM_before <- our_OM_before[symbol=="OM SC",]
 
-png(file = paste(base,"03_25","5steps_only_Mutation_number_compare_with_OM_publication_03_23.png",sep =seperator),
+png(file = paste(base,"03_29","include_indel_5steps_only_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 data_5setps <- create_overlap_summary(our_OM_after,clean_sanger,total_three_intercet)
@@ -273,41 +276,41 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 
 print(p)
-fwrite(data_5setps,file=paste(base,"03_25","5steps_only_compare_publication.txt",sep = seperator),
+fwrite(data_5setps,file=paste(base,"03_25","include_indel_5steps_only_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 dev.off()
-
-png(file = paste(base,"03_25","5steps_only_Mutation_ratio_compare_with_OM_publication_03_23.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-
-ratio_data <- melt(data_5setps, id.vars = c("sample"),
-                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
-                   variable.name = "fill")
-
-ratio_data <- ratio_data[order(sample)]
-
-x <- ratio_data$sample
-y <- ratio_data$value
-classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
-fill <- ratio_data$fill
-fill <- factor(fill, levels=classify);
-samples <- unique(x);
-sample_order <-sample_order;
-x <- factor(x, levels=samples[sample_order]);
-plot_data <- data.frame(x=x, y=y, fill=fill);
-#plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
-fill_colors <- c("cyan","black","red");
-
-p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
-print(p1)
-dev.off()
+# 
+# png(file = paste(base,"03_29","5steps_only_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
+#     width = 4800, height =2700, units = "px", res = 500)
+# 
+# ratio_data <- melt(data_5setps, id.vars = c("sample"),
+#                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+#                    variable.name = "fill")
+# 
+# ratio_data <- ratio_data[order(sample)]
+# 
+# x <- ratio_data$sample
+# y <- ratio_data$value
+# classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+# fill <- ratio_data$fill
+# fill <- factor(fill, levels=classify);
+# samples <- unique(x);
+# sample_order <-sample_order;
+# x <- factor(x, levels=samples[sample_order]);
+# plot_data <- data.frame(x=x, y=y, fill=fill);
+# #plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
+# fill_colors <- c("cyan","black","red");
+# 
+# p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
+#                       title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
+# print(p1)
+# dev.off()
 
 ### 5steps only end
 
 ## Before 5 steps
 
-png(file = paste(base,"03_25","Before_5_steps_Mutation_number_compare_with_OM_publication_03_23.png",sep =seperator),
+png(file = paste(base,"03_29","include_indel_Before_5_steps_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 data_before_5setps <- create_overlap_summary(our_OM_before,clean_sanger,total_three_intercet)
@@ -333,42 +336,43 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
                      title="Before 5 steps UGA mut number overlapped with publication",fontsize=20)
 print(p)
 
-dev.off()
-
-png(file = paste(base,"03_25","Before_5_steps_Mutation_ratio_compare_with_OM_publication_03_23.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-
-ratio_data <- melt(data_before_5setps, id.vars = c("sample"),
-                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
-                   variable.name = "fill")
-
-ratio_data <- ratio_data[order(sample)]
-
-x <- ratio_data$sample
-y <- ratio_data$value
-classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
-fill <- ratio_data$fill
-fill <- factor(fill, levels=classify);
-samples <- unique(x);
-sample_order <-sample_order;
-x <- factor(x, levels=samples[sample_order]);
-plot_data <- data.frame(x=x, y=y, fill=fill);
-#plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
-fill_colors <- c("cyan","black","red");
-
-p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
-print(p1)
-
-fwrite(data_before_5setps,file=paste(base,"03_25","Before_5steps_Mutect1_compare_publication.txt",sep = seperator),
+fwrite(data_before_5setps,file=paste(base,"03_29","include_indel_Before_5steps_Mutect1_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+
+dev.off()
+# 
+# png(file = paste(base,"03_29","Before_5_steps_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
+#     width = 4800, height =2700, units = "px", res = 500)
+# 
+# ratio_data <- melt(data_before_5setps, id.vars = c("sample"),
+#                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+#                    variable.name = "fill")
+# 
+# ratio_data <- ratio_data[order(sample)]
+# 
+# x <- ratio_data$sample
+# y <- ratio_data$value
+# classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+# fill <- ratio_data$fill
+# fill <- factor(fill, levels=classify);
+# samples <- unique(x);
+# sample_order <-sample_order;
+# x <- factor(x, levels=samples[sample_order]);
+# plot_data <- data.frame(x=x, y=y, fill=fill);
+# #plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
+# fill_colors <- c("cyan","black","red");
+# 
+# p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
+#                       title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
+# print(p1)
+
 
 dev.off()
 
 ####### Burair filtering #########
 
 
-png(file = paste(base,"03_25","Burair_filtering_Mutect1_Mutation_number_compare_with_OM_publication_03_23.png",sep =seperator),
+png(file = paste(base,"03_29","Burair_filtering_Mutect1_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 Burair_filtering_data <- create_overlap_summary(our_OM,clean_sanger,total_three_intercet)
@@ -395,31 +399,31 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
 print(p)
 
 dev.off()
-
-png(file = paste(base,"03_25","Burair_filtering_Mutect1_Mutation_ratio_compare_with_OM_publication_03_23.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-
-ratio_data <- melt(Burair_filtering_data, id.vars = c("sample"),
-                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
-                   variable.name = "fill")
-
-ratio_data <- ratio_data[order(sample)]
-
-x <- ratio_data$sample
-y <- ratio_data$value
-classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
-fill <- ratio_data$fill
-fill <- factor(fill, levels=classify);
-samples <- unique(x);
-sample_order <-sample_order;
-x <- factor(x, levels=samples[sample_order]);
-plot_data <- data.frame(x=x, y=y, fill=fill);
-#plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
-fill_colors <- c("cyan","black","red");
-
-p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
-print(p1)
+# 
+# png(file = paste(base,"03_29","Burair_filtering_Mutect1_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
+#     width = 4800, height =2700, units = "px", res = 500)
+# 
+# ratio_data <- melt(Burair_filtering_data, id.vars = c("sample"),
+#                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+#                    variable.name = "fill")
+# 
+# ratio_data <- ratio_data[order(sample)]
+# 
+# x <- ratio_data$sample
+# y <- ratio_data$value
+# classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+# fill <- ratio_data$fill
+# fill <- factor(fill, levels=classify);
+# samples <- unique(x);
+# sample_order <-sample_order;
+# x <- factor(x, levels=samples[sample_order]);
+# plot_data <- data.frame(x=x, y=y, fill=fill);
+# #plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
+# fill_colors <- c("cyan","black","red");
+# 
+# p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
+#                       title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
+# print(p1)
 
 fwrite(Burair_filtering_data,file=paste(base,"03_25","Burair_filtering_Mutect1_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
@@ -427,17 +431,6 @@ dev.off()
 
 ### compare end ###
 
-# 
-# # ## indel file
-# indel_file <- fread(paste(base,"total_CDS_indel_info_withGene.txt",sep =seperator))
-# indel_col_names <- c("chrom","pos","ref","alt","gene_name","ensembl_id","status","sample_names")
-# colnames(indel_file) <- indel_col_names
-# indel_file$tumor_type <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
-# final_indel <- indel_file[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt,status)]
-# final_indel$chrom_loc <- paste(final_indel$chrom,final_indel$pos,sep ="_")
-# final_indel_sample_convert <- sapply(final_indel$sample_names,convert_sample)
-# final_indel$Sample <- final_indel_sample_convert
-# total_snv <- rbind(our_data,final_indel)
 
 ############# Plot the sanger six bases #############
 
