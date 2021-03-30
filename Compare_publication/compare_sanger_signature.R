@@ -88,6 +88,55 @@ create_overlap_summary <- function(our_data,publis_data,intercet_sample){
 }
 
 
+create_overlap_summary_for_each <- function(our_data,publis_data,intercet_sample){
+  final_sum <- list()
+  unique_to_them_sum <- data.table()
+  unique_to_us_sum <- data.table()
+  share_sum <- data.table()
+  for (samp in intercet_sample){
+    our_each_mut <- unique(our_data[Case == samp, .(chrom_loc)][['chrom_loc']])
+    publish_each_mut <- unique(publis_data[Case == samp,.(chrom_loc)][['chrom_loc']])
+    intercet_data <- intersect(our_each_mut,publish_each_mut)
+    each_unique_to_us <- setdiff(our_each_mut,publish_each_mut)
+    each_unique_to_publish <- setdiff(publish_each_mut,our_each_mut)
+    
+    if (length(each_unique_to_publish)==0){
+      each_unique_to_publish <- "NA"
+    }
+    if (length(each_unique_to_us)==0){
+      each_unique_to_us <- "NA"
+    }
+    if (length(intercet_data)==0){
+      intercet_data <- "NA"
+    }
+    each_unique_to_us <- list(Case = samp,
+                              unique_to_us =each_unique_to_us)
+    
+    each_unique_to_publish <- list(Case = samp,
+                                   unique_to_publish =each_unique_to_publish)
+    each_share <- list(Case = samp,
+                       share = intercet_data)
+    
+    unique_to_them_sum <- rbindlist(list(unique_to_them_sum,each_unique_to_publish))
+    
+    unique_to_us_sum <- rbindlist(list(unique_to_us_sum,each_unique_to_us))
+    
+    share_sum <- rbindlist(list(share_sum,each_share))
+    
+    # summary
+    
+  }
+  unique_to_them_sum <- setDT(unique_to_them_sum)
+  unique_to_us_sum <- setDT(unique_to_us_sum)
+  share_sum <- setDT(share_sum)
+  final_sum[['unique_to_them_sum']] <- unique_to_them_sum
+  final_sum[['unique_to_us_sum']] <- unique_to_us_sum
+  final_sum[['share_sum']] <- share_sum
+  return (final_sum)
+}
+
+
+
 ##### check overlap samples ######
 base <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
   "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
@@ -100,10 +149,13 @@ original_signature$Chromosome <- paste("chr",original_signature$`#Chr`,sep="")
 original_signature$chrom_loc <- paste(original_signature$Chromosome,original_signature$Position,sep="_")
 original_signature$merge_key <- paste(original_signature$Chromosome,original_signature$Position,original_signature$Ref,original_signature$Alt,sep="_")
 target_original <- original_signature[,.(Sample,Chromosome,Position,Ref,Alt,Consequence,chrom_loc,merge_key)]
+unique(target_original$Consequence)
+target_conseq <- unique(target_original$Consequence[!grepl("frame",target_original$Consequence)])
 
 seperator <- "/"
 sanger_signature <- fread(paste(base,"DbSNP_sanger_CDS_mut_file_after_DBSNP_03_23.txt",sep =seperator))
 sanger_filter_SNP <- sanger_signature
+sanger_signature[Sample=="DD0013a",]
 
 sanger_filter_SNP$chrom_loc <- paste(sanger_filter_SNP$Chromosome,sanger_filter_SNP$Position,sep = "_")
 sanger_filter_SNP$merge_key <- paste(sanger_filter_SNP$Chromosome,sanger_filter_SNP$Position,sanger_filter_SNP$Ref,sanger_filter_SNP$Alt,sep="_")
@@ -114,23 +166,26 @@ samples <- sort(unique(sanger_filter_SNP$Sample))
 merge_table <-  merge(x = sanger_filter_SNP, y = target_original, by.x="merge_key", by.y="merge_key", all.x = T)
 target_col <- c("Sample.x","Chromosome.x","Position.x","Ref.x","Alt.x","chrom_loc.x","Consequence")
 merge_table <- merge_table[,target_col,with = F]
-merge_table <- unique(merge_table)
+a = merge_table[duplicated(merge_table),]
+merge_table <-  distinct(merge_table)
 colnames(merge_table) <- c("Sample","Chromosome","Position","Ref","Alt","chrom_loc","Consequence")
 ## only select SNV data ###
-target_conseq <- c("missense_variant","synonymous_variant","stop_gained")
+#target_conseq <- c("missense_variant","synonymous_variant","stop_gained","start_lost")
+
+#unique(target_original$Consequence)
 
 final_merge <- merge_table[Consequence %in% target_conseq,]
 clean_sanger <- setDT(final_merge)
 colnames(clean_sanger)[1] <- "Case"
+
 #### Analyzed the ratio use bar plot before 5steps
-our_OM_before <- fread(paste(base,"Sanger_Total_Before_5step_Sanger_Mutect1_03_26.txt",sep = seperator));
-colnames(our_OM_before) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
-               "status","tumor_type","symbol")
+our_OM_before <- fread(paste(base,"DbSNP_CDS_Total_Before_5step_Sanger_Mutect1_03_29.txt",sep = seperator));
+# colnames(our_OM_before) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
+#                "status","tumor_type","symbol")
 
 our_OM_before <- our_OM_before[symbol=="OM SC",]
 our_OM_before <- our_OM_before[tumor_type=="OM",.(sample_names,chrom,pos,ref,alt)]
-our_data_sample_convert <- sapply(our_OM_before$sample_names,convert_sample)
-our_OM_before$Case <- our_data_sample_convert
+our_OM_before$Case <- sapply(our_OM_before$sample_names,convert_sample)
 our_OM_before$chrom_loc <- paste(our_OM_before$chrom,our_OM_before$pos,sep ="_")
 our_sample <- sort(unique(our_OM_before$Case))
 their_sample <- sort(unique(clean_sanger$Case))
@@ -138,9 +193,9 @@ OM_before_intercet_sample <- intersect(their_sample,our_sample)
 
 
 ### after 
-our_OM_after <- fread(paste(base,"Sanger_Total_After_5step_Sanger_Mutect1_03_26.txt",sep = seperator));
-colnames(our_OM_after) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
-                             "status","tumor_type","symbol")
+our_OM_after <- fread(paste(base,"DbSNP_CDS_Total_After_5step_Sanger_Mutect1_03_29.txt",sep = seperator));
+# colnames(our_OM_after) <- c("chrom","pos","vaf","ref","alt","tRef","tAlt","sample_names","gene_name","ensembl_id",
+#                              "status","tumor_type","symbol")
 our_OM_after <- our_OM_after[symbol=="OM SC",.(sample_names,chrom,pos,ref,alt)]
 our_OM_after$Case <- sapply(our_OM_after$sample_names, convert_sample)
 our_OM_after$chrom_loc <- paste(our_OM_after$chrom,our_OM_after$pos,sep= "_")
@@ -149,6 +204,18 @@ our_OM_after$chrom_loc <- paste(our_OM_after$chrom,our_OM_after$pos,sep ="_")
 our_sample <- sort(unique(our_OM_after$Case))
 their_sample <- sort(unique(clean_sanger$Case))
 OM_after_intercet_sample <- intersect(their_sample,our_sample)
+
+
+# a = our_OM_after[Case=='DD0013a',]
+# b = clean_sanger[Case=='DD0013a']
+# 
+# setdiff(a$chrom_loc,b$chrom_loc)
+
+# fwrite(our_OM_after, paste(base,"our_om_after.txt",sep = "/"),
+#        col.names = T, row.names = F, sep = "\t",eol = "\n")
+# fwrite(clean_sanger, paste(base,"sanger_mut.txt",sep = "/"),
+#        col.names = T, row.names = F, sep = "\t",eol = "\n")
+
 
 ## Burair
 our_OM_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep = seperator));
@@ -173,6 +240,15 @@ png(file = paste(base,"03_25","5steps_only_Mutation_number_compare_with_OM_publi
     width = 4800, height =2700, units = "px", res = 500)
 
 data_5setps <- create_overlap_summary(our_OM_after,clean_sanger,total_three_intercet)
+after_5steps_data_sum <- create_overlap_summary_for_each(our_OM_after,clean_sanger,total_three_intercet)
+
+fwrite(after_5steps_data_sum$unique_to_them_sum, file = paste(base,"unique_to_them.txt",sep = "/"),
+       col.names = T, row.names = F,sep = "\t",eol = "\n")
+
+fwrite(after_5steps_data_sum$unique_to_us_sum, file = paste(base,"unique_to_us.txt",sep = "/"),
+       col.names = T, row.names = F,sep = "\t",eol = "\n")
+fwrite(after_5steps_data_sum$share_sum, file = paste(base,"share_both.txt",sep = "/"),
+       col.names = T, row.names = F,sep = "\t",eol = "\n")
 
 count_data <- melt(data_5setps, id.vars = c("sample"),
                    measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
