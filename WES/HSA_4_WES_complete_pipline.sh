@@ -382,7 +382,8 @@ ${MuTect2_out}/PON_DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf \
 ${MuTect2_out}/PON_DbSNP_filtered-${SampleName}_MuTect2_GATK4.vcf \
 ${MuTect2_out}/${SampleName}_VAF_Before.txt \
 ${MuTect2_out}/${SampleName}_VAF_After.txt \
-${MuTect2_out}/${SampleName}_whyout.txt
+${MuTect2_out}/${SampleName}_whyout.txt \
+${SampleName}
 
 
 ## Strelka
