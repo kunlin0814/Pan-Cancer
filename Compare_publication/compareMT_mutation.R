@@ -6,15 +6,15 @@ library(readxl)
 library(ggpubr)
 library(grid)
 
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  #"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  "/Volumes/Research/GitHub/R_util/my_util.R")
 
-source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
-  #"/Volumes/Research/GitHub/VAF/six_base_function_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
+  "/Volumes/Research/GitHub/VAF/six_base_function_util.R")
 
 
-whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -82,6 +82,54 @@ create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
   return (data)
 }
 
+create_overlap_summary_for_each <- function(our_data,publis_data,intercet_sample){
+  final_sum <- list()
+  unique_to_them_sum <- data.table()
+  unique_to_us_sum <- data.table()
+  share_sum <- data.table()
+  for (samp in intercet_sample){
+    our_each_mut <- unique(our_data[Case == samp, .(chrom_loc)][['chrom_loc']])
+    publish_each_mut <- unique(publis_data[Case == samp,.(chrom_loc)][['chrom_loc']])
+    intercet_data <- intersect(our_each_mut,publish_each_mut)
+    each_unique_to_us <- setdiff(our_each_mut,publish_each_mut)
+    each_unique_to_publish <- setdiff(publish_each_mut,our_each_mut)
+    
+    if (length(each_unique_to_publish)==0){
+      each_unique_to_publish <- "NA"
+    }
+    if (length(each_unique_to_us)==0){
+      each_unique_to_us <- "NA"
+    }
+    if (length(intercet_data)==0){
+      intercet_data <- "NA"
+    }
+    each_unique_to_us <- list(Case = samp,
+                              unique_to_us =each_unique_to_us)
+    
+    each_unique_to_publish <- list(Case = samp,
+                                   unique_to_publish =each_unique_to_publish)
+    each_share <- list(Case = samp,
+                       share = intercet_data)
+    
+    unique_to_them_sum <- rbindlist(list(unique_to_them_sum,each_unique_to_publish))
+    
+    unique_to_us_sum <- rbindlist(list(unique_to_us_sum,each_unique_to_us))
+    
+    share_sum <- rbindlist(list(share_sum,each_share))
+    
+    # summary
+    
+  }
+  unique_to_them_sum <- setDT(unique_to_them_sum)
+  unique_to_us_sum <- setDT(unique_to_us_sum)
+  share_sum <- setDT(share_sum)
+  final_sum[['unique_to_them_sum']] <- unique_to_them_sum
+  final_sum[['unique_to_us_sum']] <- unique_to_us_sum
+  final_sum[['share_sum']] <- share_sum
+  return (final_sum)
+}
+
+
 seperator = "/"
 fontsize <- 20;
 dot_size <- 1.4;
@@ -92,13 +140,13 @@ xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 regular.text <- element_text(colour="black",size=20)
 
-base <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
+base <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
 
 
 ##### check overlap samples ######
-base <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
+base <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
 
 ### analyzed Mutect2 results
 #### Analyzed the ratio use bar plot before 5steps
@@ -113,12 +161,13 @@ our_MT_before$Case <- sapply(our_MT_before$sample_name, convert_MT_sample)
 our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep= "_")
 our_MT_before <- clean_table(our_MT_before)
 our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
-
-samples <- unique(our_MT_before$Case)
-our_sample <- unique(our_MT_before$Case)
-their_sample <- unique(publishMT$Case)
-mutect2_before_intercet_sample <- intersect(their_sample,our_sample)
-mutect2_before_diff_sample <- setdiff(their_sample,our_sample)
+fwrite(our_MT_before,file=paste(base,"03_30","MT_mutect2_before.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+our_MT_before_samples <- unique(our_MT_before$Case)
+# our_sample <- unique(our_MT_before$Case)
+# their_sample <- unique(publishMT$Case)
+# mutect2_before_intercet_sample <- intersect(their_sample,our_sample)
+# mutect2_before_diff_sample <- setdiff(their_sample,our_sample)
 
 
 ### after 
@@ -127,27 +176,28 @@ our_MT_after <- our_MT_after[symbol=="MT Korean",]
 our_MT_after$Case <- sapply(our_MT_after$sample_name, convert_MT_sample)
 our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
 our_MT_after <- clean_table(our_MT_after)
-
-our_sample <- unique(our_MT_after$Case)
-their_sample <- unique(publishMT$Case)
-mutect2_after_intercet_sample <- intersect(their_sample,our_sample)
-mutect2_after_diff_sample <- setdiff(their_sample,our_sample)
+fwrite(our_MT_before,file=paste(base,"03_30","MT_mutect2_after.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+our_MT_after_samples <- unique(our_MT_after$Case)
+# their_sample <- unique(publishMT$Case)
+# mutect2_after_intercet_sample <- intersect(their_sample,our_sample)
+# mutect2_after_diff_sample <- setdiff(their_sample,our_sample)
 
 ## Burair
-
-our_MT_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep = seperator));
+our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_0330.txt.gz",sep = seperator));
 our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt)]
 
 our_MT$Case <- sapply(our_MT$sample_names, convert_MT_sample)
 our_MT$chrom_loc <- paste(our_MT$chrom,our_MT$pos,sep= "_")
-
+fwrite(our_MT,file=paste(base,"03_30","MT_Burair_Mutect1_filtering.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 our_sample <- unique(our_MT$Case)
-their_sample <- unique(publishMT$Case)
-Burair_intercet_sample <- intersect(their_sample,our_sample)
-Burair_diff <- setdiff(their_sample,our_sample)
+# their_sample <- unique(publishMT$Case)
+# Burair_sample <- unique(our_MT$Case)
+# Burair_diff <- setdiff(their_sample,our_sample)
 
-total_three_intercet <- intersect(intersect(mutect2_before_intercet_sample,mutect2_after_intercet_sample),
-                                  Burair_intercet_sample)
+total_three_intercet <- intersect(intersect(our_MT_before_samples,our_MT_after_samples),
+                                  our_sample)
 
 ##### check overlap samples end ######
 
@@ -175,7 +225,7 @@ our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
 # intercet_sample <- intersect(their_sample,our_sample)
 # mutect2_before_sample <- setdiff(their_sample,our_sample)
 
-png(file = paste(base,"03_25","before_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
+png(file = paste(base,"03_30","before_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 
@@ -206,33 +256,33 @@ p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 
 print(p2)
-dev.off()
-png(file = paste(base,"03_25","before_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-ratio_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
-                   variable.name = "fill")
+# dev.off()
+# png(file = paste(base,"03_30","before_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
+#     width = 4800, height =2700, units = "px", res = 500)
+# ratio_data <- melt(data, id.vars = c("sample"),
+#                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+#                    variable.name = "fill")
+# 
+# ratio_data <- ratio_data[order(sample)]
+# 
+# x <- ratio_data$sample
+# y <- ratio_data$value
+# classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+# fill <- ratio_data$fill
+# fill <- factor(fill, levels=classify);
+# samples <- unique(x);
+# sample_order <-sample_order;
+# x <- factor(x, levels=samples[sample_order]);
+# plot_data <- data.frame(x=x, y=y, fill=fill);
+# fill_colors <- c("cyan","black","red");
+# 
+# p3 <- my_bar_function(plot_data,fill_colors = fill_colors,
+#                       title="Before MT mutation ratio overlapped with MT Korean",
+#                       fontsize=20)
+# 
+# print(p3)
 
-ratio_data <- ratio_data[order(sample)]
-
-x <- ratio_data$sample
-y <- ratio_data$value
-classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
-fill <- ratio_data$fill
-fill <- factor(fill, levels=classify);
-samples <- unique(x);
-sample_order <-sample_order;
-x <- factor(x, levels=samples[sample_order]);
-plot_data <- data.frame(x=x, y=y, fill=fill);
-fill_colors <- c("cyan","black","red");
-
-p3 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Before MT mutation ratio overlapped with MT Korean",
-                      fontsize=20)
-
-print(p3)
-
-fwrite(data,file=paste(base,"03_25","Mutect2_before_compare_publication.txt",sep = seperator),
+fwrite(data,file=paste(base,"03_30","Mutect2_before_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 dev.off()
 
@@ -250,7 +300,7 @@ our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep ="_")
 # mutect2_after_sample <- setdiff(their_sample,our_sample)
 
 
-png(file = paste(base,"03_25","after_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
+png(file = paste(base,"03_30","after_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 
@@ -275,48 +325,49 @@ p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
                       title="After 5steps UGA MT mutation number overlapped with MT CUK",
                       fontsize=20)
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
-plot_data[plot_data$x=="CMT-495",]
+#plot_data[plot_data$x=="CMT-495",]
 
 print(p2)
 dev.off()
-png(file = paste(base,"03_25","after_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-ratio_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
-                   variable.name = "fill")
-
-ratio_data <- ratio_data[order(sample)]
-
-x <- ratio_data$sample
-y <- ratio_data$value
-classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
-fill <- ratio_data$fill
-fill <- factor(fill, levels=classify);
-samples <- unique(x);
-sample_order <-sample_order;
-x <- factor(x, levels=samples[sample_order]);
-plot_data <- data.frame(x=x, y=y, fill=fill);
-fill_colors <- c("cyan","black","red");
-
-p3 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Before MT mutation ratio overlapped with MT Korean",
-                      fontsize=20)
-print(p3)
-fwrite(data,file=paste(base,"03_25","Mutect2_after_compare_publication.txt",sep = seperator),
+# png(file = paste(base,"03_30","after_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
+#     width = 4800, height =2700, units = "px", res = 500)
+# ratio_data <- melt(data, id.vars = c("sample"),
+#                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+#                    variable.name = "fill")
+# 
+# ratio_data <- ratio_data[order(sample)]
+# 
+# x <- ratio_data$sample
+# y <- ratio_data$value
+# classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+# fill <- ratio_data$fill
+# fill <- factor(fill, levels=classify);
+# samples <- unique(x);
+# sample_order <-sample_order;
+# x <- factor(x, levels=samples[sample_order]);
+# plot_data <- data.frame(x=x, y=y, fill=fill);
+# fill_colors <- c("cyan","black","red");
+# 
+# p3 <- my_bar_function(plot_data,fill_colors = fill_colors,
+#                       title="Before MT mutation ratio overlapped with MT Korean",
+#                       fontsize=20)
+# print(p3)
+fwrite(data,file=paste(base,"03_30","Mutect2_after_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 
-dev.off()
+
 
 ##### Mutect2 end #####
 
-## Analyze MT samples with Mutect1 Burair filtering
+## Analyze MT samples with Mutect1 Burair filtering using modified
 
-our_MT_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep = seperator));
+our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_0330.txt.gz",sep = seperator));
 our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt)]
 
 publisMT <- setDT(publishMT)
 our_MT$Case <- sapply(our_MT$sample_names, convert_MT_sample)
 our_MT$chrom_loc <- paste(our_MT$chrom,our_MT$pos,sep= "_")
+
 
 # samples <- unique(our_MT$Case)
 # our_sample <- unique(our_MT$Case)
@@ -330,7 +381,7 @@ our_MT$chrom_loc <- paste(our_MT$chrom,our_MT$pos,sep= "_")
 # pdf(paste(base,"Burair_filtering_bar_MT_Mutation_overlap_ratio_for_mutect2.pdf",sep="\\")
 #     , height=12.94, width=12.94);
 
-png(file = paste(base,"03_25","remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
+png(file = paste(base,"03_30","remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 data <- create_overlap_summary(our_MT,publisMT,total_three_intercet)
@@ -359,33 +410,33 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 print(p)
 dev.off()
-
-png(file = paste(base,"03_25","remove_Burair_filtering_compare_with_MT_publication_ratio.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-ratio_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
-                   variable.name = "fill")
-
-ratio_data <- ratio_data[order(sample)]
-
-x <- ratio_data$sample
-y <- ratio_data$value
-classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
-fill <- ratio_data$fill
-fill <- factor(fill, levels=classify);
-samples <- unique(x);
-sample_order <-sample_order;
-x <- factor(x, levels=samples[sample_order]);
-plot_data <- data.frame(x=x, y=y, fill=fill);
-plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
-fill_colors <- c("cyan","black","red");
-
-p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="UGA MT mutation ratio overlapped with MT CUK",fontsize=20)
-print(p1)
-fwrite(data,file=paste(base,"03_25","Mutect1_Burair_filtering_compare_publication.txt",sep = seperator),
-       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
-dev.off()
+# 
+# png(file = paste(base,"03_30","remove_Burair_filtering_compare_with_MT_publication_ratio.png",sep =seperator),
+#     width = 4800, height =2700, units = "px", res = 500)
+# ratio_data <- melt(data, id.vars = c("sample"),
+#                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
+#                    variable.name = "fill")
+# 
+# ratio_data <- ratio_data[order(sample)]
+# 
+# x <- ratio_data$sample
+# y <- ratio_data$value
+# classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
+# fill <- ratio_data$fill
+# fill <- factor(fill, levels=classify);
+# samples <- unique(x);
+# sample_order <-sample_order;
+# x <- factor(x, levels=samples[sample_order]);
+# plot_data <- data.frame(x=x, y=y, fill=fill);
+# plot_data <- plot_data[-which(plot_data$x =="CMT-033"),] # remove the outlier
+# fill_colors <- c("cyan","black","red");
+# 
+# p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
+#                      title="UGA MT mutation ratio overlapped with MT CUK",fontsize=20)
+# print(p1)
+# fwrite(data,file=paste(base,"03_30","Mutect1_Burair_filtering_compare_publication.txt",sep = seperator),
+#        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+# dev.off()
 
 
 ## Burair filtering end
