@@ -7,7 +7,7 @@ human_base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/DLBCL"
 pathway <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis/PathwayGeneList-03_19.xlsx",
                       sheet = "Pathway_gene_list")
 pathway <- setDT(pathway)
-target <- c("PI3K","BCR signaling","NFKB","Chromatin remodeler","Cell cycle")
+target <- c("PI3K","BCR signaling","NFKB","Chromatin remodeler","Cell cycle","p53")
 target_pathway <- pathway[,target, with= F]
 
 path_col <- colnames(target_pathway)
@@ -119,7 +119,7 @@ pathway_sum <- setDT(pathway_sum)
 
 #1. find the most frequeny mut gene for snv and cna in human 
 human_total_sample_number <- 42 # the number is from paper
-base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/TCL"
+base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/DLBCL"
 human_snv <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
 human_snv <- setDT(human_snv)
 total_snv_gene <- unique(human_snv$Gene)
