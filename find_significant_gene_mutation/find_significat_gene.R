@@ -27,12 +27,6 @@ mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
 
-## process indel files
-
-indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
-indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
-setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
-indel_file <- indel_file[,emsembl_id:=NULL] 
 
 # fwrite(mutect_after_vaf, file = paste(base_dir,"02_18","NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_18.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t")
@@ -187,6 +181,7 @@ indel_file$breeds_info <- match_vector_table(indel_file$sample_names,"final_bree
 sig_indel_gene <- indel_file[,.(sample_names,gene_name,breeds_info,ensembl_id,subtype,mut_type)]
 sig_indel_gene$BH_pvalue <- 0.04
 sig_gene_sample_wide <- rbind(sig_gene_sample_wide,sig_indel_gene) 
+sig_gene_sample_wide <- sig_gene_sample_wide[gene_name!="-",]
 
 ### combine snv indel for genes end ###
 
@@ -333,6 +328,7 @@ fwrite(total_variant_summary,
 ## use mutect_vaf input file to identify the occurence 
 ## for variants and genes, if the variants or gene are not sig if all samples, then the variants and gene won't be choosed
 ## The variants or genes must be sig in at least one samples, so that it will be choosed 
+## 4/7 tumor wide has problem
 
 
 tumor_type <- unique(mutect_after_vaf$Subtype)
