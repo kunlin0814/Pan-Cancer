@@ -1,10 +1,10 @@
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 ## create a target_gene_pathway_list
 seperator <- "/"
-target_tumor_type="BCL"
-human_base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/DLBCL"
+target_tumor_type="TCL"
+human_base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_Cancer_paper/Human/DLBCL"
 
-pathway <- read_excel("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis/PathwayGeneList-03_19.xlsx",
+pathway <- read_excel("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis/PathwayGeneList-03_19.xlsx",
                       sheet = "Pathway_gene_list")
 pathway <- setDT(pathway)
 target <- c("PI3K","BCR signaling","NFKB","Chromatin remodeler","Cell cycle","p53")
@@ -25,12 +25,12 @@ for (each_pathway in colnames(target_pathway)){
 ### Dog data ###
 
 base_dir <- 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
-#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt") 
+"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -61,9 +61,35 @@ colnames(CNV)<- c("sample_names","gene_name","status","Subtype")
 ## combine snv, cnv, amp
 total_mut <- rbindlist(list(SNV,indel_file,CNV))
 
+
 total_sample <- unique(total_mut$sample_names)
 
 total_mut <- total_mut[!sample_names %in% exclude,]
+
+
+BCL_total_mut <- total_mut[Subtype =="TCL",]
+
+BCL_total_mut[gene_name=="MTOR",]
+
+BCL_sample <- unique(BCL_total_mut$sample_names)
+#BCL_total_mut[sample_names=='CCB070243']$gene_name[BCL_total_mut[sample_names=='CCB070243']$gene_name %in% pathway$PI3K]
+total_summ <- NULL
+for (each_sample in BCL_sample){
+  each_summ <- NULL
+  each_sample_mut <- BCL_total_mut[sample_names==each_sample]
+  each_sample_gene <- unique(BCL_total_mut[sample_names==each_sample]$gene_name)
+  if (sum(each_sample_gene %in% pathway$PI3K) >0){
+    each_summ <- list(sample = each_sample,
+                      gene = c(each_sample_gene))
+  }
+  total_summ <- rbindlist(list(total_summ,each_summ))
+}
+total_summ <- setDT(total_summ)
+final <- total_summ[gene %in% pathway$PI3K,]
+fwrite(final, file = "/Users/kun-linho/Desktop/TCL_PIK3.txt",
+       col.names = T,row.names = F, sep = "\t",eol = "\n")
+
+unique(BCL_total_mut[sample_names=='BelBer']$gene_name) %in% pathway$PI3K
 
 # create a total pathway list (0 and 1 in the list for each sample)
 total_sum <- list()
@@ -100,6 +126,8 @@ total_sum$Subtype <- subtype
 ## select target tumor type
 ## total_sum is pathway, total_mut is SNV+CNV
 dog_target_tumor_pathway <- total_sum[Subtype==target_tumor_type,]
+dog_target_tumor_pathway[dog_target_tumor_pathway$PI3K==1]$sample_names
+
 
 pathway_sum <- NULL
 dog_total_sample_number <- nrow(dog_target_tumor_pathway)
