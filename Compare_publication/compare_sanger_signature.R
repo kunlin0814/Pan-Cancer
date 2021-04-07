@@ -177,11 +177,12 @@ colnames(merge_table) <- c("Sample","Chromosome","Position","Ref","Alt","chrom_l
 final_merge <- merge_table
 clean_sanger <- setDT(final_merge)
 colnames(clean_sanger)[1] <- "Case"
-
+fwrite(clean_sanger, file = paste(base,"DbSNP_sanger_snv_indel_CDS_mut_file_03_30.txt",sep = seperator),
+       col.names = T, row.names = F, sep = "\t",quote = F,eol = "\n")
 #### Analyzed the before 5steps
 
 # ## indel file
-indel_file <- fread(paste(base,"total_CDS_indel_info_withGene.txt",sep =seperator))
+indel_file <- fread(paste(base,"total_indel_info_03_30.txt",sep =seperator))
 indel_col_names <- c("chrom","pos","ref","alt","gene_name","ensembl_id","status","sample_names")
 colnames(indel_file) <- indel_col_names
 indel_file$tumor_type <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
@@ -202,7 +203,8 @@ our_OM_before <- rbind(our_OM_before,final_indel)
 our_sample <- sort(unique(our_OM_before$Case))
 their_sample <- sort(unique(clean_sanger$Case))
 OM_before_intercet_sample <- intersect(their_sample,our_sample)
-
+fwrite(our_OM_before, file = paste(base, "UGA_Mutect1_before_steps_withStrelka_03_31.txt",sep = seperator),
+       col.names = T, row.names = F, quote = F, sep = "\t",eol = "\n")
 
 ### after 5 steps
 our_OM_after <- fread(paste(base,"DbSNP_CDS_Total_After_5step_Sanger_Mutect1_03_29.txt",sep = seperator));
@@ -217,15 +219,20 @@ our_OM_after <- rbind(our_OM_after,final_indel)
 our_sample <- sort(unique(our_OM_after$Case))
 their_sample <- sort(unique(clean_sanger$Case))
 OM_after_intercet_sample <- intersect(their_sample,our_sample)
-
+fwrite(our_OM_after, file = paste(base, "UGA_Mutect1_after5_steps_withStrelka_03_31.txt",sep = seperator),
+       col.names = T, row.names = F, quote = F, sep = "\t",eol = "\n")
 
 ## Burair
-our_OM_Burair <- fread(paste(base,"total_final_withGene_final_Filtering3_VAF_Mutect1_orientBias3_0129.gz",sep = seperator));
+our_OM_Burair <- fread(paste(base,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_0330.txt.gz",sep = seperator));
 our_OM <- our_OM_Burair[symbol=="OM SC",.(sample_names,chrom,pos,ref,alt,status)]
 
 our_OM$Case <- sapply(our_OM$sample_names, convert_sample)
 our_OM$chrom_loc <- paste(our_OM$chrom,our_OM$pos,sep= "_")
 our_OM <- rbind(our_OM,final_indel)
+
+fwrite(our_OM, file = paste(base, "Final_burair_pipeline_withStrelka_03_31.txt",sep = seperator),
+       col.names = T, row.names = F, quote = F, sep = "\t",eol = "\n")
+
 our_sample <- unique(our_OM$Case)
 their_sample <- sort(unique(clean_sanger$Case))
 Burair_intercet_sample <- intersect(their_sample,our_sample)
@@ -239,7 +246,7 @@ total_three_intercet <- intersect(intersect(OM_before_intercet_sample,OM_after_i
 # our_OM_before <- fread(paste(base,"total_final_without_Gene_Burair_Filtering3_VAF_Mutect_Before_0201.txt.gz",sep = seperator));
 # our_OM_before <- our_OM_before[symbol=="OM SC",]
 
-png(file = paste(base,"03_29","include_indel_5steps_only_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
+png(file = paste(base,"03_31","include_indel_5steps_only_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 data_5setps <- create_overlap_summary(our_OM_after,clean_sanger,total_three_intercet)
@@ -276,11 +283,11 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 
 print(p)
-fwrite(data_5setps,file=paste(base,"03_25","include_indel_5steps_only_compare_publication.txt",sep = seperator),
+fwrite(data_5setps,file=paste(base,"03_31","include_indel_5steps_only_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 dev.off()
 # 
-# png(file = paste(base,"03_29","5steps_only_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
+# png(file = paste(base,"03_31","5steps_only_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
 #     width = 4800, height =2700, units = "px", res = 500)
 # 
 # ratio_data <- melt(data_5setps, id.vars = c("sample"),
@@ -310,7 +317,7 @@ dev.off()
 
 ## Before 5 steps
 
-png(file = paste(base,"03_29","include_indel_Before_5_steps_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
+png(file = paste(base,"03_31","include_indel_Before_5_steps_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 data_before_5setps <- create_overlap_summary(our_OM_before,clean_sanger,total_three_intercet)
@@ -336,12 +343,12 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
                      title="Before 5 steps UGA mut number overlapped with publication",fontsize=20)
 print(p)
 
-fwrite(data_before_5setps,file=paste(base,"03_29","include_indel_Before_5steps_Mutect1_compare_publication.txt",sep = seperator),
+fwrite(data_before_5setps,file=paste(base,"03_31","include_indel_Before_5steps_Mutect1_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 
 dev.off()
 # 
-# png(file = paste(base,"03_29","Before_5_steps_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
+# png(file = paste(base,"03_31","Before_5_steps_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
 #     width = 4800, height =2700, units = "px", res = 500)
 # 
 # ratio_data <- melt(data_before_5setps, id.vars = c("sample"),
@@ -372,7 +379,7 @@ dev.off()
 ####### Burair filtering #########
 
 
-png(file = paste(base,"03_29","Burair_filtering_Mutect1_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
+png(file = paste(base,"03_31","Burair_filtering_Mutect1_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 Burair_filtering_data <- create_overlap_summary(our_OM,clean_sanger,total_three_intercet)
@@ -396,11 +403,13 @@ fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
                      title="UGA mutation calling number overlapped with publication",fontsize=20)
+p <- p+scale_y_continuous(breaks=c(0,50,100,150))
+
 print(p)
 
 dev.off()
 # 
-# png(file = paste(base,"03_29","Burair_filtering_Mutect1_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
+# png(file = paste(base,"03_31","Burair_filtering_Mutect1_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
 #     width = 4800, height =2700, units = "px", res = 500)
 # 
 # ratio_data <- melt(Burair_filtering_data, id.vars = c("sample"),
@@ -425,9 +434,9 @@ dev.off()
 #                       title="UGA OM mutation ratio overlapped with Sanger Publication",fontsize=20)
 # print(p1)
 
-fwrite(Burair_filtering_data,file=paste(base,"03_25","Burair_filtering_Mutect1_compare_publication.txt",sep = seperator),
+fwrite(Burair_filtering_data,file=paste(base,"03_31","Burair_filtering_Mutect1_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
-dev.off()
+
 
 ### compare end ###
 
