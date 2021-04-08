@@ -1,23 +1,23 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-"/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+#"/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt") 
+#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
 
 # dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_23.txt",sep = seperator),
+amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete_no_pseudo_subtype_04_06.txt",sep = seperator),
                     header = T,na.strings = "")
 
 amp_delete <- amp_delete[!sample_names %in% exclude]
@@ -173,7 +173,10 @@ for (each_tumor in tumor_type) {
   total_summary <- rbindlist(list(total_summary,each_tumor_sum))
 }
 
-fwrite(total_summary, file = paste(base_dir,"02_23","With_BH_sep_amp_delete_merged_adjust_Pan_cancer_amp_delete_02_23.txt",sep=seperator),
+out <- total_summary[tumor_type=="OM"]
+out[, head(.SD,10 ), by=.(tumor_type)]
+
+fwrite(out, file = paste(base_dir,"04_06","OM_sep_amp_delete_merged_adjust_Pan_cancer_amp_delete_04_06.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n", na = "NA",
        sep = "\t")
 
