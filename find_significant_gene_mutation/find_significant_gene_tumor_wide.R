@@ -9,21 +9,29 @@ base_dir <-
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt") 
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
   #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
-output_dir <- paste(base_dir,"04_06",sep = seperator)
+output_dir <- paste(base_dir,"04_07",sep = seperator)
 
-
+whole_wes_clean_breed_table$final_breed_label
 #### Tumor wide analysis ####
 ### assume all indel are significant
-# indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_03_30.txt",sep =seperator))
-# colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
-# indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
-# indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
-# indel_file$Breeds <- match_vector_table(indel_file$sample_names,"final_breed",whole_wes_clean_breed_table)
-# indel_file$chrom_loc <- paste(indel_file$chrom,indel_file$pos,sep = "_")
+indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
+colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
+indel_file <- indel_file[!sample_names %in% exclude,]
+#indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
+indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
+indel_file$Breeds <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
+# fwrite(indel_file,
+#        file = paste(output_dir,"ExcludeFailQC_CDS_indel_info_withGene_04_08.txt",sep = seperator)
+#        ,col.names = T,row.names = F,
+#        quote = F,
+#        eol = "\n",
+#        sep ="\t")
+
+#indel_file$chrom_loc <- paste(indel_file$chrom,indel_file$pos,sep = "_")
 # 
 # sig_indel_variants <- indel_file[,.(chrom,pos,ref,alt,sample_names,gene_name,ensembl_id,status,
 #                                     Breeds)]
@@ -32,7 +40,7 @@ output_dir <- paste(base_dir,"04_06",sep = seperator)
 # sig_indel_variants$BH_pvalue <- 0.01
 # sig_indel_variants$Subtype <- match_vector_table(sig_indel_variants$sample_names,'DiseaseAcronym2',whole_wes_clean_breed_table)
 # 
-# sig_variants_sample_wide <- fread(file = paste(output_dir,"final_breed_variant_nonsyn_samplewide_p_value_orient_modify_04_06.txt",sep = seperator))
+# sig_variants_sample_wide <- fread(file = paste(output_dir,"final_breed_variant_nonsyn_samplewide_p_value_orient_modify_04_07.txt",sep = seperator))
 # sig_variants_sample_wide <- sig_variants_sample_wide[,.(chrom,pos,ref,alt,sample_names,gene_name,ensembl_id,status,
 #                                                         Breeds,chrom_loc,BH_pvalue)]
 # 
@@ -47,7 +55,7 @@ output_dir <- paste(base_dir,"04_06",sep = seperator)
 # mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 # mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
 # mutect_after_vaf$Subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
-# finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed",table=whole_wes_clean_breed_table)
+# finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 # mutect_after_vaf$Breeds <- finalbreed
 # mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 # #mutect_after_vaf <- mutect_after_vaf[,.(sample_names,chrom_loc,Subtype,gene_name,ensembl_id)]
@@ -168,7 +176,7 @@ output_dir <- paste(base_dir,"04_06",sep = seperator)
 #   total_variant_summary <- rbindlist(list(total_variant_summary, each_tumor_info_sum))
 # }
 # fwrite(total_variant_summary,
-#        file = paste(output_dir,"final_breed_variants_nonsyn_tumorwide_VAF_Mutect_orientBiasModified_04_06.txt",sep = seperator)
+#        file = paste(output_dir,"final_breed_variants_nonsyn_tumorwide_VAF_Mutect_orientBiasModified_04_07.txt",sep = seperator)
 #        ,col.names = T,row.names = F,
 #        quote = F,
 #        eol = "\n",
@@ -178,15 +186,15 @@ output_dir <- paste(base_dir,"04_06",sep = seperator)
 
 ### Tumorwide genes
 ## assume all indel significant
-sig_gene_sample_wide <- fread(paste(output_dir,"final_breeds_gene_nonsym_samplewide_p_value_orient_modify_04_06.txt",sep = seperator))
+sig_gene_sample_wide <- fread(paste(output_dir,"final_breeds_gene_nonsym_samplewide_p_value_orient_modify_04_07.txt",sep = seperator))
 sig_gene_sample_wide <- sig_gene_sample_wide[,.(sample_names,gene_name,breeds_info,ensembl_id,Subtype,
                                                 BH_pvalue)]
 
-indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_03_30.txt",sep =seperator))
+indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
 colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
 indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
 indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
-indel_file$breeds_info <- match_vector_table(indel_file$sample_names,"final_breed",whole_wes_clean_breed_table)
+indel_file$breeds_info <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 
 sig_indel_gene <- indel_file[,.(sample_names,gene_name,breeds_info,ensembl_id,Subtype)]
 sig_indel_gene$BH_pvalue <- 0.04
@@ -200,7 +208,7 @@ mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
 mutect_after_vaf$Subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
-finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed",table=whole_wes_clean_breed_table)
+finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 mutect_after_vaf$Breeds <- finalbreed
 mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 
@@ -209,9 +217,10 @@ final_mutect_after_vaf <- mutect_after_vaf[,.(sample_names,gene_name,ensembl_id,
 final_indel_file <- indel_file[,.(sample_names,gene_name,ensembl_id,status,ref,alt,Subtype)]
 final_gene_tumor_wide_SNV_indel <- rbind(final_mutect_after_vaf,final_indel_file)
 final_gene_tumor_wide_SNV_indel <- final_gene_tumor_wide_SNV_indel[!sample_names %in% exclude]
+
 # 
 # fwrite(final_gene_tumor_wide_SNV_indel,
-#        file = paste(output_dir,"Combine_SNV_indel_Mutect_orientBiasModified_04_06.txt",sep = seperator)
+#        file = paste(output_dir,"Combine_SNV_indel_Mutect_orientBiasModified_04_07.txt",sep = seperator)
 #        ,col.names = T,row.names = F,
 #        quote = F,
 #        eol = "\n",
@@ -321,7 +330,7 @@ for (each_tumor in tumor_type) {
 top_8_tumor_gene <- total_gene_summary[, head(.SD,8 ), by=.(tumor_type)]
 
 fwrite(top_8_tumor_gene,
-       file = paste(output_dir,"Top8_tumorwide_VAF_Mutect_orientBiasModified_04_06.txt",sep = seperator)
+       file = paste(output_dir,"Top8_tumorwide_VAF_Mutect_orientBiasModified_04_09.txt",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
@@ -329,7 +338,7 @@ fwrite(top_8_tumor_gene,
 
 
 fwrite(total_gene_summary,
-       file = paste(output_dir,"final_breed_genes_nonsyn_tumorwide_VAF_Mutect_orientBiasModified_04_06.txt",sep = seperator)
+       file = paste(output_dir,"final_breed_genes_nonsyn_tumorwide_VAF_Mutect_orientBiasModified_04_07.txt",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
