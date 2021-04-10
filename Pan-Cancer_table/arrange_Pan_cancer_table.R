@@ -81,20 +81,13 @@ setdiff(notpass,excel_not_pass)
 
 ## Breed prediction and assignment
 ## from excel WESQCdata
-whole_wes_table <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
-whole_wes_table <- setDT(whole_wes_table)
-
-
+whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
 info <- unique(whole_wes_table[,.(Case_ID,DiseaseAcronym2)])
 
 tumor_info <- info[,.N, keyby= .(DiseaseAcronym2)]
-
-a = unique(whole_wes_table[DiseaseAcronym2 =="TCL" & The_reason_to_exclude!="Pass QC",.(Case_ID,The_reason_to_exclude)])
-
-
 #exclude <- unique(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]$Case_ID)
 # Breed QC info and final Breed info
-final_breed_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/merge_breed_4WGS/merge_dis_val_4WGS/assignment_clusters.txt")
+#final_breed_data <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/merge_breed_4WGS/merge_dis_val_4WGS/assignment_clusters.txt")
 whole_wes_table<- assign_final_breeds_for_WES_table(whole_wes_table,final_breed_data)
 
 
@@ -102,13 +95,65 @@ fwrite(whole_wes_table, file = "C:/Users/abc73/Desktop/whole_wes_table_0218.txt"
        col.names = T, row.names = F, quote = F, sep = "\t", na = "NA", eol = "\n")
 
 
-#Breed <- as.data.table(table(whole_wes_table$Breeds))
-breed_cluster_info <- read.table(pipe("pbpaste"),sep = "\t",header = T, stringsAsFactors = F)
+#### Update the old meta table and assign the QC result for the old table ###
+# for some reason assign final breeds not work
+assign_final_breeds <- function(meta_data) {
+  if ("BreedCluster" %in% colnames(meta_data)){
+    total_samples <- unique(meta_data$SampleName)
+    info <- NULL
+    
+    for (i in total_samples){
+      original_label <- meta_data[SampleName==i,.(Breed)]
+      cluster <- meta_data[SampleName == i, .(BreedCluster)]
+      if (is.na(original_label) == TRUE){
+        qc <- "NA"
+      }
+      else if (original_label == cluster){
+        qc <- "PassBreed"
+      }
+      else{
+        qc <- "FailBreed"
+      }
+      info <- c(info,qc)
+      
+    }
+    meta_data$BreedQC <- info
+    final_breed <- meta_data[, "Breed"]; 
+    predicted_breed_indices <- intersect(which(is.na(meta_data[, "Breed"])), which(meta_data[, "BreedCluster"] != "Unknown"));
+    final_breed[predicted_breed_indices] <- meta_data[predicted_breed_indices, "BreedCluster"];
+    fail_breed_indices <- which(meta_data[, "BreedQC"] == "FailBreed")
+    final_breed[fail_breed_indices]  <- meta_data[fail_breed_indices, "BreedCluster"]
+    meta_data[, "FinalBreed"] <- final_breed;
+    return (meta_data)
+  }
+  else {
+    print("not BreedCluster assigned")
+  }
+}
+
+
+breed_cluster_info <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F) 
+  #read.table(pipe("pbpaste"),sep = "\t",header = T, stringsAsFactors = F)
 breed_cluster_info <- setDT(breed_cluster_info)
 
-a <-  assign_final_breeds(breed_cluster_info)
+final_breed <-  assign_final_breeds(breed_cluster_info)
+#final_breed[SampleName=="070"]
+final_result <- assign_breed_prediction_results(final_breed)
+#final_result[SampleName=="CMT-354"]
+whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
+whole_wes_table <- whole_wes_table[,-c('final_breed')]
+new_wes_table <- assign_final_breeds_for_WES_table(whole_wes_table,final_result)
+#meta_table <- fread('G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/use_WGS_22/V1_exclude_WES/output_exclude_WES/old_breed_prediction_metadata.txt')
+new_wes_table[Case_ID=="024",.(final_breed)]
+colnames(meta_table)[2] <- "Case_ID"
 
-fwrite(breed_cluster_info, file = "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure2/val_WGS/final_57WGS_final_assignment.txt",
+new_meta_table <- assign_breeds_result_for_meta(meta_table,final_result)
+
+
+fwrite(new_wes_table, file = "C:/Users/abc73/Desktop/all_pan_cancer_wes_metatable_04_09.txt",
+       col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")
+
+fwrite(final_result, file = "C:/Users/abc73/Desktop/Final_breed_cluster_results.txt",
        col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")
 
 
