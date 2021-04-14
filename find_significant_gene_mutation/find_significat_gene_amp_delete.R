@@ -10,18 +10,36 @@ seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt") 
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
 
 # dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete_no_pseudo_subtype_04_06.txt",sep = seperator),
+amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete_no_pseudo_subtype_04_11.txt",sep = seperator),
                     header = T,na.strings = "")
 
 amp_delete <- amp_delete[!sample_names %in% exclude]
 amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
+
+# 
+name_sample <- c("BenTuc","BitRic","CasLab","ChiMun","RenJoh")
+
+issue_sample <- amp_delete[sample_names %in% name_sample,]
+no_issue_sample <- amp_delete[!sample_names %in% name_sample,]
+issue_sample$sample_names <- toupper(issue_sample$sample_names)
+final_out <- rbind(issue_sample, no_issue_sample)
+
+final_out <- final_out[order(subtype)]
+
+final_out$breeds <- match_vector_table(final_out$sample_names,"final_breed_label",whole_wes_clean_breed_table)
+
+
+# fwrite(final_out,file = paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete_no_pseudo_subtype_04_11.txt",sep = seperator),
+#        col.names = T, row.names = F, quote = F, sep = "\t",
+#        eol = "\n")
+
 
 # subtype <- match_vector_table(amp_delete$sample_names, "DiseaseAcronym2",
 #                               table=whole_wes_clean_breed_table, string_value = T)

@@ -95,7 +95,7 @@ fwrite(whole_wes_table, file = "C:/Users/abc73/Desktop/whole_wes_table_0218.txt"
        col.names = T, row.names = F, quote = F, sep = "\t", na = "NA", eol = "\n")
 
 
-#### Update the old meta table and assign the QC result for the old table ###
+#### Update the old meta table and assign the QC result for the old table for Breed predictions ###
 # for some reason assign final breeds not work
 assign_final_breeds <- function(meta_data) {
   if ("BreedCluster" %in% colnames(meta_data)){
@@ -131,27 +131,31 @@ assign_final_breeds <- function(meta_data) {
   }
 }
 
-
+examined_breeds <- c("Shih Tzu", "Schnauzer","Golden Retriever", "Rottweiler", "Greyhound", "Maltese","Yorkshire Terrier","Boxer","Poodle","Cocker Spaniel");
 breed_cluster_info <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F) 
   #read.table(pipe("pbpaste"),sep = "\t",header = T, stringsAsFactors = F)
 breed_cluster_info <- setDT(breed_cluster_info)
 
 final_breed <-  assign_final_breeds(breed_cluster_info)
-#final_breed[SampleName=="070"]
-final_result <- assign_breed_prediction_results(final_breed)
+final_breed[SampleName=="070"]
+final_result <- assign_breed_prediction_results(final_breed,examined_breeds)
 #final_result[SampleName=="CMT-354"]
-whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
-whole_wes_table <- whole_wes_table[,-c('final_breed')]
-new_wes_table <- assign_final_breeds_for_WES_table(whole_wes_table,final_result)
-#meta_table <- fread('G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/use_WGS_22/V1_exclude_WES/output_exclude_WES/old_breed_prediction_metadata.txt')
-new_wes_table[Case_ID=="024",.(final_breed)]
-colnames(meta_table)[2] <- "Case_ID"
+# whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+# whole_wes_table <- whole_wes_table[,-c('final_breed')]
+# new_wes_table <- assign_final_breeds_for_WES_table(whole_wes_table,final_result)
+meta_table <- fread('G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/new_all_breeds/output_exclude_WES/old_breed_prediction_metadata.txt')
+# new_wes_table[Case_ID=="024",.(final_breed)]
+# colnames(meta_table)[2] <- "Case_ID"
 
 new_meta_table <- assign_breeds_result_for_meta(meta_table,final_result)
 
-
-fwrite(new_wes_table, file = "C:/Users/abc73/Desktop/all_pan_cancer_wes_metatable_04_09.txt",
+fwrite(final_result, file = "C:/Users/abc73/Desktop/check_all_breed_final.txt",
        col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")
+# fwrite(new_wes_table, file = "C:/Users/abc73/Desktop/all_pan_cancer_wes_metatable_04_09.txt",
+#        col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")
+fwrite(new_meta_table, file = "C:/Users/abc73/Desktop/check_breed_prediction_metadata.txt",
+       col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")
+
 
 fwrite(final_result, file = "C:/Users/abc73/Desktop/Final_breed_cluster_results.txt",
        col.names = T, row.names = F, sep = "\t", quote = F, na = "NA")
