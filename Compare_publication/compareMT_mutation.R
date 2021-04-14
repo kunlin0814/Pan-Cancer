@@ -13,7 +13,7 @@ source(#"C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
   "/Volumes/Research/GitHub/VAF/six_base_function_util.R")
 
 
-whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
+whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_07.txt")
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
@@ -161,7 +161,7 @@ our_MT_before$Case <- sapply(our_MT_before$sample_name, convert_MT_sample)
 our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep= "_")
 our_MT_before <- clean_table(our_MT_before)
 our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
-fwrite(our_MT_before,file=paste(base,"03_30","MT_mutect2_before.txt",sep = seperator),
+fwrite(our_MT_before,file=paste(base,"04_07","MT_mutect2_before.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 our_MT_before_samples <- unique(our_MT_before$Case)
 # our_sample <- unique(our_MT_before$Case)
@@ -176,7 +176,7 @@ our_MT_after <- our_MT_after[symbol=="MT Korean",]
 our_MT_after$Case <- sapply(our_MT_after$sample_name, convert_MT_sample)
 our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
 our_MT_after <- clean_table(our_MT_after)
-fwrite(our_MT_before,file=paste(base,"03_30","MT_mutect2_after.txt",sep = seperator),
+fwrite(our_MT_before,file=paste(base,"04_07","MT_mutect2_after.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 our_MT_after_samples <- unique(our_MT_after$Case)
 # their_sample <- unique(publishMT$Case)
@@ -184,12 +184,12 @@ our_MT_after_samples <- unique(our_MT_after$Case)
 # mutect2_after_diff_sample <- setdiff(their_sample,our_sample)
 
 ## Burair
-our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_0330.txt.gz",sep = seperator));
+our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",sep = seperator));
 our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt)]
 
 our_MT$Case <- sapply(our_MT$sample_names, convert_MT_sample)
 our_MT$chrom_loc <- paste(our_MT$chrom,our_MT$pos,sep= "_")
-fwrite(our_MT,file=paste(base,"03_30","MT_Burair_Mutect1_filtering.txt",sep = seperator),
+fwrite(our_MT,file=paste(base,"04_07","MT_Burair_Mutect1_filtering.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 our_sample <- unique(our_MT$Case)
 # their_sample <- unique(publishMT$Case)
@@ -225,7 +225,7 @@ our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
 # intercet_sample <- intersect(their_sample,our_sample)
 # mutect2_before_sample <- setdiff(their_sample,our_sample)
 
-png(file = paste(base,"03_30","before_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
+png(file = paste(base,"04_07","before_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 
@@ -257,7 +257,7 @@ p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 
 print(p2)
 # dev.off()
-# png(file = paste(base,"03_30","before_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
+# png(file = paste(base,"04_07","before_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
 #     width = 4800, height =2700, units = "px", res = 500)
 # ratio_data <- melt(data, id.vars = c("sample"),
 #                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
@@ -282,7 +282,7 @@ print(p2)
 # 
 # print(p3)
 
-fwrite(data,file=paste(base,"03_30","Mutect2_before_compare_publication.txt",sep = seperator),
+fwrite(data,file=paste(base,"04_07","Mutect2_before_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 dev.off()
 
@@ -300,7 +300,7 @@ our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep ="_")
 # mutect2_after_sample <- setdiff(their_sample,our_sample)
 
 
-png(file = paste(base,"03_30","after_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
+png(file = paste(base,"04_07","after_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 
@@ -329,7 +329,7 @@ p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 
 print(p2)
 dev.off()
-# png(file = paste(base,"03_30","after_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
+# png(file = paste(base,"04_07","after_UGA_mutect2_compare_ratio_with_MT_publication.png",sep =seperator),
 #     width = 4800, height =2700, units = "px", res = 500)
 # ratio_data <- melt(data, id.vars = c("sample"),
 #                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
@@ -352,7 +352,7 @@ dev.off()
 #                       title="Before MT mutation ratio overlapped with MT Korean",
 #                       fontsize=20)
 # print(p3)
-fwrite(data,file=paste(base,"03_30","Mutect2_after_compare_publication.txt",sep = seperator),
+fwrite(data,file=paste(base,"04_07","Mutect2_after_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 
 
@@ -361,7 +361,7 @@ fwrite(data,file=paste(base,"03_30","Mutect2_after_compare_publication.txt",sep 
 
 ## Analyze MT samples with Mutect1 Burair filtering using modified
 
-our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_0330.txt.gz",sep = seperator));
+our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",sep = seperator));
 our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt)]
 
 publisMT <- setDT(publishMT)
@@ -381,7 +381,7 @@ our_MT$chrom_loc <- paste(our_MT$chrom,our_MT$pos,sep= "_")
 # pdf(paste(base,"Burair_filtering_bar_MT_Mutation_overlap_ratio_for_mutect2.pdf",sep="\\")
 #     , height=12.94, width=12.94);
 
-png(file = paste(base,"03_30","remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
+png(file = paste(base,"04_07","remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
     width = 4800, height =2700, units = "px", res = 500)
 
 data <- create_overlap_summary(our_MT,publisMT,total_three_intercet)
@@ -410,8 +410,11 @@ p <- my_bar_function(plot_data,fill_colors = fill_colors,
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 print(p)
 dev.off()
+
+fwrite(data,file=paste(base,"04_07","Burair_filtering_compare_MT_mutect2_publication.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 # 
-# png(file = paste(base,"03_30","remove_Burair_filtering_compare_with_MT_publication_ratio.png",sep =seperator),
+# png(file = paste(base,"04_07","remove_Burair_filtering_compare_with_MT_publication_ratio.png",sep =seperator),
 #     width = 4800, height =2700, units = "px", res = 500)
 # ratio_data <- melt(data, id.vars = c("sample"),
 #                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
@@ -434,7 +437,7 @@ dev.off()
 # p1 <- my_bar_function(plot_data,fill_colors = fill_colors,
 #                      title="UGA MT mutation ratio overlapped with MT CUK",fontsize=20)
 # print(p1)
-# fwrite(data,file=paste(base,"03_30","Mutect1_Burair_filtering_compare_publication.txt",sep = seperator),
+# fwrite(data,file=paste(base,"04_07","Mutect1_Burair_filtering_compare_publication.txt",sep = seperator),
 #        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 # dev.off()
 
