@@ -1,16 +1,16 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  #"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  "/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- 
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 output_dir <- paste(base_dir,"04_07",sep = seperator)
@@ -35,7 +35,7 @@ mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
 
 ### append column ###
 mutect_after_vaf$Subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
-finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed",table=whole_wes_clean_breed_table)
+finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 mutect_after_vaf$Breeds <- finalbreed
 mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 # 
@@ -69,7 +69,7 @@ for (index in 1:length(total_sample)) {
 total_info_sum[tumor_type=="GLM" & gene_name=="PIK3CA"]$p_value
 
 fwrite(total_info_sum,
-       file = paste(output_dir,"final_breed_variant_nonsyn_samplewide_p_value_orient_modify_04_07.txt",sep = seperator)
+       file = paste(output_dir,"final_breed_label_variant_nonsyn_samplewide_p_value_orient_modify_04_07.txt",sep = seperator)
        ,col.names = T,
        row.names = F,
        quote = F,
@@ -134,7 +134,7 @@ for (index in 1:length(total_sample)) {
 
 
 fwrite(gene_total_info_sum,
-       file = paste(output_dir,"final_breeds_gene_nonsym_samplewide_p_value_orient_modify_04_07.txt",sep = seperator)
+       file = paste(output_dir,"final_breed_labels_gene_nonsym_samplewide_p_value_orient_modify_04_07.txt",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",
@@ -149,8 +149,8 @@ base_dir <-
   "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt") 
-"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -163,15 +163,15 @@ SNV <- SNV[!sample_names %in% exclude]
 SNV <- SNV[tumor_type!="UCL"]
 SNV$Subtype <- match_vector_table(SNV$sample_names,column="DiseaseAcronym2",table=whole_wes_clean_breed_table)
 
-SNV$Breeds  <- match_vector_table(SNV$sample_names,column="final_breed",table=whole_wes_clean_breed_table)
+SNV$Breeds  <- match_vector_table(SNV$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 
 #total_breeds <- unique( SNV$Breeds)
 # clean_breeds <- na.omit(total_breeds)
-indel_file <- fread(paste(base_dir,"ExcludeFailQC_CDS_indel_info_withGene_04_08.txt",sep =seperator))
+indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
 colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
 indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
 indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
-indel_file$Breeds <- match_vector_table(indel_file$sample_names,"final_breed",whole_wes_clean_breed_table)
+indel_file$Breeds <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 
 
 #setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
@@ -313,19 +313,19 @@ meet_cut_off <- total_tumor_type_summary[target_breeds_with >number_sample_mut_c
 
 Total_tumor_info <- NULL
 for (each_tumor_type in tumor_type){
-  each_tumor_final_breed_label <- NULL
+  each_tumor_final_breed_label_label <- NULL
   #each_tumor_type <- "MT"
   candidate_breed_each_tumor_type <- unique(unlist(meet_cut_off[tumor_type ==each_tumor_type,.(breeds)]$breeds))
   for ( each_breed in candidate_breed_each_tumor_type){
     each_breed_pvalue_for_each_tumor <- meet_cut_off[tumor_type == each_tumor_type & breeds == each_breed]
     each_breed_pvalue_for_each_tumor <- each_breed_pvalue_for_each_tumor[order(p_value)]
     each_breed_pvalue_for_each_tumor$BH_pvalue = p.adjust(each_breed_pvalue_for_each_tumor$p_value, method = "BH")
-    each_tumor_final_breed_label <- rbindlist(list(each_tumor_final_breed_label, each_breed_pvalue_for_each_tumor))
+    each_tumor_final_breed_label_label <- rbindlist(list(each_tumor_final_breed_label_label, each_breed_pvalue_for_each_tumor))
   }
-  Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_final_breed_label))
+  Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_final_breed_label_label))
 }
 
-fwrite(Total_tumor_info, file = paste(output_dir,"final_breed_sig_WithBH_Tumor_wide_04_07.txt",sep=seperator),
+fwrite(Total_tumor_info, file = paste(output_dir,"final_breed_label_sig_WithBH_Tumor_wide_04_07.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n", na = "NA",
        sep = "\t")
 

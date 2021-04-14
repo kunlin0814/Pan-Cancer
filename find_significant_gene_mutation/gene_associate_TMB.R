@@ -1,41 +1,48 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-#"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
 
 
 ## Gene assocaited TMB only exam somatic mutation
 base_dir <- 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-output_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
+output_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
-whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
+mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",
                                 sep =seperator))
+## append columns
+mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
+mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
+mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
+mutect_after_vaf$Subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
+mutect_after_vaf$finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 
 ## indel
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude,]
-indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
+indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
+colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
+indel_file <- indel_file[!sample_names %in% exclude,]
+#indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
+indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
+indel_file$finalbreed <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
-setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
-indel_file <- indel_file[,emsembl_id:=NULL]
+indel_file <- indel_file[,c("sample_names","gene_name","status","Subtype"),with=F]
+#setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
+#indel_file <- indel_file[,emsembl_id:=NULL]
 
-Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table )
-indel_file$Subtype <- Subtype
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
 total_mut <- rbindlist(list(SNV,indel_file))
 
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
-
-
 breed <- match_vector_table(total_mut$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 
 total_mut$breed <- breed
@@ -46,17 +53,17 @@ b = a[,.N,keyby= .(breed)]
 
 
 ## exclude s1 high and UCL samples
-s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 exclude <- c(exclude, s1_high_sample)
-
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
 ## append TMB 
-TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+TMB_info <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
 colnames(TMB_info)
-total_mut$tmb <- match_vector_table(total_mut$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
+colnames(TMB_info)[1] <- "sample_names"
+total_mut$tmb <- match_vector_table(total_mut$sample_names, "total_tmb", TMB_info, string_value = F)
 
 ## Normalize TMB with regards to each tumor median (in pan-tumor analysis)
 ## now decide not normalize 2/25
@@ -140,7 +147,7 @@ total_tumor_gene_sum <- setDT(total_tumor_gene_sum)
 total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
 total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
 
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","pan_tumor_gene_assication_TMB.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"04_14","pan_tumor_gene_assication_TMB.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 ## cross tumor end
 
@@ -202,50 +209,63 @@ for (tumor_index in 1:length(total_tumor_type)){
   total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_total_gene_summary))
   }
  
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","all_tumor_type_gene_assication_TMB.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"04_14","all_tumor_type_gene_assication_TMB.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ############################ TMB-l and TMB-h gene associated tmb ############################
 
 ## Gene assocaited TMB only exam somatic mutation
 base_dir <- 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-output_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
+output_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
-whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
+mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",
                                 sep =seperator))
+## append columns
+mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
+mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
+mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
+mutect_after_vaf$Subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
+mutect_after_vaf$finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 
 ## indel
-mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude,]
-indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
+indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
+colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
+indel_file <- indel_file[!sample_names %in% exclude,]
+#indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
+indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
+indel_file$finalbreed <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
-setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
-indel_file <- indel_file[,emsembl_id:=NULL]
+indel_file <- indel_file[,c("sample_names","gene_name","status","Subtype"),with=F]
+#setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
+#indel_file <- indel_file[,emsembl_id:=NULL]
 
-Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table )
-indel_file$Subtype <- Subtype
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
 total_mut <- rbindlist(list(SNV,indel_file))
 
+total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
+breed <- match_vector_table(total_mut$sample_names,"final_breed_label",whole_wes_clean_breed_table)
+total_mut$breed <- breed
 ## exclude s1 high and UCL samples
-s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 exclude <- c(exclude, s1_high_sample)
 
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
 ## append TMB 
-TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-total_mut$tmb <- match_vector_table(total_mut$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
+TMB_info <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+colnames(TMB_info)[1] <- "sample_names"
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+total_mut$tmb <- match_vector_table(total_mut$sample_names, "total_tmb", TMB_info, string_value = F)
 
 all_tumor_cut <- 0
 signle_tumor_cut <- 5
@@ -300,7 +320,7 @@ total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
 total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","tmb_l_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"04_14","tmb_l_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ### TMB-h 
@@ -351,7 +371,7 @@ total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
 total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
 
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"03_19","tmb_h_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"04_14","tmb_h_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 
@@ -376,10 +396,10 @@ for (each_pathway in colnames(target_path_way)){
   target_pathway_gene <- c(target_pathway_gene,each_path_clean_gene)
 }
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
+mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",
                                 sep =seperator))
 
 ## indel
@@ -413,9 +433,9 @@ total_snv_cnv <- total_snv_cnv[!sample_names %in% exclude & Subtype !="UCL" & ge
 
 ## append tmb info
 
-TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
-total_snv_cnv$tmb <- match_vector_table(total_snv_cnv$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
+TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+total_snv_cnv$tmb <- match_vector_table(total_snv_cnv$sample_names, "total_tmb", TMB_info, string_value = F)
 
 ## Normalize TMB with regards to each tumor median (in breed associated analysis)
 all_tumor_type <- unique(total_snv_cnv$Subtype)
@@ -489,9 +509,9 @@ tmb_h <- c("OM","OSA","HSA","TCL")
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
 
 ## append TMB info
-TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/With_Breeds_exclude_failQC_TMB_Burair_filtering3_02_11.txt")
+TMB_info <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
 colnames(TMB_info)
-total_cnv$tmb <- match_vector_table(total_cnv$sample_names, "combine_snv_indel_tmb", TMB_info, string_value = F)
+total_cnv$tmb <- match_vector_table(total_cnv$sample_names, "total_tmb", TMB_info, string_value = F)
 total_tumor_type <- unique(total_cnv$Subtype)
 
 candidate_gene <- unique(total_tumor_gene_sum$gene_name)
