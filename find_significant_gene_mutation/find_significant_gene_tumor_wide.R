@@ -1,16 +1,16 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  #"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  "/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- 
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_03_30.txt")
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 output_dir <- paste(base_dir,"04_07",sep = seperator)
@@ -213,18 +213,20 @@ mutect_after_vaf$Breeds <- finalbreed
 mutect_after_vaf <- mutect_after_vaf[,chrom_loc:= paste(chrom,pos,sep = "_"),]
 
 tumor_type <- unique(mutect_after_vaf$Subtype)
-final_mutect_after_vaf <- mutect_after_vaf[,.(sample_names,gene_name,ensembl_id,status,ref,alt,Subtype)]
+final_mutect_after_vaf <- mutect_after_vaf[,.(sample_names,gene_name,ensembl_id,status,ref,alt,Subtype,vaf)]
 final_indel_file <- indel_file[,.(sample_names,gene_name,ensembl_id,status,ref,alt,Subtype)]
+final_indel_file$vaf <- runif(1)
+
 final_gene_tumor_wide_SNV_indel <- rbind(final_mutect_after_vaf,final_indel_file)
 final_gene_tumor_wide_SNV_indel <- final_gene_tumor_wide_SNV_indel[!sample_names %in% exclude]
 
-# 
-# fwrite(final_gene_tumor_wide_SNV_indel,
-#        file = paste(output_dir,"Combine_SNV_indel_Mutect_orientBiasModified_04_07.txt",sep = seperator)
-#        ,col.names = T,row.names = F,
-#        quote = F,
-#        eol = "\n",
-#        sep ="\t")
+
+fwrite(final_gene_tumor_wide_SNV_indel,
+       file = paste(output_dir,"withVAF_Combine_SNV_indel_Mutect_orientBiasModified_04_07.txt",sep = seperator)
+       ,col.names = T,row.names = F,
+       quote = F,
+       eol = "\n",
+       sep ="\t")
 
 
 unique(final_gene_tumor_wide_SNV_indel[gene_name=="PTAFR" & Subtype=="TCL",.(gene_name,sample_names,status,ensembl_id)])
