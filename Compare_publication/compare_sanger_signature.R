@@ -5,14 +5,14 @@ library(ggrepel)
 library(readxl)
 library(ggpubr)
 library(grid)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  #"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  "/Volumes/Research/GitHub/R_util/my_util.R")
 
-source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
-#source("/Volumes/Research/GitHub/VAF/six_base_function_util.R")
+#source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
+source("/Volumes/Research/GitHub/VAF/six_base_function_util.R")
 seperator <- "/"
-whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 
 fontsize=20
 dot_size <- 1.4;
@@ -138,8 +138,8 @@ create_overlap_summary_for_each <- function(our_data,publis_data,intercet_sample
 
 
 ##### check overlap samples ######
-base <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean"
-  "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
+base <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/OM_mutation_compare_with_Sanger"
+  #"G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
 
 ## clean sanger_data
 original_signature <- read_excel(paste(base,"Sanger_mutation.xlsx",sep =seperator),
@@ -408,6 +408,8 @@ p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 print(p)
 
 dev.off()
+fwrite(Burair_filtering_data,file=paste(base,"04_13","Burair_pipeline_vs_sanger_04_13.txt",sep = seperator),
+       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 # 
 # png(file = paste(base,"04_13","Burair_filtering_Mutect1_Mutation_ratio_compare_with_OM_publication_03_29.png",sep =seperator),
 #     width = 4800, height =2700, units = "px", res = 500)
