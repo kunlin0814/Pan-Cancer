@@ -51,7 +51,8 @@ SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype")
 CNV <- unique(amp_delete[,c("sample_names","gene_name","mut_type","subtype"),with =F])
 colnames(CNV)<- c("sample_names","gene_name","status","Subtype")
 
-
+unique(CNV[Subtype=="OM" & gene_name=="MDM2"]$sample_names)
+34/71
 ## combine snv, cnv, amp
 total_mut <- rbindlist(list(SNV,indel_file,CNV))
 
@@ -93,7 +94,8 @@ for (index in 1:length(total_sample)){
 total_sum<- setDT(total_sum)
 subtype <- match_vector_table(total_sum$sample_name,"DiseaseAcronym2", whole_wes_clean_breed_table)
 total_sum$Subtype <- subtype
-sum(total_sum[Subtype=="OM",.(p53)])
+total_sum[Subtype=="OSA",.(p53)]
+sum(total_sum[Subtype=="OSA",.(p53)])
 
 ## exclude UCL tumor
 no_UCL <- total_sum[Subtype!="UCL",]
