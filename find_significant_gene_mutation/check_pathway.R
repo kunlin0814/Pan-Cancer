@@ -2,34 +2,43 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-#"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
 
 base_dir <- 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
+whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt") 
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 ## pathway data
-pathway <- fread(paste(base_dir,"all_pathway_03_19.txt",sep = seperator), na.strings = "")
+pathway <- fread(paste(base_dir,"all_pathway_04_14.txt",sep = seperator), na.strings = "")
 path_col <- colnames(pathway)
 
 ## mutation Data
 
 ## SNV
-mutect_after_vaf <- fread(paste(base_dir,"NonSyn_Burair_filtering3_WithBreeds_Subtypes_QCpass_mutect_after_vaf_02_11.txt",
+mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",
                                 sep =seperator))
+mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
+mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
+mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
+mutect_after_vaf$Subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
+mutect_after_vaf$finalbreed <- match_vector_table(mutect_after_vaf$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
+
+
 ## indel
   
-indel_file <- fread(paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator))
+indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
+colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
 indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
-setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
-indel_file <- indel_file[,emsembl_id:=NULL]
+indel_file <- indel_file[,.(sample_names,gene_name,status)]
+#setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
+#indel_file <- indel_file[,emsembl_id:=NULL]
 # fwrite(indel_file, file= paste(base_dir,"passQC_pan-tumor-total_indel_info_0214.txt",sep =seperator),
 #        col.names = T, row.names = F, sep = "\t", quote = F, eol="\n")
 
@@ -37,7 +46,7 @@ Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_we
 indel_file$Subtype <- Subtype
 
 ## CNV data
-amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype.txt",sep = seperator),header = T)
+amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete_no_pseudo_subtype_04_11.txt",sep = seperator),header = T)
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
 CNV <- unique(amp_delete[,c("sample_names","gene_name","mut_type","subtype"),with =F])
 colnames(CNV)<- c("sample_names","gene_name","status","Subtype")
@@ -84,6 +93,7 @@ for (index in 1:length(total_sample)){
 total_sum<- setDT(total_sum)
 subtype <- match_vector_table(total_sum$sample_name,"DiseaseAcronym2", whole_wes_clean_breed_table)
 total_sum$Subtype <- subtype
+sum(total_sum[Subtype=="OM",.(p53)])
 
 ## exclude UCL tumor
 no_UCL <- total_sum[Subtype!="UCL",]
