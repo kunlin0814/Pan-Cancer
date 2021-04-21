@@ -11,11 +11,10 @@ seperator <- "/"
 
 whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
   "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
-
+whole_wes_clean_breed_table[Case_ID=="DD0073"]
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 output_dir <- paste(base_dir,"04_07",sep = seperator)
 
-whole_wes_clean_breed_table$final_breed_label
 #### Tumor wide analysis ####
 ### assume all indel are significant
 indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
@@ -200,6 +199,9 @@ sig_indel_gene <- indel_file[,.(sample_names,gene_name,breeds_info,ensembl_id,Su
 sig_indel_gene$BH_pvalue <- 0.04
 sig_gene_sample_wide <- rbind(sig_gene_sample_wide,sig_indel_gene) 
 sig_gene_sample_wide <- sig_gene_sample_wide[gene_name!="-",]
+
+
+nrow(sig_gene_sample_wide[gene_name=="PIK3CA" &Subtype=="MT" & BH_pvalue < 0.05])
 
 # fill up with NA string 
 mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",sep =seperator),
