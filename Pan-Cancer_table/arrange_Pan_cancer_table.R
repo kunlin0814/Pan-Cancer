@@ -2,8 +2,11 @@ library(data.table)
 library(tidyverse)
 library(readxl)
 
-base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
-  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+base_dir <- "G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1"
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+
+output_dir <- "G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1/WGS"
 seperator <- "/"
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 #"/Volumes/Research/GitHub/R_util/my_util.R")
@@ -16,29 +19,96 @@ source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.
 
 #excel_wes_table <- read_excel("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_TableS1_02-01-21.xlsx",
                               #sheet = "WESQCdata",skip=1)
-# mac version
-excel_wes_table <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F) 
-excel_wes_table <- setDF(excel_wes_table)
-output_dir <- "C:/Users/abc73/Desktop/need_to_revised/tableS1"
+seperator <- "/"
+excel_wes_table <- read_excel(paste(base_dir,"TableS1_04-19-21.xlsx",sep = seperator),
+                              skip = 2, sheet = "WES_QC_data")
+excel_wgs_table <- read_excel(paste(base_dir,"TableS1_04-19-21.xlsx",sep = seperator),
+                              skip = 2, sheet = "WGSQCdata")
 
+excel_wgs_table <- setDT(excel_wgs_table)
+excel_wgs_table <- excel_wgs_table[-173,]
+
+breed <- unique(excel_wgs_table[, .(Case_ID,Breed_info)])
+a = as.data.frame(table(breed$Breed_info))
+fwrite(a, file = paste(base_dir,"WGS_breed.txt",sep = seperator),
+       col.names = T, row.names = F, sep = "\t",quote = F, eol = "\n")
+
+check <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
+check <- setDT(check)
+
+breed <- unique(check[, .(Case_ID,Breed_info)])
+a = as.data.frame(table(breed$Breed_info))
+fwrite(a, file = paste(base_dir,"WWS_breed.txt",sep = seperator),
+       col.names = T, row.names = F, sep = "\t",quote = F, eol = "\n")
+
+a = check[Mean_Coverage <30,]
+
+#excel_wes_table <- setDF(excel_wes_table)
+excel_wes_table <- setDT(excel_wes_table)
+excel_wgs_table <- setDT(excel_wgs_table)
+
+
+# breed <- unique(excel_wes_table[,.(Case_ID, Breed_info)])
+# a = as.data.frame(table(breed$Breed_info))
+# 
+# fwrite(a, file = "C:/Users/abc73/Desktop/wes_breed.txt",
+#        col.names = T, row.names = F, sep = "\t",eol = "\n",quote = F)
+
+colnames(excel_wgs_table)
 ####
-target_column <- c("Case_ID","Sample_ID","callable_bases",
+target_column <- c("Case_ID","Sample_ID","SelfMatch", "DiffFromBest",
                    "Tumor_Type","Status"	,"Symbol"	,"Bioproject")
+fail <- c()
+lt5m<- unique(excel_wgs_table[Total_pairs <5000000]$Case_ID)
+uniq_fail <- unique(excel_wgs_table[Total_pairs>=5000000 & Unique_mapped_rate <0.6]$Case_ID)
+mean_fail <- unique(excel_wgs_table[Total_pairs>=5000000 & Unique_mapped_rate>=0.6 & total_mean_coverage<30]$Case_ID)
+rmse_fail <- unique(excel_wgs_table[Total_pairs>=5000000 & Unique_mapped_rate >=0.6 & total_mean_coverage >30 & RMSE >0.01]$Case_ID)
+fail <- unique(c(lt5m,uniq_fail,mean_fail,rmse_fail))
 
-output <- excel_wes_table %>% 
-  filter(Total_pairs>=5000000) %>%
-  filter(gt30 >=0) %>%
-  filter(Unique_mapped_rate >=0.6) %>%
-  #filter(Target_CDS_Mapping_Rates >=0.3) %>%
-  filter(total_mean_coverage >=30) %>%
-  filter(RMSE <= 0.01) %>%
-  filter(callable_bases!= "Normal_sample")
- 
-
-final_out <- output[, target_column]
-
-fwrite(final_out,file = paste(output_dir,"wgs_callable.txt",sep = "/"),
+pair <- excel_wgs_table[!Case_ID %in% fail & Status=="Tumor",target_column,with =F]
+fwrite(pair, file = paste(output_dir,"pair.txt",sep = "/"),
        col.names = T, row.names = F, quote = F, sep = "\t")
+#   excel_wgs_table %>%
+#   filter(Total_pairs>=5000000) %>%
+#   filter(Unique_mapped_rate >=0.6)  %>% 
+#   filter(gt30 >=0) %>% 
+# #   filter(Target_CDS_Mapping_Rates >=0.3) %>% 
+#   filter(total_mean_coverage >=30) %>% 
+#   filter(RMSE <= 0.01) %>% 
+#   select(Case_ID) %>% 
+#   unique()
+#   #filter(Callable_bases >=10000000)
+excel_wgs_table[!excel_wgs_table$Case_ID %in% remove & callable_bases !="Normal_sample",target_column,with = F]
+
+
+#unique(output$Case_ID)
+final_out <- output[, target_column, with = F]
+
+fwrite(final_out,file = paste(output_dir,"callable.txt",sep = "/"),
+       col.names = T, row.names = F, quote = F, sep = "\t")
+
+## check cases 
+lt5M  <- unique(excel_wes_table[Total_pairs<5000000]$Case_ID)
+uniqufail <- unique(excel_wes_table[Total_pairs>=5000000 & Uniquely_coordinatly_mapped_rate<0.6])$Case_ID
+cds <- unique(excel_wes_table[Total_pairs>=5000000 & Uniquely_coordinatly_mapped_rate>=0.6 & Target_CDS_Mapping_Rates<0.3]$Case_ID)
+fail <- unique(c(lt5M,uniqufail,cds))
+fail <- c(fail,"P10-1","P12-1")
+mean <- unique(excel_wes_table[!Case_ID %in% fail & Mean_Coverage <30]$Case_ID)
+fail <- unique(c(fail, mean))
+rmse_fail <- unique(excel_wes_table[!Case_ID %in% fail & RMSE>0.01]$Case_ID)
+fail <- c(fail,rmse_fail)
+
+pair <- excel_wes_table[!Case_ID %in% fail & Status=="Tumor", target_column, with = F]
+fwrite(pair,file = paste(output_dir,"pair.txt",sep = "/"),
+       col.names = T, row.names = F, quote = F, sep = "\t")
+
+unique(excel_wes_table[DiffFromBest <0]$Case_ID)
+
+excel_wes_table %>% 
+  filter(Case_ID %in% target$Case_ID) %>% 
+  select(Case_ID) %>% 
+  unique() %>% 
+  nrow()
 
 
 #excel_wes_table$The_reason_to_exclude

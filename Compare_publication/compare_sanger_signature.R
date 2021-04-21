@@ -5,23 +5,22 @@ library(ggrepel)
 library(readxl)
 library(ggpubr)
 library(grid)
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  "/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  #"/Volumes/Research/GitHub/R_util/my_util.R")
 
-#source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
-source("/Volumes/Research/GitHub/VAF/six_base_function_util.R")
+source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
+#source("/Volumes/Research/GitHub/VAF/six_base_function_util.R")
 seperator <- "/"
-whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 
-fontsize=20
+fontsize=35
 dot_size <- 1.4;
-abs_text_size <- 16;
+abs_text_size <- 50;
 regular.text <- element_text(colour="black",size=abs_text_size);
 xangle <- 45;
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
-xaxis_just <- ifelse(xangle > 0, 1, 0.5);
-regular.text <- element_text(colour="black",size=20)
+
 
 create_overlap_summary <- function(our_data,publis_data,intercet_sample){
   
@@ -76,9 +75,9 @@ create_overlap_summary <- function(our_data,publis_data,intercet_sample){
                      sample = total_sample,
                      uniq_ratio_to_uga = as.numeric(total_uniq_ratio_to_us),
                      uniq_ratio_to_publication = as.numeric(total_uniq_ratio_to_them),
-                     uniq_num_to_publication = as.numeric(total_uniq_num_to_them),
-                     uniq_num_to_uga = as.numeric(total_uniq_num_to_us),
-                     share_number = as.numeric(total_share_number),
+                     Unique_to_original_study = as.numeric(total_uniq_num_to_them),
+                     Unique_to_our_study = as.numeric(total_uniq_num_to_us),
+                     Shared = as.numeric(total_share_number),
                      total_denomitor= as.numeric(total_denomitor),
                      total_their_mut_number=as.numeric(total_their_mut_number),
                      total_UGA_mut_number=as.numeric(total_UGA_mut_number))
@@ -138,8 +137,8 @@ create_overlap_summary_for_each <- function(our_data,publis_data,intercet_sample
 
 
 ##### check overlap samples ######
-base <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/OM_mutation_compare_with_Sanger"
-  #"G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
+base <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/OM_mutation_compare_with_Sanger"
+  "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\OM_mutation_compare_with_Sanger"
 
 ## clean sanger_data
 original_signature <- read_excel(paste(base,"Sanger_mutation.xlsx",sep =seperator),
@@ -261,13 +260,13 @@ after_5steps_data_sum <- create_overlap_summary_for_each(our_OM_after,clean_sang
 #        col.names = T, row.names = F,sep = "\t",eol = "\n")
 
 count_data <- melt(data_5setps, id.vars = c("sample"),
-                   measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
+                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("uniq_num_to_uga","uniq_num_to_publication","share_number");
+classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
@@ -279,9 +278,11 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="After 5 steps UGA mut number overlapped with publication",fontsize=20)
+                     title="MuTect output after 5-steps filtering",fontsize=35)
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
-
+p <- p+theme(legend.position="none",
+             axis.text=regular.text, 
+             axis.title=regular.text)
 print(p)
 fwrite(data_5setps,file=paste(base,"04_13","include_indel_5steps_only_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
@@ -323,13 +324,13 @@ png(file = paste(base,"04_13","include_indel_Before_5_steps_Mutation_number_comp
 data_before_5setps <- create_overlap_summary(our_OM_before,clean_sanger,total_three_intercet)
 
 count_data <- melt(data_before_5setps, id.vars = c("sample"),
-                   measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
+                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("uniq_num_to_uga","uniq_num_to_publication","share_number");
+classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
@@ -340,7 +341,12 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="Before 5 steps UGA mut number overlapped with publication",fontsize=20)
+                     title="MuTect output",fontsize=35)
+
+p <- p+theme(legend.position="none",
+             axis.text=regular.text, 
+             axis.title=regular.text)
+             
 print(p)
 
 fwrite(data_before_5setps,file=paste(base,"04_13","include_indel_Before_5steps_Mutect1_compare_publication.txt",sep = seperator),
@@ -385,13 +391,13 @@ png(file = paste(base,"04_13","Burair_filtering_Mutect1_Mutation_number_compare_
 Burair_filtering_data <- create_overlap_summary(our_OM,clean_sanger,total_three_intercet)
 
 count_data <- melt(Burair_filtering_data, id.vars = c("sample"),
-                   measure.vars= c("uniq_num_to_uga","uniq_num_to_publication","share_number"),
+                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("uniq_num_to_uga","uniq_num_to_publication","share_number");
+classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
@@ -402,9 +408,12 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="UGA mutation calling number overlapped with publication",fontsize=20)
+                     title="Mutect output after 5-steps filtering & \npaired-read strand orientation filtering",
+                     fontsize=35)
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
-
+p <- p+theme(legend.position="none",
+             axis.text=regular.text, 
+             axis.title=regular.text)
 print(p)
 
 dev.off()

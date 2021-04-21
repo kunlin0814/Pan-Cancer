@@ -23,6 +23,8 @@ amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete
 amp_delete <- amp_delete[!sample_names %in% exclude]
 amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
 
+unique(amp_delete[subtype =="OSA"]$sample_names)
+
 # 
 name_sample <- c("BenTuc","BitRic","CasLab","ChiMun","RenJoh")
 
