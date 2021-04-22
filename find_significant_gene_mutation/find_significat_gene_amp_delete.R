@@ -208,21 +208,21 @@ fwrite(out, file = paste(base_dir,"04_06","OM_sep_amp_delete_merged_adjust_Pan_c
 #### Breeds within each tumor type 
 # need at least 10 dogs,
 # need at least two certain dogs have that mutation (gene or variants)
-base_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+base_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp"
 seperator <- "/"
 
 #retro_gene_list <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Retro_gene_finding/RetroGeneList/new_retro_gene_list_CanFam3.1.99gtf.txt",
 #                         header = F)
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")
-"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table_02_19.txt")       
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
 
 # dataset <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Burair_pan_scripts/breed_prediction_test/Pan-Cancer-Breed_prediction/seperate_dis_val/breed_prediction_metadata.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-amp_delete <- fread(paste(base_dir,"CNV_Taifang_total_amp_delete_no_pseudo_subtype_02_18.txt",sep = seperator),
+amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete_no_pseudo_subtype_04_11.txt",sep = seperator),
                     header = T, na.strings = "")
 
 
@@ -232,7 +232,8 @@ amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ig
 # change into final breeds
 finalbreed <- match_vector_table(amp_delete$sample_names,column="final_breed_label",table=whole_wes_clean_breed_table)
 amp_delete$breeds <- finalbreed
-amp_delete <- amp_delete[subtype!="UCL" & !sample_names %in% exclude & breeds!="No breed provided and unable to do the breed-prediction",]
+unique(amp_delete$breeds)
+amp_delete <- amp_delete[subtype!="UCL" & !sample_names %in% exclude & breeds!="Unknown/Missing",]
 amp_delete <- na.omit(amp_delete)
 number_breeds_cutoff <- 10
 number_sample_mut_cutoff <- 2
@@ -343,15 +344,13 @@ for (index in 1:length(tumor_type)) {
     rbindlist(list(total_tumor_type_summary, each_tumor_sum))
   
 }
-# fwrite(total_tumor_type_summary, file = "C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt",
-#        col.names = T, row.names = F, quote = F, sep = "\t")
-a <- unique(amp_delete[subtype=="MT",.(sample_names,breeds)])
+
 
 # total_tumor_type_summary <- fread("C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt")
 unique(total_tumor_type_summary$tumor_type)
 
 meet_cut_off <- total_tumor_type_summary[target_breeds_with >number_sample_mut_cutoff,]
-a <- meet_cut_off[tumor_type == "MT"]
+
 ## within each tumor type, do p adjustment for each breed
 
 Total_tumor_info <- NULL
@@ -368,11 +367,12 @@ for (each_tumor_type in tumor_type){
   Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_final_breed_label))
 }
 
+
 split_col <- as.data.frame(str_split_fixed(Total_tumor_info$gene_mut,"_",2))
 colnames(split_col) <- c("gene_name","mut_type")
 Total_tumor_info <- cbind(Total_tumor_info,split_col)
 
-fwrite(Total_tumor_info, file = paste(base_dir,"02_23","final_breeds_WithBH_amp_delete_breed_significant_Tumor_wide_02_23.txt",sep=seperator),
+fwrite(Total_tumor_info, file = paste(base_dir,"04_07","final_breeds_WithBH_amp_delete_breed_significant_Tumor_wide_04_07.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n",na = "NA",
        sep = "\t")
 

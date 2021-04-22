@@ -1,16 +1,16 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  "/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  #"/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- 
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
 
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 output_dir <- paste(base_dir,"04_07",sep = seperator)
@@ -145,12 +145,12 @@ fwrite(gene_total_info_sum,
 # need at least 10 dogs,
 # need at least two certain dogs have that mutation (gene or variants)
 base_dir <- 
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/VAF/New_Burair_filterin3/Mutect1/"
 seperator <- "/"
-whole_wes_clean_breed_table <- fread(#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
-"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+whole_wes_clean_breed_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -183,7 +183,10 @@ final_SNV <- SNV[,.(sample_names,gene_name,status,Subtype,Breeds)]
 
 snv_indel <- rbindlist(list(final_SNV,final_indel))
 
-snv_indel <- snv_indel[Subtype!="UCL" & !sample_names %in% exclude & Breeds!="No breed provided and unable to do the breed-prediction",]
+snv_indel <- snv_indel[Subtype!="UCL" & !sample_names %in% exclude & gene_name!="-"
+                       & Breeds!="No breed provided and unable to do the breed-prediction",]
+
+
 snv_indel <- na.omit(snv_indel)
 #### Breeds within each tumor type 
 # need at least 10 dogs,
@@ -300,9 +303,6 @@ for (index in 1:length(tumor_type)) {
     rbindlist(list(total_tumor_type_summary, each_tumor_sum))
 }
 
-
-# fwrite(total_tumor_type_summary, file = "C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt",
-#        col.names = T, row.names = F, quote = F, sep = "\t")
 
 
 # total_tumor_type_summary <- fread("C:/Users/abc73/Desktop/Breed_associated_sig_pvalue_02_13.txt")
