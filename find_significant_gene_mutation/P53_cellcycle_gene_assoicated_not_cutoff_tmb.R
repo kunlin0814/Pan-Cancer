@@ -108,12 +108,7 @@ indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym
 indel_file$finalbreed <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
 indel_file <- indel_file[,c("sample_names","gene_name","status","Subtype"),with=F]
-#setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
-#indel_file <- indel_file[,emsembl_id:=NULL]
-
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
-#breed <- match_vector_table(total_mut$sample_names,"final_breed_label",whole_wes_clean_breed_table)
-
 ## amp_delete
 amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete_no_pseudo_subtype_04_11.txt",sep = seperator),
                     header = T,na.strings = "")
@@ -267,9 +262,18 @@ tmbh_sum <- gene_assoicate_tmb(tmb_h_group,tmb_h_unique_gene,signle_tumor_cut,to
 fwrite(tmbh_sum, file = paste(output_dir,"04_14","test_not_cut_include_amp_tmb_h_candidate_gene_associated_TMB_04_22_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
-
 ### test ###
-tmb_l_group[gene_name =="CDKN2A"]
-tmb_h_group[gene_name =="CDKN2A"]
-total_snv_cnv[Subtype=="GLM" & gene_name =="ATM"]
+tar_gene_name <- "CDKN2A"
+tumor_type <- "OM"
+tar_info <- total_snv_cnv[Subtype==tumor_type ]
+
+mut_sample <- unique(tar_info [gene_name == tar_gene_name,.(sample_names)])$sample_names
+mut_sample_tmb <- unique(tar_info[sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
+
+not_mut_samples <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names)])
+not_mut_sample_tmb <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
+wilcox.test(mut_sample_tmb,not_mut_sample_tmb)
+
+total_snv_cnv[Subtype=="BCL" & gene_name =="CDK4"]
+total_snv_cnv[Subtype=="TCL" & gene_name,]
 
