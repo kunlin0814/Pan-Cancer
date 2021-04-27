@@ -55,14 +55,16 @@ b = a[,.N,keyby= .(breed)]
 
 
 ## exclude s1 high and UCL samples
-s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
+a = match_vector_table(s1_high_sample, "DiseaseAcronym2",whole_wes_clean_breed_table)
+b = data.frame(subtype = a, sample = s1_high_sample)
 exclude <- c(exclude, s1_high_sample)
 total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
 ## append TMB 
-TMB_info <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
 colnames(TMB_info)
 colnames(TMB_info)[1] <- "sample_names"
 total_mut$tmb <- match_vector_table(total_mut$sample_names, "total_tmb", TMB_info, string_value = F)
@@ -85,7 +87,25 @@ for (each_tumor in total_tumor_type){
 total_mut <- total_tumor_normalize
 
 #check result#
-tp53 <- unique(total_mut[gene_name =="TP53",.(sample_names,normalizetmb)])
+
+### test ###
+tar_gene_name <- "TP53"
+tumor_type <- "OSA"
+tar_info <- total_mut[Subtype==tumor_type]
+a = tar_info[sample_names=="GarLar",]
+mut_sample <- unique(tar_info [gene_name == tar_gene_name,.(sample_names)])$sample_names
+mut_sample_tmb <- unique(tar_info[sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
+
+not_mut_samples <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names)])
+not_mut_sample_tmb <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
+median(mut_sample_tmb)/median(not_mut_sample_tmb)
+
+wilcox.test(mut_sample_tmb,not_mut_sample_tmb)
+
+write.table(mut_sample,file = 'C:/Users/abc73/Desktop/OSA_mut.txt',
+       col.names = F, row.names = F, quote = F, sep = "\n")
+
+tp53 <- unique(total_mut[gene_name =="TP53",.(sample_names,)])
 tp53_sample <- tp53$sample_names
 no_tp53 <- setdiff(unique(total_mut$sample_names), tp53_sample)
 tp53_tmb <- tp53$normalizetmb
