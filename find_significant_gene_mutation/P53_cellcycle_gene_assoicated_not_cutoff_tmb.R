@@ -277,3 +277,4 @@ wilcox.test(mut_sample_tmb,not_mut_sample_tmb)
 total_snv_cnv[Subtype=="BCL" & gene_name =="CDK4"]
 total_snv_cnv[Subtype=="TCL" & gene_name,]
 
+unique(tmb_h_group$sample_names)
