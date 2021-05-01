@@ -14,11 +14,24 @@ source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
 
 
 whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_07.txt")
-"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_07.txt") 
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
-create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
+# ## indel file
+indel_file <- fread(paste(base,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
+indel_col_names <- c("chrom","pos","ref","alt","gene_name","ensembl_id","status","sample_names")
+colnames(indel_file) <- indel_col_names
+indel_file$tumor_type <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
+final_indel <- indel_file[tumor_type=="MT",.(sample_names,chrom,pos,ref,alt,status)]
+final_indel <- final_indel[-c(154:165),]
+final_indel$chrom_loc <- paste(final_indel$chrom,final_indel$pos,sep ="_")
+final_indel$Case <-  sapply(final_indel$sample_names,convert_MT_sample)
+
+
+
+
+create_overlap_summary <- function(our_MT,publisMT,intercet_sample,method = 'min'){
   
   total_uniq_num_to_them <- NULL
   total_uniq_num_to_us <- NULL
@@ -39,7 +52,16 @@ create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
     our_each <- nrow(our_each_mut)
     sanger_each <- nrow(publish_each_mut)
     intercet_data <- nrow(intersect(our_each_mut,publish_each_mut))
-    denominator <- our_each+sanger_each-intercet_data
+    if (method == 'min'){
+      denominator <- min(c(our_each,sanger_each))
+    }
+    
+    else if (method == 'average'){
+      denominator <- mean(c(our_each,sanger_each))
+    }
+    else if (method == 'union'){
+      denominator <- our_each+sanger_each-intercet_data
+    }
     
     # count
     number_overlap <- nrow(intersect(our_each_mut,publish_each_mut))
@@ -75,7 +97,7 @@ create_overlap_summary <- function(our_MT,publisMT,intercet_sample){
                      Unique_to_our_study = as.numeric(total_uniq_num_to_us),
                      Shared = as.numeric(total_share_number),
                      total_denomitor= as.numeric(total_denomitor),
-                     total_their_mut_number=as.numeric(total_their_mut_number),
+                     total_publication_mut_number=as.numeric(total_their_mut_number),
                      total_UGA_mut_number=as.numeric(total_UGA_mut_number))
   data <- setDT(data)
   
@@ -154,11 +176,14 @@ publishMT <- fread(paste(base,"PON_DbSNP_CDS_combineChrompublishMT.txt",sep=sepe
 #publishMT$Chromosome <- paste("chr",publishMT$Chromosome,sep = "")
 publishMT$chrom_loc <- paste(publishMT$Chromosome,publishMT$Position,sep = "_")
 publisMT <- setDT(publishMT)
+publisMT[Case =='CMT-024']
+
+
 our_MT_before$Case <- sapply(our_MT_before$sample_name, convert_MT_sample)
 our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep= "_")
 our_MT_before <- clean_table(our_MT_before)
 our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
-fwrite(our_MT_before,file=paste(base,"04_07","MT_mutect2_before.txt",sep = seperator),
+fwrite(our_MT_before,file=paste(base,"04_26","MT_mutect2_before.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 our_MT_before_samples <- unique(our_MT_before$Case)
 # our_sample <- unique(our_MT_before$Case)
@@ -166,59 +191,59 @@ our_MT_before_samples <- unique(our_MT_before$Case)
 # mutect2_before_intercet_sample <- intersect(their_sample,our_sample)
 # mutect2_before_diff_sample <- setdiff(their_sample,our_sample)
 
-
-### after 
-our_MT_after <- fread(paste(base,"total_final_after_mutect2_vaf.gz",sep = seperator));
-our_MT_after <- our_MT_after[symbol=="MT Korean",]
-our_MT_after$Case <- sapply(our_MT_after$sample_name, convert_MT_sample)
-our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
-our_MT_after <- clean_table(our_MT_after)
-fwrite(our_MT_before,file=paste(base,"04_07","MT_mutect2_after.txt",sep = seperator),
-       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
-our_MT_after_samples <- unique(our_MT_after$Case)
+# 
+# ### Mutect2 after 5 steps ### 
+# our_MT_after <- fread(paste(base,"total_final_after_mutect2_vaf.gz",sep = seperator));
+# our_MT_after <- our_MT_after[symbol=="MT Korean",]
+# our_MT_after$Case <- sapply(our_MT_after$sample_name, convert_MT_sample)
+# our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
+# our_MT_after <- clean_table(our_MT_after)
+# fwrite(our_MT_before,file=paste(base,"04_26","MT_mutect2_after.txt",sep = seperator),
+#        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+# our_MT_after_samples <- unique(our_MT_after$Case)
 # their_sample <- unique(publishMT$Case)
 # mutect2_after_intercet_sample <- intersect(their_sample,our_sample)
 # mutect2_after_diff_sample <- setdiff(their_sample,our_sample)
 
 ## Burair
-our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",sep = seperator));
+our_MT_Burair <- fread(paste(base,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02txt.gz",sep = seperator));
 our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt)]
 
 our_MT$Case <- sapply(our_MT$sample_names, convert_MT_sample)
 our_MT$chrom_loc <- paste(our_MT$chrom,our_MT$pos,sep= "_")
-fwrite(our_MT,file=paste(base,"04_07","MT_Burair_Mutect1_filtering.txt",sep = seperator),
+fwrite(our_MT,file=paste(base,"04_26","MT_Burair_Mutect1_filtering.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 our_sample <- unique(our_MT$Case)
 # their_sample <- unique(publishMT$Case)
 # Burair_sample <- unique(our_MT$Case)
 # Burair_diff <- setdiff(their_sample,our_sample)
 
-total_three_intercet <- intersect(intersect(our_MT_before_samples,our_MT_after_samples),
+total_three_intercet <- intersect(intersect(our_MT_before_samples,publishMT$Case),
                                   our_sample)
 
 ##### check overlap samples end ######
 #### Main code ######
 ### analyzed Mutect2 results
 #### Analyzed the ratio use bar plot before 5steps
-our_MT_before <- fread(paste(base,"total_final_before_mutect2_vaf.gz",sep = seperator));
-our_MT_before <- our_MT_before[symbol=="MT Korean",]
+our_MT_mutect2_before <- fread(paste(base,"total_final_before_mutect2_vaf.gz",sep = seperator));
+our_MT_mutect2_before <- our_MT_mutect2_before[symbol=="MT Korean",]
 
 publishMT <- fread(paste(base,"PON_DbSNP_CDS_combineChrompublishMT.txt",sep=seperator))
 #publishMT$Chromosome <- paste("chr",publishMT$Chromosome,sep = "")
 publishMT$chrom_loc <- paste(publishMT$Chromosome,publishMT$Position,sep = "_")
 publisMT <- setDT(publishMT)
-our_MT_before$Case <- sapply(our_MT_before$sample_name, convert_MT_sample)
-our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep= "_")
-our_MT_before <- clean_table(our_MT_before)
-our_MT_before$chrom_loc <- paste(our_MT_before$chrom,our_MT_before$pos,sep ="_")
+our_MT_mutect2_before$Case <- sapply(our_MT_mutect2_before$sample_name, convert_MT_sample)
+our_MT_mutect2_before$chrom_loc <- paste(our_MT_mutect2_before$chrom,our_MT_mutect2_before$pos,sep= "_")
+#our_MT_mutect2_before <- clean_table(our_MT_mutect2_before)
+our_MT_mutect2_before$chrom_loc <- paste(our_MT_mutect2_before$chrom,our_MT_mutect2_before$pos,sep ="_")
 
-png(file = paste(base,"04_07","before_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
+png(file = paste(base,"04_26","before_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
+    width = 5000, height =2700, units = "px", res = 500)
 
 
-data <- create_overlap_summary(our_MT_before,publisMT,total_three_intercet)
+data <- create_overlap_summary(our_MT_mutect2_before,publisMT,total_three_intercet, method = 'min')
 
-fwrite(data,file=paste(base,"04_07","Mutect2_before_compare_publication.txt",sep = seperator),
+fwrite(data,file=paste(base,"04_26","Mutect2_before_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <- data[sample!="CMT-033"]
 
@@ -245,69 +270,68 @@ p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
                       fontsize=35)
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 p2 <- p2+theme(legend.position="none",
-             axis.text=regular.text, 
-             axis.title=regular.text)
+               axis.text=regular.text, 
+               axis.title=regular.text)
 
 print(p2)
 dev.off()
-
-## Mutect2 5 step filtering
-our_MT_after <- fread(paste(base,"total_final_after_mutect2_vaf.gz",sep = seperator));
-our_MT_after <- our_MT_after[symbol=="MT Korean",]
-our_MT_after$Case <- sapply(our_MT_after$sample_name, convert_MT_sample)
-our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
-our_MT_after <- clean_table(our_MT_after)
-our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep ="_")
-
-
-png(file = paste(base,"04_07","after_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-
-data <- create_overlap_summary(our_MT_after,publisMT,total_three_intercet)
-fwrite(data,file=paste(base,"04_07","Mutect2_after_compare_publication.txt",sep = seperator),
-       col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
-data <- data[sample!="CMT-033"]
-count_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
-                   variable.name = "fill")
-count_data <- count_data[order(sample)]
-
-x <- count_data$sample
-y <- count_data$value
-classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
-fill <- count_data$fill
-fill <- factor(fill, levels=classify);
-samples <- unique(x);
-sample_order <- Mutect2_before_order
-x <- factor(x, levels=samples[sample_order]);
-plot_data <- data.frame(x=x, y=y, fill=fill);
-fill_colors <- c("cyan","black","red");
-p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="MuTect2 output after 5-steps filtering",
-                      fontsize=35)
-p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
-p2 <- p2+theme(legend.position="none",
-             axis.text=regular.text, 
-             axis.title=regular.text)
-#plot_data[plot_data$x=="CMT-495",]
-
-print(p2)
-dev.off()
+# 
+# ## Mutect2 5 step filtering
+# our_MT_after <- fread(paste(base,"total_final_after_mutect2_vaf.gz",sep = seperator));
+# our_MT_after <- our_MT_after[symbol=="MT Korean",]
+# our_MT_after$Case <- sapply(our_MT_after$sample_name, convert_MT_sample)
+# our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep= "_")
+# our_MT_after <- clean_table(our_MT_after)
+# our_MT_after$chrom_loc <- paste(our_MT_after$chrom,our_MT_after$pos,sep ="_")
+# 
+# 
+# png(file = paste(base,"04_26","after_UGA_mutect2_compare_count_with_MT_publication.png",sep =seperator),
+#     width = 5000, height =2700, units = "px", res = 500)
+# 
+# data <- create_overlap_summary(our_MT_after,publisMT,total_three_intercet, method = 'min')
+# fwrite(data,file=paste(base,"04_26","Mutect2_after_compare_publication.txt",sep = seperator),
+#        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
+# data <- data[sample!="CMT-033"]
+# count_data <- melt(data, id.vars = c("sample"),
+#                    measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
+#                    variable.name = "fill")
+# count_data <- count_data[order(sample)]
+# 
+# x <- count_data$sample
+# y <- count_data$value
+# classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
+# fill <- count_data$fill
+# fill <- factor(fill, levels=classify);
+# samples <- unique(x);
+# sample_order <- Mutect2_before_order
+# x <- factor(x, levels=samples[sample_order]);
+# plot_data <- data.frame(x=x, y=y, fill=fill);
+# fill_colors <- c("cyan","black","red");
+# p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
+#                       title="MuTect2 output after 5-steps filtering",
+#                       fontsize=35)
+# p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
+# p2 <- p2+theme(legend.position="none",
+#              axis.text=regular.text, 
+#              axis.title=regular.text)
+# #plot_data[plot_data$x=="CMT-495",]
+# 
+# print(p2)
+# dev.off()
 ##### Mutect2 end #####
 
 ## Analyze MT samples with Mutect1 Burair filtering using modified
-our_MT_Burair <- fread(paste(base,"Final_Total_without_Gene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",sep = seperator));
-our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt)]
-
 publisMT <- setDT(publishMT)
+our_MT_Burair <- fread(paste(base,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02txt.gz",sep = seperator));
+our_MT <- our_MT_Burair[tumor_type=="MT" & symbol=="MT CUK",.(sample_names,chrom,pos,ref,alt, status)]
 our_MT$Case <- sapply(our_MT$sample_names, convert_MT_sample)
 our_MT$chrom_loc <- paste(our_MT$chrom,our_MT$pos,sep= "_")
+our_MT <- rbind(our_MT,final_indel)
+png(file = paste(base,"04_26","remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
+    width = 5000, height =2700, units = "px", res = 500)
 
-png(file = paste(base,"04_07","remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-
-data <- create_overlap_summary(our_MT,publisMT,total_three_intercet)
-fwrite(data,file=paste(base,"04_07","Burair_filtering_compare_MT_mutect2_publication.txt",sep = seperator),
+data <- create_overlap_summary(our_MT,publisMT,total_three_intercet, method ='min')
+fwrite(data,file=paste(base,"04_26","Burair_filtering_compare_MT_mutect2_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <-data[sample!="CMT-033"]
 count_data <- melt(data, id.vars = c("sample"),
@@ -330,7 +354,7 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="Mutect output after 5-steps filtering & \npaired-read strand orientation filtering",fontsize=35)
+                     title="Somatic mutation after 5-steps filtering & \npaired-read strand orientation filtering",fontsize=35)
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 p <- p+theme(legend.position="none",
              axis.text=regular.text, 
@@ -342,23 +366,41 @@ dev.off()
 
 
 ### Analyzed with mutect1
-our_MT_Mutect_after <- fread(paste(base,"total_final_after_mutect_vaf.gz",sep = seperator));
+
+
+# ## indel file
+indel_file <- fread(paste(base,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
+indel_col_names <- c("chrom","pos","ref","alt","gene_name","ensembl_id","status","sample_names")
+colnames(indel_file) <- indel_col_names
+indel_file$tumor_type <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
+final_indel <- indel_file[tumor_type=="MT",.(sample_names,chrom,pos,ref,alt,status)]
+final_indel <- final_indel[-c(154:165),]
+final_indel$chrom_loc <- paste(final_indel$chrom,final_indel$pos,sep ="_")
+final_indel$Case <-  sapply(final_indel$sample_names,convert_MT_sample)
+
+
 our_MT_Mutect_before <- fread(paste(base,"total_final_before_mutect_vaf.gz",sep = seperator));
-our_MT_Mutect_before <- our_MT_Mutect_before[tumor_type=="MT" & symbol=="MT Korean", .(sample_names,chrom,pos,ref,alt)]
-our_MT_Mutect_after <- our_MT_Mutect_after[tumor_type=="MT" & symbol=="MT Korean",.(sample_names,chrom,pos,ref,alt)]
-our_MT_Mutect_after <- clean_table(our_MT_Mutect_after)
-our_MT_Mutect_after$chrom_loc <- paste(our_MT_Mutect_after$chrom,our_MT_Mutect_after$pos,sep= "_")
-our_MT_Mutect_after$Case <- sapply(our_MT_Mutect_after$sample_name, convert_MT_sample)
-our_MT_Mutect_before <- clean_table(our_MT_Mutect_before)
+our_MT_Mutect_before <- our_MT_Mutect_before[tumor_type=="MT" & symbol=="MT Korean", .(sample_names,chrom,pos,ref,alt,status)]
+# this function remove indel  but now 4/27 add strelka to replace
+#our_MT_Mutect_before <- clean_table(our_MT_Mutect_before)
 our_MT_Mutect_before$chrom_loc <- paste(our_MT_Mutect_before$chrom,our_MT_Mutect_before$pos,sep ="_")
 our_MT_Mutect_before$Case <- sapply(our_MT_Mutect_before$sample_name, convert_MT_sample)
+our_MT_Mutect_before <- rbind(our_MT_Mutect_before,final_indel)
 
 
+### Mutect1 after 5 steps
+our_MT_Mutect_after <- fread(paste(base,"total_final_after_mutect_vaf.gz",sep = seperator));
+our_MT_Mutect_after <- our_MT_Mutect_after[tumor_type=="MT" & symbol=="MT Korean",.(sample_names,chrom,pos,ref,alt,status)]
+#our_MT_Mutect_after <- clean_table(our_MT_Mutect_after)
+our_MT_Mutect_after$chrom_loc <- paste(our_MT_Mutect_after$chrom,our_MT_Mutect_after$pos,sep= "_")
+our_MT_Mutect_after$Case <- sapply(our_MT_Mutect_after$sample_name, convert_MT_sample)
+our_MT_Mutect_after <- rbind(our_MT_Mutect_after,final_indel)
 
-png(file = paste(base,"04_07","Mutect1_after_5steps.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-data <- create_overlap_summary(our_MT_Mutect_after,publisMT,total_three_intercet)
-fwrite(data,file=paste(base,"04_07","Mutect1_after5steps_data.txt",sep = seperator),
+
+png(file = paste(base,"04_26","Mutect1_after_5steps.png",sep =seperator),
+    width = 5000, height =2700, units = "px", res = 500)
+data <- create_overlap_summary(our_MT_Mutect_after,publisMT,total_three_intercet, method = 'min')
+fwrite(data,file=paste(base,"04_26","Mutect1_after5steps_data.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <- data[sample!="CMT-033"]
 count_data <- melt(data, id.vars = c("sample"),
@@ -377,7 +419,7 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="MuTect output after 5-steps filtering",
+                      title="Somatic mutation after 5-steps filtering",
                       fontsize=35)
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 p2 <- p2+theme(legend.position="none",
@@ -389,10 +431,10 @@ print(p2)
 dev.off()
 
 ###### Mutect1 before 5 steps ###### 
-png(file = paste(base,"04_07","Mutect1_before_5steps.png",sep =seperator),
-    width = 4800, height =2700, units = "px", res = 500)
-data <- create_overlap_summary(our_MT_Mutect_before,publisMT,total_three_intercet)
-fwrite(data,file=paste(base,"04_07","Mutect1_before5steps_data.txt",sep = seperator),
+png(file = paste(base,"04_26","Mutect1_before_5steps.png",sep =seperator),
+    width = 5000, height =2700, units = "px", res = 500)
+data <- create_overlap_summary(our_MT_Mutect_before,publisMT,total_three_intercet, method='min')
+fwrite(data,file=paste(base,"04_26","Mutect1_before5steps_data.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <- data[sample!="CMT-033"]
 count_data <- melt(data, id.vars = c("sample"),
@@ -411,7 +453,7 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="MuTect output",
+                      title="Somatic mutation before 5-steps filtering",
                       fontsize=35)
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 p2 <- p2+theme(legend.position="none",
@@ -426,95 +468,6 @@ dev.off()
 
 ### Analysed Mutect1 end ####
 
-#### Analyzed the ratio use bar plot before 5steps
-
-###
-# 
-# ratio_data <- melt(data, id.vars = c("sample"),
-#                    measure.vars= c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio"),
-#                    variable.name = "fill")
-# 
-# ratio_data <- ratio_data[order(sample)]
-# 
-# x <- ratio_data$sample
-# y <- ratio_data$value
-# classify <- c("uniq_ratio_to_uga","uniq_ratio_to_publication","share_ratio");
-# fill <- ratio_data$fill
-# fill <- factor(fill, levels=classify);
-# samples <- unique(x);
-# sample_order <-sample_order;
-# x <- factor(x, levels=samples[sample_order]);
-# plot_data <- data.frame(x=x, y=y, fill=fill);
-# fill_colors <- c("cyan","black","red");
-# 
-# p7 <- my_bar_function(plot_data,fill_colors = fill_colors,
-#                       title="Before MT mutation ratio overlapped with MT Korean mutect1",
-#                       fontsize=35)
-# print(p7)
-# fwrite(our_MT_before,file=paste(base,"04_07","MT_mutect2_before.txt",sep = seperator),
-#        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
-# dev.off()
-
-### Bar plot end ##
-
-# ### cat all of Mutect2 data together
-# 
-# cancer_type <- "MT"
-# base_dir = #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate/VAF/Mutect1"
-#   "G:\\MAC_Research_Data\\Pan_cancer\\Pan_cancer-analysis\\Compare_publication\\MT_mutateion_compare_with_korean\\Mutect2\\MT"
-# 
-# # # coverage_file <- read_excel(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate/New_WES_QC_dataset.xlsx",
-# # #   "C:\\Users\\abc73_000\\Desktop\\New_WES_QC_dataset.xlsx",
-# # #   sheet = "Mut")
-# # 
-# # coverage_file <- setDT(coverage_file)
-# 
-# before_total_summary <- NULL
-# after_total_summary <- NULL
-# 
-# for (cancer in cancer_type){
-#   
-#   sample_names <- list.files(base_dir)
-#   
-#   for (sample in sample_names){
-#     
-#     M2before_file_name <- paste(sample,"vaf_before.txt",sep = '_')
-#     M2after_file_name <- paste(sample,"vaf_after.txt",sep = '_')
-#     
-#     Mutect2_before <-fread(paste(base_dir,sample,M2before_file_name ,sep="\\"))
-#     Mutect2_after <- fread(paste(base_dir,sample,M2after_file_name ,sep="\\"))
-#     
-#     
-#     
-#     if (nrow(Mutect2_after)!=0){
-#       #print(file_loc)
-#       before_each_file <-fread(paste(base_dir,sample,M2before_file_name ,sep="\\"))
-#       after_each_file <- fread(paste(base_dir,sample,M2after_file_name ,sep="\\"))
-#       # before
-#       colnames(before_each_file) <- c("chrom","pos","vaf","ref","alt")
-#       before_each_file$sample_name <-sample
-#       #coverage_info <- coverage_file[Case_ID==sample,.(coverage_stat,tumor_coverage,both_status)]
-#       # before_each_file$tumor_coverage <- coverage_info$tumor_coverage[1]
-#       # before_each_file$both_coverage <- coverage_info$both_status[1]
-#       # before_each_file$sample_mean <- coverage_info$coverage_stat[1]
-#       # before_each_file$tumor_type <- cancer
-#       
-#       # after
-#       colnames(after_each_file) <- c("chrom","pos","vaf","ref","alt")
-#       after_each_file$sample_name <-sample
-#       
-#       #coverage_info <- coverage_file[Case_ID==sample,.(coverage_stat,tumor_coverage,both_status)]
-#       # after_each_file$tumor_coverage <- coverage_info$tumor_coverage[1]
-#       # after_each_file$both_coverage <- coverage_info$both_status[1]
-#       # after_each_file$sample_mean <- coverage_info$coverage_stat[1]
-#       # after_each_file$tumor_type <- cancer
-#       
-#     }
-#     before_total_summary <- rbind(before_total_summary,before_each_file)
-#     after_total_summary <- rbind(after_total_summary,after_each_file)
-#   }
-#   #total_summary <- rbind(total_summary,after_each_file)
-# }
 # ## cat all file done
 # 
 # 

@@ -409,7 +409,7 @@ seperator <- "/"
 output_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
 pathway <- fread(paste(base_dir,"all_pathway_03_19.txt",sep = seperator), na.strings = "")
-
+path_col <- colnames(pathway)
 target_path_way <- pathway[,c("p53","Cell cycle"), with =F]
 target_pathway_gene <- NULL
 for (each_pathway in colnames(target_path_way)){
@@ -512,7 +512,7 @@ for( index in 1:length(all_tumor_type)){
   total_tumor_gene_sum <- rbindlist(list(total_tumor_gene_sum,each_tumor_sum),fill = T)
 }
 total_tumor_gene_sum <- na.omit(total_tumor_gene_sum)
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"02_25","include_amp_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"05_01","include_amp_candidate_gene_associated_TMB_05_01.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ## Use candidate gene to compare tmb
@@ -610,7 +610,7 @@ total_gene_sum <- total_gene_sum[order(tmb_h_pvalue)]
 total_gene_sum$tmb_h_BH_pvalue <- p.adjust(total_gene_sum$tmb_h_pvalue,method = "BH")
 
 
-fwrite(total_gene_sum, file = paste(output_dir,"02_25","include_amp_not_normalize_p_value_candidate_gene_associated_TMB_02_25.txt",sep = seperator),
+fwrite(total_gene_sum, file = paste(output_dir,"05_01","include_amp_not_normalize_p_value_candidate_gene_associated_TMB_05_01.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 

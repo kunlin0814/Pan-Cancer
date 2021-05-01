@@ -1,20 +1,20 @@
 library(data.table)
 library(tidyverse)
 library(readxl)
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  "/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  #"/Volumes/Research/GitHub/R_util/my_util.R")
 
 ## Gene assocaited TMB only exam somatic mutation no amp
 base_dir <- 
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-output_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
+output_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
-whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",
@@ -41,13 +41,13 @@ indel_file <- indel_file[,c("sample_names","gene_name","status","Subtype"),with=
 SNV <- unique(mutect_after_vaf[,c("sample_names","gene_name","status","Subtype"), with =F])
 total_mut <- rbindlist(list(SNV,indel_file))
 
-total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
+total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL" & gene_name!="-",]
 breed <- match_vector_table(total_mut$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 
 ## append TMB 
 ## append TMB 
-TMB_info <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+TMB_info <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/all_pan-tumor_tmb_04_06.txt")
 colnames(TMB_info)
 colnames(TMB_info)[1] <- "sample_names"
 total_mut$tmb <- match_vector_table(total_mut$sample_names, "total_tmb", TMB_info, string_value = F)
@@ -78,8 +78,8 @@ exclude <- c(exclude)
 withS1_total_mut <- total_mut[!sample_names %in% exclude & Subtype !="UCL",]
 
 ## exclude s1 high and UCL samples
-s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
-  #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+  "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 s1_exclude <- c(exclude, s1_high_sample)
 
@@ -89,8 +89,8 @@ withoutS1_total_mut <- total_mut[!sample_names %in% s1_exclude & Subtype !="UCL"
 
 ## select 5 sample of all genes
 compare_gene <- "TP53"
-signle_tumor_cut <- 5
-breed_cut_off <- 3
+signle_tumor_cut <- 0
+breed_cut_off <- 5
 pan_tumor_uniq_gene <- unique(withoutS1_total_mut$gene_name)
 total_sample_number <- length(unique(withoutS1_total_mut$sample_names))
 candidate_gene_list <- c()
@@ -104,10 +104,11 @@ for (gene_index in 1:length(pan_tumor_uniq_gene)){
     candidate_gene_list <- c(candidate_gene_list,each_gene)
   }
 }
-## each gene need 3 samples in each breed
+## each gene need 5 samples in each breed
 target_breeds <- c("Boxer","Cocker Spaniel","Golden Retriever","Greyhound","Maltese",
                    "Poodle","Rottweiler","Schnauzer","Shih Tzu",
                    "Yorkshire Terrier")
+
 candidate_gene_list <- unique(candidate_gene_list)
 total_breed_sum <- NULL
 for (each_candidate_breed in target_breeds){
@@ -151,18 +152,24 @@ for (each_candidate_breed in target_breeds){
                                      TP53_Incl_Excl=tp53_relation_type,
                                      TP53_mutual_significant = tp53_relation_sign)
         
+        
       }
+
     }
     each_breed_sum <- rbindlist(list(each_breed_sum, each_breed_each_gene))
-    
   }
-  each_breed_sum <- setDT(each_breed_sum)
-  each_breed_sum <- each_breed_sum[order(P_value)]
-  each_breed_sum$BH_pvalue <-  p.adjust(each_breed_sum$P_value, method = "BH")
-  total_breed_sum <- rbindlist(list(total_breed_sum,each_breed_sum))
-}
+  
+   
+    if (nrow(each_breed_sum>0)){
+    each_breed_sum <- setDT(each_breed_sum)
+    each_breed_sum <- each_breed_sum[order(P_value)]
+    each_breed_sum$BH_pvalue <-  p.adjust(each_breed_sum$P_value, method = "BH")
+    total_breed_sum <- rbindlist(list(total_breed_sum,each_breed_sum))
+    }
+  }
 
-fwrite(total_breed_sum, file = paste(output_dir,"04_14","breeds_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
+
+fwrite(total_breed_sum, file = paste(output_dir,"05_01","breeds_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ##### golden retriever with S1 ( not excldue S1) ####
@@ -221,7 +228,7 @@ for (each_candidate_breed in target_breeds){
 total_breed_sum <- setDT(total_breed_sum)
 total_breed_sum <- total_breed_sum[order(P_value)]
 total_breed_sum$BH_pvalue <-  p.adjust(total_breed_sum$P_value, method = "BH")
-fwrite(total_breed_sum, file = paste(output_dir,"04_14","golden_withS1_associated_TMB_03_19_summary.txt",sep = seperator),
+fwrite(total_breed_sum, file = paste(output_dir,"05_01","golden_withS1_associated_TMB_05_01_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 
@@ -229,18 +236,18 @@ fwrite(total_breed_sum, file = paste(output_dir,"04_14","golden_withS1_associate
 ## only need Breed,Pathway	Mutated_samples	P_value	Fold_change	BH_P_value
 ## for breed analysis, we only use snv +indel, no amp
 ## extract breed 01 matrix and compare tmb
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-  "/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+  #"/Volumes/Research/GitHub/R_util/my_util.R")
 base_dir <- 
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Oncoprint_analysis"
 seperator <- "/"
 
-output_dir <- "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
+output_dir <- #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB"
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate/Gene_association_TMB/"
 
 pathway <- fread(paste(base_dir,"all_pathway_04_14.txt",sep = seperator), na.strings = "")
-
+path_col <- colnames(pathway)
 target_path_way <- pathway[,c("p53","Cell cycle"), with =F]
 target_pathway_gene <- NULL
 for (each_pathway in colnames(target_path_way)){
@@ -250,8 +257,8 @@ for (each_pathway in colnames(target_path_way)){
 }
 target_pathway_gene <- unique(target_pathway_gene)
 
-whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
+whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
 mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",
@@ -296,8 +303,8 @@ total_snv_cnv <- total_snv_cnv[!sample_names %in% exclude & Subtype !="UCL",]
 
 
 ## exclude s1 high and UCL
-s1_data <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
-#"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
+"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 exclude <- c(exclude, s1_high_sample)
 
@@ -419,14 +426,14 @@ for (each_pathway in target_pathway_col){
 }
 
 
-fwrite(final_out, file = paste(output_dir,"04_14","all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
+fwrite(final_out, file = paste(output_dir,"05_01","all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ### data for TMB breed ##
 breed_pathway_tmb <- total_sum[breed %in% target_breeds,.(sample_names,breed,p53,`Cell cycle`,tmb,Subtype)]
 breed_pathway_tmb[breed_pathway_tmb==0] <- "Not altered"
 breed_pathway_tmb[breed_pathway_tmb==1] <- "Altered"
-fwrite(breed_pathway_tmb, file = paste(output_dir,"04_14","TMB_all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
+fwrite(breed_pathway_tmb, file = paste(output_dir,"05_01","TMB_all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ##### Poodle with S1 ( not excldue S1) no samples #######
@@ -485,7 +492,7 @@ fwrite(breed_pathway_tmb, file = paste(output_dir,"04_14","TMB_all_breeds_cell_c
 # total_breed_sum <- setDT(total_breed_sum)
 # total_breed_sum <- total_breed_sum[order(P_value)]
 # total_breed_sum$BH_pvalue <-  p.adjust(total_breed_sum$P_value, method = "BH")
-# fwrite(total_breed_sum, file = paste(output_dir,"04_14","Poodle_withS1_associated_TMB_03_19_summary.txt",sep = seperator),
+# fwrite(total_breed_sum, file = paste(output_dir,"05_01","Poodle_withS1_associated_TMB_03_19_summary.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 # "No breed provided and unable to do the breed-prediction"
 
