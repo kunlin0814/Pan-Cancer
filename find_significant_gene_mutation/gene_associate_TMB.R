@@ -53,6 +53,8 @@ a = unique(total_mut[Subtype=="MT",.(sample_names,breed)])
 a <- setDT(a)
 b = a[,.N,keyby= .(breed)]
 
+unique(total_mut[gene_name=="TP53" & Subtype=='OSA',.(sample_names)])
+length(unique(total_mut[Subtype=="OSA"]$sample_names))
 
 ## exclude s1 high and UCL samples
 s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")

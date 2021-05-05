@@ -85,13 +85,15 @@ s1_exclude <- c(exclude, s1_high_sample)
 
 withoutS1_total_mut <- total_mut[!sample_names %in% s1_exclude & Subtype !="UCL",]
 
+
+
 ############################ Breed assoicated TMB ############################
 
 ## select 5 sample of all genes
 compare_gene <- "TP53"
 signle_tumor_cut <- 0
 breed_cut_off <- 5
-pan_tumor_uniq_gene <- unique(withoutS1_total_mut$gene_name)
+pan_tumor_uniq_gene <- unique(total_mut$gene_name)
 total_sample_number <- length(unique(withoutS1_total_mut$sample_names))
 candidate_gene_list <- c()
 for (gene_index in 1:length(pan_tumor_uniq_gene)){
@@ -109,7 +111,8 @@ target_breeds <- c("Boxer","Cocker Spaniel","Golden Retriever","Greyhound","Malt
                    "Poodle","Rottweiler","Schnauzer","Shih Tzu",
                    "Yorkshire Terrier")
 
-candidate_gene_list <- unique(candidate_gene_list)
+#candidate_gene_list <- unique(candidate_gene_list)
+candidate_gene_list <- unique(total_mut$gene_name)
 total_breed_sum <- NULL
 for (each_candidate_breed in target_breeds){
   each_breed_sum <- NULL
@@ -148,6 +151,8 @@ for (each_candidate_breed in target_breeds){
                                      Mutated_samples = length(target_breed_sample_with_mut),
                                      P_value=p_value,
                                      Fold_change= fold_change,
+                                     mut_tmb = median(target_breed_with_mut_tmb),
+                                     not_mut_tmb = median(target_breed_sample_without_mut_tmb),
                                      TP53_mutual_P_value=tp53_fisher_p,
                                      TP53_Incl_Excl=tp53_relation_type,
                                      TP53_mutual_significant = tp53_relation_sign)
@@ -169,7 +174,7 @@ for (each_candidate_breed in target_breeds){
   }
 
 
-fwrite(total_breed_sum, file = paste(output_dir,"05_01","breeds_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
+fwrite(total_breed_sum, file = paste(output_dir,"05_04","breeds_Not_include_amp_candidate_gene_associated_TMB_03_19_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ##### golden retriever with S1 ( not excldue S1) ####
@@ -228,7 +233,7 @@ for (each_candidate_breed in target_breeds){
 total_breed_sum <- setDT(total_breed_sum)
 total_breed_sum <- total_breed_sum[order(P_value)]
 total_breed_sum$BH_pvalue <-  p.adjust(total_breed_sum$P_value, method = "BH")
-fwrite(total_breed_sum, file = paste(output_dir,"05_01","golden_withS1_associated_TMB_05_01_summary.txt",sep = seperator),
+fwrite(total_breed_sum, file = paste(output_dir,"05_04","golden_withS1_associated_TMB_05_04_summary.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 
@@ -426,14 +431,14 @@ for (each_pathway in target_pathway_col){
 }
 
 
-fwrite(final_out, file = paste(output_dir,"05_01","all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
+fwrite(final_out, file = paste(output_dir,"05_04","all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ### data for TMB breed ##
 breed_pathway_tmb <- total_sum[breed %in% target_breeds,.(sample_names,breed,p53,`Cell cycle`,tmb,Subtype)]
 breed_pathway_tmb[breed_pathway_tmb==0] <- "Not altered"
 breed_pathway_tmb[breed_pathway_tmb==1] <- "Altered"
-fwrite(breed_pathway_tmb, file = paste(output_dir,"05_01","TMB_all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
+fwrite(breed_pathway_tmb, file = paste(output_dir,"05_04","TMB_all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
 ##### Poodle with S1 ( not excldue S1) no samples #######
@@ -492,7 +497,7 @@ fwrite(breed_pathway_tmb, file = paste(output_dir,"05_01","TMB_all_breeds_cell_c
 # total_breed_sum <- setDT(total_breed_sum)
 # total_breed_sum <- total_breed_sum[order(P_value)]
 # total_breed_sum$BH_pvalue <-  p.adjust(total_breed_sum$P_value, method = "BH")
-# fwrite(total_breed_sum, file = paste(output_dir,"05_01","Poodle_withS1_associated_TMB_03_19_summary.txt",sep = seperator),
+# fwrite(total_breed_sum, file = paste(output_dir,"05_04","Poodle_withS1_associated_TMB_03_19_summary.txt",sep = seperator),
 #        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 # "No breed provided and unable to do the breed-prediction"
 

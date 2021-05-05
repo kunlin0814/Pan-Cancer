@@ -93,7 +93,7 @@ create_overlap_summary <- function(our_MT,publisMT,intercet_sample,method = 'min
                      sample = total_sample,
                      uniq_ratio_to_uga = as.numeric(total_uniq_ratio_to_us),
                      uniq_ratio_to_publication = as.numeric(total_uniq_ratio_to_them),
-                     Unique_to_original_study = as.numeric(total_uniq_num_to_them),
+                     Unique_to_original_publication = as.numeric(total_uniq_num_to_them),
                      Unique_to_our_study = as.numeric(total_uniq_num_to_us),
                      Shared = as.numeric(total_share_number),
                      total_denomitor= as.numeric(total_denomitor),
@@ -248,13 +248,13 @@ fwrite(data,file=paste(base,"04_26","Mutect2_before_compare_publication.txt",sep
 data <- data[sample!="CMT-033"]
 
 count_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
+                   measure.vars= c("Unique_to_our_study","Unique_to_original_publication","Shared"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
+classify <- c("Unique_to_our_study","Unique_to_original_publication","Shared");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
@@ -293,13 +293,13 @@ dev.off()
 #        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 # data <- data[sample!="CMT-033"]
 # count_data <- melt(data, id.vars = c("sample"),
-#                    measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
+#                    measure.vars= c("Unique_to_our_study","Unique_to_original_publication","Shared"),
 #                    variable.name = "fill")
 # count_data <- count_data[order(sample)]
 # 
 # x <- count_data$sample
 # y <- count_data$value
-# classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
+# classify <- c("Unique_to_our_study","Unique_to_original_publication","Shared");
 # fill <- count_data$fill
 # fill <- factor(fill, levels=classify);
 # samples <- unique(x);
@@ -335,13 +335,13 @@ fwrite(data,file=paste(base,"04_26","Burair_filtering_compare_MT_mutect2_publica
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <-data[sample!="CMT-033"]
 count_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
+                   measure.vars= c("Unique_to_our_study","Unique_to_original_publication","Shared"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
+classify <- c("Unique_to_our_study","Unique_to_original_publication","Shared");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
@@ -354,7 +354,7 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="Somatic mutation after 5-steps filtering & \npaired-read strand orientation filtering",fontsize=35)
+                     title="Somatic base substitutions\n after 5-step & orientation bias filtering",fontsize=35)
 p <- p+scale_y_continuous(breaks=c(0,50,100,150))
 p <- p+theme(legend.position="none",
              axis.text=regular.text, 
@@ -404,13 +404,13 @@ fwrite(data,file=paste(base,"04_26","Mutect1_after5steps_data.txt",sep = seperat
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <- data[sample!="CMT-033"]
 count_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
+                   measure.vars= c("Unique_to_our_study","Unique_to_original_publication","Shared"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
+classify <- c("Unique_to_our_study","Unique_to_original_publication","Shared");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
@@ -419,7 +419,7 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Somatic mutation after 5-steps filtering",
+                      title="Somatic base substitutions\n after 5-step filtering",
                       fontsize=35)
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 p2 <- p2+theme(legend.position="none",
@@ -438,13 +438,13 @@ fwrite(data,file=paste(base,"04_26","Mutect1_before5steps_data.txt",sep = sepera
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <- data[sample!="CMT-033"]
 count_data <- melt(data, id.vars = c("sample"),
-                   measure.vars= c("Unique_to_our_study","Unique_to_original_study","Shared"),
+                   measure.vars= c("Unique_to_our_study","Unique_to_original_publication","Shared"),
                    variable.name = "fill")
 count_data <- count_data[order(sample)]
 
 x <- count_data$sample
 y <- count_data$value
-classify <- c("Unique_to_our_study","Unique_to_original_study","Shared");
+classify <- c("Unique_to_our_study","Unique_to_original_publication","Shared");
 fill <- count_data$fill
 fill <- factor(fill, levels=classify);
 samples <- unique(x);
@@ -453,7 +453,7 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Somatic mutation before 5-steps filtering",
+                      title="Somatic base substitutions\n via Mutect alone",
                       fontsize=35)
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 p2 <- p2+theme(legend.position="none",
