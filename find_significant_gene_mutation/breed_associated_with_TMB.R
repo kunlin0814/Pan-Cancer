@@ -53,7 +53,7 @@ colnames(TMB_info)[1] <- "sample_names"
 total_mut$tmb <- match_vector_table(total_mut$sample_names, "total_tmb", TMB_info, string_value = F)
 
 ## Normalize TMB with regards to each tumor median (in pan-tumor analysis)
-## now decide not normalize 2/25
+
 total_tumor_type <- unique(total_mut$Subtype)
 total_tumor_normalize <- NULL
 

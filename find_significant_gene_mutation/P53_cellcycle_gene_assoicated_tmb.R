@@ -21,7 +21,7 @@ for (each_pathway in colnames(target_path_way)){
   target_pathway_gene <- c(target_pathway_gene,each_path_clean_gene)
 }
 target_pathway_gene <- unique(target_pathway_gene)
-target_pathway_gene <- c("CDKN2A","ATM","CDK4")
+#target_pathway_gene <- c("CDKN2A","ATM","CDK4")
 
 
 whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt")
@@ -44,7 +44,7 @@ indel_file <- indel_file[!sample_names %in% exclude,]
 #indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
 indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
 indel_file$finalbreed <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
-indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
+indel_file <- indel_file[gene_name!="-" & status!="nonframeshift" & ! sample_names %in% exclude,]
 indel_file <- indel_file[,c("sample_names","gene_name","status","Subtype"),with=F]
 #setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
 #indel_file <- indel_file[,emsembl_id:=NULL]
@@ -153,7 +153,7 @@ total_tumor_gene_sum <- setDT(total_tumor_gene_sum)
 total_tumor_gene_sum <- total_tumor_gene_sum[order(P_value)]
 total_tumor_gene_sum$BH_P_value <-  p.adjust(total_tumor_gene_sum$P_value, method = "BH")
 
-fwrite(total_tumor_gene_sum, file = paste(output_dir,"04_14","include_amp_TP53_cell_cycle_gene_assication_TMB.txt",sep = seperator),
+fwrite(total_tumor_gene_sum, file = paste(output_dir,"04_14","include_amp_cross_tumor_TP53_cell_cycle_gene_assication_TMB.txt",sep = seperator),
        col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 ## cross tumor end
 
