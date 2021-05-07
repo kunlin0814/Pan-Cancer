@@ -21,7 +21,19 @@ amp_delete <- fread(paste(base_dir,"CNV_exclude_failQC_fixed_OM_total_amp_delete
                     header = T,na.strings = "")
 
 amp_delete <- amp_delete[!sample_names %in% exclude]
-amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
+# original <- fread('G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Gene_amp/DatafromTaifang/MT_original.txt')
+# original[V1=="CMT-724"]
+# a = unique(amp_delete[subtype=="MT",]$sample_names)
+# b = unique(final_gene_tumor_wide_SNV_indel[Subtype == "MT",]$sample_names)
+# c = setdiff(b,a)
+# for (each in c){
+#   check = nrow(original[V1==each])
+#   if (check!=0){
+#     print(each)
+#   }
+# }
+
+#amp_delete <- amp_delete[!grepl("ENSCAFG",amp_delete[,.(gene_name)]$gene_name,ignore.case = T)]
 
 unique(amp_delete[subtype =="OSA"]$sample_names)
 

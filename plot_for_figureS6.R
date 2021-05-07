@@ -5,7 +5,7 @@ library(scales)
 library(data.table)
 source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 setwd("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Mutation_rate_VAF/Mut_rate")
-
+xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 whole_wes_table <- fread("G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 exclude <- unique(unlist(whole_wes_table[The_reason_to_exclude!="Pass QC",.(Case_ID)]))
 
@@ -35,7 +35,7 @@ png(file = "FigS6B_mutect2.png", width = 1200, height = 1000, units = "px", res 
 p <- ggplot(mutect2, aes(x=tumor_type, y=log10(TMb+0.01))) + 
   geom_jitter(aes(colour = tumor_type), shape=16, position=position_jitterdodge(),size = 0.5) + 
   ylab("TMB")+
-  ggtitle("Mutect2")+
+  ggtitle("MuTect2")+
   theme_classic()+ 
   scale_color_manual(values=c("darkblue","darkblue","darkblue","firebrick3","firebrick3","firebrick3","firebrick3")) +
   #scale_y_continuous(trans='log10',breaks = c(0,0.1,1,10))+
@@ -75,7 +75,8 @@ ggplot(atLeastTwo, aes(x=tumor_type, y=log10(TMb+0.01))) +
   theme(axis.text=regular.text, 
         axis.title=regular.text, 
         axis.text.x = element_text(angle=xangle, hjust=xaxis_just,colour = c("darkblue","darkblue","darkblue","firebrick3","firebrick3","firebrick3","firebrick3")),
-        axis.text.y = element_text(colour = 'black'),##### Pan cancer Supp Fig. 6b
+        axis.text.y = element_text(colour = 'black')##### Pan cancer Supp Fig. 6b
+        
 library(ggplot2)
 library(MASS)
 library(scales)
@@ -158,12 +159,5 @@ ggplot(atLeastTwo, aes(x=tumor_type, y=log10(TMb+0.01))) +
 dev.off()
 
 
-
-        axis.title.x =element_blank(),
-        axis.title.y= element_text(colour = 'black'),
-        legend.position="none")
-
-
-dev.off()
 
 

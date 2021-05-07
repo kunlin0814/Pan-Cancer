@@ -453,7 +453,7 @@ x <- factor(x, levels=samples[sample_order]);
 plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 p2 <- my_bar_function(plot_data,fill_colors = fill_colors,
-                      title="Somatic base substitutions\n via Mutect alone",
+                      title="Somatic base substitutions\n via MuTect alone",
                       fontsize=35)
 p2 <- p2+scale_y_continuous(breaks=c(0,50,100,150))
 p2 <- p2+theme(legend.position="none",

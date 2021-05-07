@@ -186,7 +186,7 @@ indel_file$Breeds <- match_vector_table(indel_file$sample_names,"final_breed_lab
 ### Tumorwide genes
 ## assume all indel significant
 sig_gene_sample_wide <- fread(paste(output_dir,"final_breeds_gene_nonsym_samplewide_p_value_orient_modify_04_07.txt",sep = seperator))
-sig_gene_sample_wide <- sig_gene_sample_wide[,.(sample_names,gene_name,breeds_info,ensembl_id,Subtype,p_value,
+sig_gene_sample_wide <- sig_gene_sample_wide[,.(sample_names,gene_name,breeds_info,ensembl_id,Subtype,
                                                 BH_pvalue)]
 
 indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
@@ -202,11 +202,11 @@ sig_gene_sample_wide <- sig_gene_sample_wide[gene_name!="-",]
 
 
 nrow(sig_gene_sample_wide[gene_name=="PIK3CA" &Subtype=="MT" & BH_pvalue < 0.05])
-sig_gene_sample_wide[gene_name=="PIK3CA" & Subtype=="MT" &p_value<0.05]
+#sig_gene_sample_wide[gene_name=="PIK3CA" & Subtype=="MT" &p_value<0.05]
 # fill up with NA string 
 mutect_after_vaf <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",sep =seperator),
                           na.strings = "")
-mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
+#mutect_after_vaf <- mutect_after_vaf[status!= "synonymous",]
 mutect_after_vaf <- mutect_after_vaf[!sample_names %in% exclude]
 mutect_after_vaf <- mutect_after_vaf[tumor_type!="UCL"]
 mutect_after_vaf$Subtype <- match_vector_table(mutect_after_vaf$sample_names,column = "DiseaseAcronym2", table =whole_wes_clean_breed_table,string_value = T )
@@ -234,6 +234,7 @@ fwrite(final_gene_tumor_wide_SNV_indel,
 unique(final_gene_tumor_wide_SNV_indel[gene_name=="PTAFR" & Subtype=="TCL",.(gene_name,sample_names,status,ensembl_id)])
 nrow(unique(final_gene_tumor_wide_SNV_indel[Subtype=="HSA",.(sample_names)]))
 as.data.frame(table(sig_indel_gene[Subtype=="OM",.(gene_name)]))
+final_gene_tumor_wide_SNV_indel[Subtype=="MT"]
 
 ### Tumorwide genes
 total_gene_summary <- NULL
@@ -342,7 +343,7 @@ fwrite(top_8_tumor_gene,
 
 
 fwrite(total_gene_summary,
-       file = paste(output_dir,"final_breed_genes_nonsyn_tumorwide_VAF_Mutect_orientBiasModified_04_07.txt",sep = seperator)
+       file = paste(output_dir,"final_breed_genes_nonsyn_tumorwide_VAF_Mutect_orientBiasModified_05_06.txt",sep = seperator)
        ,col.names = T,row.names = F,
        quote = F,
        eol = "\n",

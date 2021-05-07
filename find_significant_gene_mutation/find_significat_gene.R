@@ -158,7 +158,7 @@ exclude <- unique(unlist(whole_wes_clean_breed_table[The_reason_to_exclude!="Pas
 SNV <- fread(paste(base_dir,"Final_Total_withGene_Burair_Filtering3_VAF_Mutect_orientBiasModified_04_02.txt.gz",sep =seperator)
              ,fill = T,na.strings="")
 
-SNV <- SNV[status!= "synonymous",]
+#SNV <- SNV[status!= "synonymous",]
 SNV <- SNV[!sample_names %in% exclude]
 SNV <- SNV[tumor_type!="UCL"]
 SNV$Subtype <- match_vector_table(SNV$sample_names,column="DiseaseAcronym2",table=whole_wes_clean_breed_table)
@@ -169,7 +169,7 @@ SNV$Breeds  <- match_vector_table(SNV$sample_names,column="final_breed_label",ta
 # clean_breeds <- na.omit(total_breeds)
 indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
 colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
-indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
+indel_file <- indel_file[gene_name!="-" & status!="nonframeshift" & ! sample_names %in% exclude,]
 indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
 indel_file$Breeds <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 
@@ -183,7 +183,7 @@ final_SNV <- SNV[,.(sample_names,gene_name,status,Subtype,Breeds)]
 
 snv_indel <- rbindlist(list(final_SNV,final_indel))
 
-snv_indel <- snv_indel[Subtype!="UCL" & !sample_names %in% exclude & gene_name!="-"
+snv_indel <- snv_indel[Subtype!="UCL" & !sample_names %in% exclude
                        & Breeds!="No breed provided and unable to do the breed-prediction",]
 
 
@@ -234,7 +234,7 @@ for (index in 1:length(tumor_type)) {
         #each_tumor_breed_uniq_gene <- unique(each_tumor_breed_gene)
         #### check gene mut for each breed ( at least two dogs)
         candidate_breeds_info <-
-          unique(each_tumor_info[gene_name == each_gene_mut, .(sample_names, Breeds)])
+          unique(each_tumor_info[gene_name == each_gene_mut & status!='synonymous', .(sample_names, Breeds)])
         number_gene_mut_in_breeds <-
           candidate_breeds_info[, .N, keyby = .(Breeds)]
         if (any(number_gene_mut_in_breeds$N >= number_sample_mut_cutoff) ) {
@@ -324,8 +324,8 @@ for (each_tumor_type in tumor_type){
   }
   Total_tumor_info <- rbindlist(list(Total_tumor_info,each_tumor_final_breed_label_label))
 }
-
-fwrite(Total_tumor_info, file = paste(output_dir,"final_breed_label_sig_WithBH_Tumor_wide_04_07.txt",sep=seperator),
+Total_tumor_info <- Total_tumor_info[gene_mut!='-',]
+fwrite(Total_tumor_info, file = paste(output_dir,"final_breed_label_sig_WithBH_Tumor_wide_05_06.txt",sep=seperator),
        col.names = T, row.names = F, quote = F, eol = "\n", na = "NA",
        sep = "\t")
 

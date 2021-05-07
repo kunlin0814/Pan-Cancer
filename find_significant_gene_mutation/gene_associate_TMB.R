@@ -91,30 +91,30 @@ total_mut <- total_tumor_normalize
 #check result#
 
 ### test ###
-tar_gene_name <- "TP53"
-tumor_type <- "OSA"
-tar_info <- total_mut[Subtype==tumor_type]
-a = tar_info[sample_names=="GarLar",]
-mut_sample <- unique(tar_info [gene_name == tar_gene_name,.(sample_names)])$sample_names
-mut_sample_tmb <- unique(tar_info[sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
-
-not_mut_samples <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names)])
-not_mut_sample_tmb <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
-median(mut_sample_tmb)/median(not_mut_sample_tmb)
-
-wilcox.test(mut_sample_tmb,not_mut_sample_tmb)
-
-write.table(mut_sample,file = 'C:/Users/abc73/Desktop/OSA_mut.txt',
-       col.names = F, row.names = F, quote = F, sep = "\n")
-
-tp53 <- unique(total_mut[gene_name =="TP53",.(sample_names,)])
-tp53_sample <- tp53$sample_names
-no_tp53 <- setdiff(unique(total_mut$sample_names), tp53_sample)
-tp53_tmb <- tp53$normalizetmb
-no_tp53_tmb <- unique(total_mut[sample_names %in%no_tp53, .(sample_names,normalizetmb)])
-
-wilcox.test(tp53_tmb,no_tp53_tmb$normalizetmb)
-median(tp53_tmb)/median(no_tp53_tmb$normalizetmb)
+# tar_gene_name <- "TP53"
+# tumor_type <- "OSA"
+# tar_info <- total_mut[Subtype==tumor_type]
+# a = tar_info[sample_names=="GarLar",]
+# mut_sample <- unique(tar_info [gene_name == tar_gene_name,.(sample_names)])$sample_names
+# mut_sample_tmb <- unique(tar_info[sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
+# 
+# not_mut_samples <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names)])
+# not_mut_sample_tmb <- unique(tar_info[!sample_names %in% mut_sample,.(sample_names,tmb)])$tmb
+# median(mut_sample_tmb)/median(not_mut_sample_tmb)
+# 
+# wilcox.test(mut_sample_tmb,not_mut_sample_tmb)
+# 
+# write.table(mut_sample,file = 'C:/Users/abc73/Desktop/OSA_mut.txt',
+#        col.names = F, row.names = F, quote = F, sep = "\n")
+# 
+# tp53 <- unique(total_mut[gene_name =="TP53",.(sample_names,)])
+# tp53_sample <- tp53$sample_names
+# no_tp53 <- setdiff(unique(total_mut$sample_names), tp53_sample)
+# tp53_tmb <- tp53$normalizetmb
+# no_tp53_tmb <- unique(total_mut[sample_names %in%no_tp53, .(sample_names,normalizetmb)])
+# 
+# wilcox.test(tp53_tmb,no_tp53_tmb$normalizetmb)
+# median(tp53_tmb)/median(no_tp53_tmb$normalizetmb)
 
 ##
 
@@ -137,6 +137,7 @@ for (gene_index in 1:length(pan_tumor_uniq_gene)){
   each_gene_total_sample_number <- nrow(each_gene_total_sample)
   if (each_gene_total_sample_number >= signle_tumor_cut ){
     candidate_gene <- each_gene
+    candidate_gene <- 'TP53'
     gene_mut_tmb <- unique(total_mut[gene_name==candidate_gene, .(sample_names,normalizetmb)])[['normalizetmb']]
     gene_mut_sample <- unique(total_mut[gene_name==candidate_gene, .(sample_names)])[['sample_names']]
     
