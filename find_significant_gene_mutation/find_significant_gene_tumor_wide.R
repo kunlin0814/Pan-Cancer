@@ -191,7 +191,7 @@ sig_gene_sample_wide <- sig_gene_sample_wide[,.(sample_names,gene_name,breeds_in
 
 indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
 colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
-indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
+indel_file <- indel_file[gene_name!="-" & status!="nonframeshift" & ! sample_names %in% exclude,]
 indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
 indel_file$breeds_info <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 
@@ -242,7 +242,7 @@ for (each_tumor in tumor_type) {
   current <- match(each_tumor, tumor_type,nomatch = 0)
   print(paste("Processing the ", current, "tumors with total numbers of tumor", length(tumor_type),sep = " "))
   each_tumor_info_sum <- NULL
-  each_tumor_info <- final_gene_tumor_wide_SNV_indel[Subtype == each_tumor, ]
+  each_tumor_info <- final_gene_tumor_wide_SNV_indel[Subtype == each_tumor & status !='synonymous', ]
   each_tumor_genes <- each_tumor_info$gene_name
   each_tumor_sign_uniq_genes <- unique(sig_gene_sample_wide[BH_pvalue < 0.05 & Subtype==each_tumor, .(gene_name)]$gene_name)
   
@@ -251,7 +251,7 @@ for (each_tumor in tumor_type) {
   numbersamples_withoutgene_sum <- numeric(length(each_tumor_sign_uniq_genes))
   total_others_sum <- numeric(length(each_tumor_sign_uniq_genes))
   total_others_without_sum <- numeric(length(each_tumor_sign_uniq_genes))
-  each_tumor_total_sample <-   length(unique(each_tumor_info$sample_names))
+  each_tumor_total_sample <-   length(unique(final_gene_tumor_wide_SNV_indel[Subtype == each_tumor,]$sample_names))
   ensmbl_id_sum <- character(length(each_tumor_sign_uniq_genes))
   gene_name_sum <- character(length(each_tumor_sign_uniq_genes))
   #sum_target_samples_mut_number <- numeric(length(each_tumor_sign_uniq_genes))
@@ -267,7 +267,7 @@ for (each_tumor in tumor_type) {
     #current <- match(each_gene, each_tumor_genes,nomatch = 0)
     print(paste("Processing the ", index, "genes, with total_genes", length(each_tumor_sign_uniq_genes),sep = " "))
     each_gene <- each_tumor_sign_uniq_genes[index]
-    each_ensembl <- each_tumor_info[gene_name==each_gene]$ensembl_id[1]
+    each_ensembl <- each_tumor_info[gene_name==each_gene & status !='synonymous']$ensembl_id[1]
     total_others <- 0
     total_others_without <- 0
     sample_loc <- which(each_tumor_genes==each_gene)
