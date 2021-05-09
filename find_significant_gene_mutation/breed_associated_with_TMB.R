@@ -279,10 +279,10 @@ mutect_after_vaf$finalbreed <- match_vector_table(mutect_after_vaf$sample_names,
 indel_file <- fread(paste(base_dir,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
 colnames(indel_file) <- c('chrom','pos','ref','alt','gene_name','ensembl_id','status','sample_names')
 indel_file <- indel_file[!sample_names %in% exclude,]
-#indel_file <- indel_file[gene_name!="-" & status!="nonframeshift " & ! sample_names %in% exclude,]
 indel_file$Subtype <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
 indel_file$finalbreed <- match_vector_table(indel_file$sample_names,"final_breed_label",whole_wes_clean_breed_table)
 indel_file <- indel_file[gene_name!="-" & status=="frameshift" & ! sample_names %in% exclude,]
+#nonframeshift
 indel_file <- indel_file[,c("sample_names","gene_name","status","Subtype"),with=F]
 #setcolorder(indel_file,c("sample_names","gene_name","emsembl_id","status"))
 #indel_file <- indel_file[,emsembl_id:=NULL]
@@ -312,10 +312,6 @@ s1_data <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-ana
 "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/S1_high_low.txt")
 s1_high_sample <- s1_data[S1_Status=="S1 high"]$SampleName
 exclude <- c(exclude, s1_high_sample)
-
-## combine SNV CNV indel
-total_snv_cnv <- rbindlist(list(SNV,indel_file, CNV))
-total_snv_cnv <- total_snv_cnv[!sample_names %in% exclude & Subtype !="UCL",]
 
 total_sample <- unique(total_snv_cnv$sample_names)
 
@@ -347,6 +343,8 @@ for (index in 1:length(total_sample)){
 # total_snv_cnv$TP53_pathway <- match_vector_table(total_snv_cnv$sample_names,"TP53",total_sum, string_value = F)
 # total_snv_cnv$Cell_cycle_pathway <- match_vector_table(total_snv_cnv$sample_names,"Cell cycle",total_sum, string_value = F)
 total_sum<- setDT(total_sum)
+# exclude S1 high and fail QC 
+total_sum <- total_sum[!sample_names %in% exclude]
 total_sum$Subtype <- match_vector_table(total_sum$sample_name,"DiseaseAcronym2", whole_wes_clean_breed_table)
 #total_sum$Subtype <- subtype
 colnames(TMB_info)[1] <- "sample_names"
@@ -367,8 +365,6 @@ for (each_tumor in total_tumor_type){
   total_tumor_normalize <- rbindlist(list(total_tumor_normalize,each_tumor_info))
 }
 
-
-total_sum <- total_tumor_normalize
 
 target_pathway_col <- c("p53","Cell cycle")
 target_breeds <- c("Boxer","Cocker Spaniel","Golden Retriever","Greyhound","Maltese",
@@ -431,11 +427,17 @@ for (each_pathway in target_pathway_col){
 }
 
 
-fwrite(final_out, file = paste(output_dir,"05_04","all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
-       col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
 
+a = total_sum[get('p53')==1 &breed == 'Rottweiler'  ]
+b = total_sum[get('Cell cycle')==0 &breed == 'Rottweiler']
+b
+
+
+fwrite(final_out, file = paste(output_dir,"05_04","exclude_s1_all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
+       col.names = T, row.names = F, quote = F, sep = "\t", eol = "\n",na = "NA")
+whole_wes_clean_breed_table[Case_ID=='CCB010005']
 ### data for TMB breed ##
-breed_pathway_tmb <- total_sum[breed %in% target_breeds,.(sample_names,breed,p53,`Cell cycle`,tmb,Subtype)]
+breed_pathway_tmb <- total_sum[breed %in% target_breeds,.(sample_names,breed,p53,`Cell cycle`,tmb,Subtype,breed)]
 breed_pathway_tmb[breed_pathway_tmb==0] <- "Not altered"
 breed_pathway_tmb[breed_pathway_tmb==1] <- "Altered"
 fwrite(breed_pathway_tmb, file = paste(output_dir,"05_04","TMB_all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
