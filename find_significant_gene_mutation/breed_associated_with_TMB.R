@@ -376,7 +376,7 @@ total_breed_pathway_sum <- NULL
 for (breed_index in 1:length(total_target_breed_type)){
   
   each_breed <- total_target_breed_type[breed_index]
-  each_breed_info <- total_sum[breed==each_breed,]
+  each_breed_info <- total_tumor_normalize[breed==each_breed,]
   each_breed_total_pathway_summary <- NULL
   for (each_pathway_index in 1:length(target_pathway_col)){
     each_breed_each_pathway_summary <- NULL
@@ -428,9 +428,9 @@ for (each_pathway in target_pathway_col){
 
 
 
-a = total_sum[get('p53')==1 &breed == 'Rottweiler'  ]
-b = total_sum[get('Cell cycle')==0 &breed == 'Rottweiler']
-b
+# a = total_sum[get('p53')==1 &breed == 'Rottweiler'  ]
+# b = total_sum[get('Cell cycle')==0 &breed == 'Rottweiler']
+# b
 
 
 fwrite(final_out, file = paste(output_dir,"05_04","exclude_s1_all_breeds_cell_cycle_tp53_pathway.txt",sep = seperator),
