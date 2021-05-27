@@ -121,7 +121,7 @@ total_mut <- total_tumor_normalize
 ## Normalize end 
 
 
-## identify candidate genes (5 samples within each tumor)
+## identify candidate genes (5 samples across tumor type)
 
 ## need to normalize with median for each tumor in pan tumor analysis
 ## Pan_tumor cross tumor types
@@ -138,7 +138,7 @@ for (gene_index in 1:length(pan_tumor_uniq_gene)){
   each_gene_total_sample_number <- nrow(each_gene_total_sample)
   if (each_gene_total_sample_number >= signle_tumor_cut ){
     candidate_gene <- each_gene
-    candidate_gene <- 'TP53'
+    #candidate_gene <- 'TP53'
     gene_mut_tmb <- unique(total_mut[gene_name==candidate_gene, .(sample_names,normalizetmb)])[['normalizetmb']]
     gene_mut_sample <- unique(total_mut[gene_name==candidate_gene, .(sample_names)])[['sample_names']]
     
