@@ -2,17 +2,18 @@ library(data.table)
 library(tidyverse)
 library(readxl)
 
-base_dir <- "G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1"
-  #"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
+base_dir <- #"G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1"
+  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Final_revision_manual_script"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 
-output_dir <- "G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1/WGS"
+#output_dir <- "G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1/WGS"
 seperator <- "/"
-source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-#"/Volumes/Research/GitHub/R_util/my_util.R")
+source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+"/Volumes/Research/GitHub/R_util/my_util.R")
 
-source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
-#"/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
+source(#"C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
+"/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
+
 ### WES table ###
 
 #whole_wes_clean_breed_table <- fread("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/whole_wes_table.txt")       
@@ -20,18 +21,21 @@ source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.
 #excel_wes_table <- read_excel("/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Figure1/WES_TableS1_02-01-21.xlsx",
                               #sheet = "WESQCdata",skip=1)
 seperator <- "/"
-excel_wes_table <- read_excel(paste(base_dir,"TableS1_04-19-21.xlsx",sep = seperator),
-                              skip = 2, sheet = "WES_QC_data")
-excel_wgs_table <- read_excel(paste(base_dir,"TableS1_04-19-21.xlsx",sep = seperator),
-                              skip = 2, sheet = "WGSQCdata")
+excel_wes_table <- read_excel(paste(base_dir,"TableS1_05-11-21W.xlsx",sep = seperator),
+                              skip =1 , sheet = "Fig1a_data")
+
+
+
+# excel_wgs_table <- read_excel(paste(base_dir,"TableS1_04-19-21.xlsx",sep = seperator),
+#                               skip = 2, sheet = "WGSQCdata")
 
 excel_wgs_table <- setDT(excel_wgs_table)
-excel_wgs_table <- excel_wgs_table[-173,]
+# excel_wgs_table <- excel_wgs_table[-173,]
 
-breed <- unique(excel_wgs_table[, .(Case_ID,Breed_info)])
-a = as.data.frame(table(breed$Breed_info))
-fwrite(a, file = paste(base_dir,"WGS_breed.txt",sep = seperator),
-       col.names = T, row.names = F, sep = "\t",quote = F, eol = "\n")
+# breed <- unique(excel_wgs_table[, .(Case_ID,Breed_info)])
+# a = as.data.frame(table(breed$Breed_info))
+# fwrite(a, file = paste(base_dir,"WGS_breed.txt",sep = seperator),
+#        col.names = T, row.names = F, sep = "\t",quote = F, eol = "\n")
 
 check <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
 check <- setDT(check)
