@@ -1,9 +1,13 @@
 #!/bin/bash
-#PBS -N SRR7779460
-#PBS -q batch
-#PBS -l nodes=1:ppn=8
-#PBS -l walltime=128:00:00
-#PBS -l mem=60gb
+#SBATCH --job-name=SRR7779460_RNA_Seq         # Job name (SRR7779460_RNA_Seq)
+#SBATCH --partition=batch           # Queue name (batch)
+#SBATCH --nodes=1                   # Run all processes on a single node
+#SBATCH --ntasks=1                  # Run in a single task on a single node
+#SBATCH --cpus-per-task=4           # Number of CPU cores per task (4)
+#SBATCH --mem=40G                   # Job memory limit (10 GB)
+#SBATCH --time=20:00:00              # Time limit hrs:min:sec or days-hours:minutes:seconds
+#SBATCH --output=SRR7779460_RNA_Seq.%j.out    # Standard output log
+#SBATCH --error=SRR7779460_RNA_Seq.%j.err     # Standard error log
 
 ### INDEX the genome for STAR and HISAT2 respectively first ###
 
@@ -17,22 +21,14 @@ mkdir $result
 mkdir $result/STAR
 mkdir $result/HISAT2
 
-ml STAR/2.6.1c-foss-2016b
-module load SRA-Toolkit/2.9.1-centos_linux64
-module load SAMtools/1.9-foss-2016b
-module load HISAT2/2.1.0-foss-2016b
-module load picard/2.16.0-Java-1.8.0_144
-module load GATK/3.8-1-Java-1.8.0_144
-module load Cufflinks/2.2.1-foss-2016b
+ml STAR/2.6.1c-GCC-8.3.0
+module load SRA-Toolkit/2.10.8-centos_linux64
+module load SAMtools/0.1.20-GCC-8.3.0
 
 ####### Download #######
 mkdir $data
 cd $data
 fastq-dump --split-files --gzip SRR7779460
-
-
-
-
 
 
 ############### Germline Muation Detection with STAR ##################
@@ -60,11 +56,13 @@ rm -r $result/STAR/1pass $result/STAR/canFam3_2pass $result/STAR/2pass
 
 ####### Picard #######
 # Sort the bam file
+module load picard/2.21.6-Java-11
 time java -jar /usr/local/apps/eb/picard/2.16.0-Java-1.8.0_144/picard.jar AddOrReplaceReadGroups I=$result/STAR/SRR7779460.bam O=$result/STAR/SRR7779460-rg_added_sorted.bam SO=coordinate RGID=id RGLB=library RGPL=platform RGPU=machine RGSM=sample
 # Mark duplicates
 time java -jar /usr/local/apps/eb/picard/2.16.0-Java-1.8.0_144/picard.jar  MarkDuplicates I=$result/STAR/SRR7779460-rg_added_sorted.bam O=$result/STAR/SRR7779460_rg_added_sorted_dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=SRR7779460-output.metrics
 
 ####### GATK #######
+module load GATK/3.8-1-Java-1.8.0_144
 #Split'N'Trim and reassign mapping qualities
 time java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T SplitNCigarReads -R $source/canFam3.fa -I $result/STAR/SRR7779460_rg_added_sorted_dedupped.bam -o $result/STAR/SRR7779460-rg_added_sorted_dedupped_split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
 # Generating interval file for sort.bam
@@ -79,10 +77,9 @@ time java -jar $EBROOTGATK/GenomeAnalysisTK.jar -T VariantFiltration -R $source/
 
 
 
-
-
 ############### Expression Level with HISAT2 #########################
 ####### HISAT2 #######
+module load HISAT2/2.2.1-foss-2019b
 cd $result/HISAT2
 hisat2 -p 8 -x $hisat_source/canFam3 \
 -1 $data/SRR7779460_1.fastq.gz \
@@ -100,6 +97,7 @@ rm -r $result/HISAT2/tmp
 rm $result/HISAT2/SRR7779460.sam
 
 ####### cufflinks #######
+module load Cufflinks/2.2.1-foss-2019b
 cufflinks -p 8 -g $source/canFam3.gtf -b $source/canFam3.fa -u -o $result/HISAT2/ $result/HISAT2/SRR7779460-sorted.bam
 
 

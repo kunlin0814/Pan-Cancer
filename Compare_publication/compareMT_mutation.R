@@ -11,8 +11,8 @@ source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
 
 source("C:/Users/abc73/Documents/GitHub/VAF/six_base_function_util.R")
   #"/Volumes/Research/GitHub/VAF/six_base_function_util.R")
-
-
+seperator <- '/'
+base <- 'G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/Compare_publication/MT_mutateion_compare_with_korean'
 whole_wes_clean_breed_table <- fread(#"/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_07.txt")
 "G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table/all_pan_cancer_wes_metatable_04_09.txt") 
 
@@ -24,14 +24,14 @@ indel_col_names <- c("chrom","pos","ref","alt","gene_name","ensembl_id","status"
 colnames(indel_file) <- indel_col_names
 indel_file$tumor_type <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
 final_indel <- indel_file[tumor_type=="MT",.(sample_names,chrom,pos,ref,alt,status)]
-final_indel <- final_indel[-c(154:165),]
+final_indel <- final_indel[c(1:153),]
 final_indel$chrom_loc <- paste(final_indel$chrom,final_indel$pos,sep ="_")
 final_indel$Case <-  sapply(final_indel$sample_names,convert_MT_sample)
 
 
 
 
-create_overlap_summary <- function(our_MT,publisMT,intercet_sample,method = 'min'){
+create_overlap_summary <- function(our_MT,publisMT,intercet_sample,method = 'union'){
   
   total_uniq_num_to_them <- NULL
   total_uniq_num_to_us <- NULL
@@ -52,15 +52,16 @@ create_overlap_summary <- function(our_MT,publisMT,intercet_sample,method = 'min
     our_each <- nrow(our_each_mut)
     sanger_each <- nrow(publish_each_mut)
     intercet_data <- nrow(intersect(our_each_mut,publish_each_mut))
-    if (method == 'min'){
-      denominator <- min(c(our_each,sanger_each))
+    if (method == 'union'){
+      denominator <- our_each+sanger_each-intercet_data
     }
     
     else if (method == 'average'){
       denominator <- mean(c(our_each,sanger_each))
     }
-    else if (method == 'union'){
-      denominator <- our_each+sanger_each-intercet_data
+    else if (method == 'min'){
+      
+      denominator <- min(c(our_each,sanger_each))
     }
     
     # count
@@ -241,7 +242,7 @@ png(file = paste(base,"04_26","before_UGA_mutect2_compare_count_with_MT_publicat
     width = 5000, height =2700, units = "px", res = 500)
 
 
-data <- create_overlap_summary(our_MT_mutect2_before,publisMT,total_three_intercet, method = 'min')
+data <- create_overlap_summary(our_MT_mutect2_before,publisMT,total_three_intercet,method = 'union')
 
 fwrite(data,file=paste(base,"04_26","Mutect2_before_compare_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
@@ -330,7 +331,7 @@ our_MT <- rbind(our_MT,final_indel)
 png(file = paste(base,"04_26","remove_Burair_filtering_compare_with_MT_publication.png",sep =seperator),
     width = 5000, height =2700, units = "px", res = 500)
 
-data <- create_overlap_summary(our_MT,publisMT,total_three_intercet, method ='min')
+data <- create_overlap_summary(our_MT,publisMT,total_three_intercet)
 fwrite(data,file=paste(base,"04_26","Burair_filtering_compare_MT_mutect2_publication.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <-data[sample!="CMT-033"]
@@ -366,15 +367,13 @@ dev.off()
 
 
 ### Analyzed with mutect1
-
-
 # ## indel file
 indel_file <- fread(paste(base,"total_CDS_indel_info_withGene_04_08.txt",sep =seperator))
 indel_col_names <- c("chrom","pos","ref","alt","gene_name","ensembl_id","status","sample_names")
 colnames(indel_file) <- indel_col_names
 indel_file$tumor_type <- match_vector_table(indel_file$sample_names,"DiseaseAcronym2",whole_wes_clean_breed_table)
 final_indel <- indel_file[tumor_type=="MT",.(sample_names,chrom,pos,ref,alt,status)]
-final_indel <- final_indel[-c(154:165),]
+final_indel <- final_indel[c(1:153),]
 final_indel$chrom_loc <- paste(final_indel$chrom,final_indel$pos,sep ="_")
 final_indel$Case <-  sapply(final_indel$sample_names,convert_MT_sample)
 
@@ -399,7 +398,7 @@ our_MT_Mutect_after <- rbind(our_MT_Mutect_after,final_indel)
 
 png(file = paste(base,"04_26","Mutect1_after_5steps.png",sep =seperator),
     width = 5000, height =2700, units = "px", res = 500)
-data <- create_overlap_summary(our_MT_Mutect_after,publisMT,total_three_intercet, method = 'min')
+data <- create_overlap_summary(our_MT_Mutect_after,publisMT,total_three_intercet, method = 'union')
 fwrite(data,file=paste(base,"04_26","Mutect1_after5steps_data.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <- data[sample!="CMT-033"]
@@ -433,7 +432,7 @@ dev.off()
 ###### Mutect1 before 5 steps ###### 
 png(file = paste(base,"04_26","Mutect1_before_5steps.png",sep =seperator),
     width = 5000, height =2700, units = "px", res = 500)
-data <- create_overlap_summary(our_MT_Mutect_before,publisMT,total_three_intercet, method='min')
+data <- create_overlap_summary(our_MT_Mutect_before,publisMT,total_three_intercet)
 fwrite(data,file=paste(base,"04_26","Mutect1_before5steps_data.txt",sep = seperator),
        col.names = T,row.names = F,quote = F, eol = "\n",sep = "\t")
 data <- data[sample!="CMT-033"]
