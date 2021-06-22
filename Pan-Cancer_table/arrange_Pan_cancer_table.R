@@ -2,17 +2,17 @@ library(data.table)
 library(tidyverse)
 library(readxl)
 
-base_dir <- #"G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1"
-  "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Final_revision_manual_script"
+base_dir <- "G:/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Final_revision_manual_script"
+ # "/Volumes/Research/MAC_Research_Data/Pan_cancer/Pan-Cancer-Manuscript/Final_revision_manual_script"
   #"G:/MAC_Research_Data/Pan_cancer/Pan_cancer-analysis/arrange_table"
 
 #output_dir <- "G:/MAC_Research_Data/need_to_revised/Figre1S1/tableS1/WGS"
 seperator <- "/"
-source(#"C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
-"/Volumes/Research/GitHub/R_util/my_util.R")
+source("C:/Users/abc73/Documents/GitHub/R_util/my_util.R")
+#"/Volumes/Research/GitHub/R_util/my_util.R")
 
-source(#"C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
-"/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
+#source("C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data.R")
+#"/Volumes/Research/GitHub/Breed_prediction/build_sample_meta_data.R")
 
 ### WES table ###
 
@@ -22,14 +22,13 @@ source(#"C:/Users/abc73/Documents/GitHub/Breed_prediction/build_sample_meta_data
                               #sheet = "WESQCdata",skip=1)
 seperator <- "/"
 excel_wes_table <- read_excel(paste(base_dir,"TableS1_05-11-21W.xlsx",sep = seperator),
-                              skip =1 , sheet = "Fig1a_data")
+                              skip =2 , sheet = "WES_QC_data")
 
 
 
-# excel_wgs_table <- read_excel(paste(base_dir,"TableS1_04-19-21.xlsx",sep = seperator),
-#                               skip = 2, sheet = "WGSQCdata")
-
-excel_wgs_table <- setDT(excel_wgs_table)
+excel_wgs_table <- read_excel(paste(base_dir,"TableS1_05-11-21W.xlsx",sep = seperator),
+                              skip = 2, sheet = "WGSQCdata")
+unique(excel_wgs_table$Symbol)
 # excel_wgs_table <- excel_wgs_table[-173,]
 
 # breed <- unique(excel_wgs_table[, .(Case_ID,Breed_info)])
@@ -37,15 +36,9 @@ excel_wgs_table <- setDT(excel_wgs_table)
 # fwrite(a, file = paste(base_dir,"WGS_breed.txt",sep = seperator),
 #        col.names = T, row.names = F, sep = "\t",quote = F, eol = "\n")
 
-check <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
-check <- setDT(check)
+# check <- read.table("clipboard",sep = "\t",header = T,stringsAsFactors = F)
+# check <- setDT(check)
 
-breed <- unique(check[, .(Case_ID,Breed_info)])
-a = as.data.frame(table(breed$Breed_info))
-fwrite(a, file = paste(base_dir,"WWS_breed.txt",sep = seperator),
-       col.names = T, row.names = F, sep = "\t",quote = F, eol = "\n")
-
-a = check[Mean_Coverage <30,]
 
 #excel_wes_table <- setDF(excel_wes_table)
 excel_wes_table <- setDT(excel_wes_table)
@@ -58,18 +51,68 @@ excel_wgs_table <- setDT(excel_wgs_table)
 # fwrite(a, file = "C:/Users/abc73/Desktop/wes_breed.txt",
 #        col.names = T, row.names = F, sep = "\t",eol = "\n",quote = F)
 
-colnames(excel_wgs_table)
-####
-target_column <- c("Case_ID","Sample_ID","SelfMatch", "DiffFromBest",
+### to identify the cases
+target_column <- c("Case_ID","Sample_ID",'Total_pairs','Uniquely_concordantly_mapped_rate',
+                   'Target_CDS_Mapping_Rates','Mean_Coverage',
+                   'RMSE',"SelfMatch",
                    "Tumor_Type","Status"	,"Symbol"	,"Bioproject")
 fail <- c()
-lt5m<- unique(excel_wgs_table[Total_pairs <5000000]$Case_ID)
-uniq_fail <- unique(excel_wgs_table[Total_pairs>=5000000 & Unique_mapped_rate <0.6]$Case_ID)
-mean_fail <- unique(excel_wgs_table[Total_pairs>=5000000 & Unique_mapped_rate>=0.6 & total_mean_coverage<30]$Case_ID)
-rmse_fail <- unique(excel_wgs_table[Total_pairs>=5000000 & Unique_mapped_rate >=0.6 & total_mean_coverage >30 & RMSE >0.01]$Case_ID)
-fail <- unique(c(lt5m,uniq_fail,mean_fail,rmse_fail))
+## info about uniq
+lt5m_fail<- unique(excel_wes_table[Total_pairs <5000000]$Case_ID)
+uniq_sum <- unique(excel_wes_table[ !Case_ID %in% c(lt5m_fail),.N,keyby =.(Symbol,Status)])
 
-pair <- excel_wgs_table[!Case_ID %in% fail & Status=="Tumor",target_column,with =F]
+
+# # info about gt30
+uniq_fail <- unique(excel_wes_table[ !Case_ID %in% lt5m_fail & Uniquely_concordantly_mapped_rate <0.6]$Case_ID)
+gt30_sum <- excel_wes_table[ !Case_ID  %in% c(lt5m_fail,uniq_fail),.N,keyby= .(Symbol,Status)]
+
+## info about CDS is the same as gt30 (no sample filtering out)
+
+## info about mean 
+cds_fail <- unique(excel_wes_table[ !Case_ID %in% c(lt5m_fail,uniq_fail) & Target_CDS_Mapping_Rates < 0.3]$Case_ID)
+mean_sum <- unique(excel_wes_table[ !Case_ID %in% c(lt5m_fail,uniq_fail,cds_fail),.N,keyby= .(Symbol,Status)])
+
+mean_fail <- unique(excel_wes_table[!Case_ID %in% c(lt5m_fail,uniq_fail,cds_fail) & Mean_Coverage<30]$Case_ID)
+rmse_sum <- unique(excel_wes_table[!Case_ID %in% c(lt5m_fail,uniq_fail,cds_fail,mean_fail),.N,keyby= .(Symbol,Status)])
+
+rmse_fail <- unique(excel_wes_table[!Case_ID %in% c(lt5m_fail,uniq_fail,cds_fail,mean_fail) & RMSE>0.01]$Case_ID)
+callable_sum <- unique(excel_wes_table[!Case_ID %in% c(lt5m_fail,uniq_fail,cds_fail,mean_fail,rmse_fail),.N,keyby=.(Symbol,Status)])
+
+fail <- unique(c(lt5m,uniq_fail,cds_fail, mean_fail,rmse_fail))
+
+
+
+
+
+### WGS summary
+target_column <- c("Case_ID","Sample_ID",'Total_pairs','Unique_mapped_rate',
+                   'total_mean_coverage',
+                   'RMSE',"SelfMatch",
+                   "Tumor_Type","Status"	,"Symbol"	,"Bioproject")
+fail <- c()
+## info about uniq
+lt5m_fail<- unique(excel_wgs_table[Total_pairs <5000000]$Case_ID)
+uniq_sum <- unique(excel_wgs_table[ !Case_ID %in% c(lt5m_fail),.N,keyby =.(Symbol,Status)])
+
+
+# # info about gt30
+uniq_fail <- unique(excel_wgs_table[ !Case_ID %in% lt5m_fail & Unique_mapped_rate <0.6]$Case_ID)
+gt30_sum <- excel_wgs_table[ !Case_ID  %in% c(lt5m_fail,uniq_fail),.N,keyby= .(Symbol,Status)]
+
+## info about mean is the same as gt30 (no sample filter)
+#cds_fail <- unique(excel_wgs_table[ !Case_ID %in% c(lt5m_fail,uniq_fail) & Target_CDS_Mapping_Rates < 0.3]$Case_ID)
+mean_sum <- unique(excel_wgs_table[ !Case_ID %in% c(lt5m_fail,uniq_fail),.N,keyby= .(Symbol,Status)])
+
+mean_fail <- unique(excel_wgs_table[!Case_ID %in% c(lt5m_fail,uniq_fail) & total_mean_coverage<30]$Case_ID)
+rmse_sum <- unique(excel_wgs_table[!Case_ID %in% c(lt5m_fail,uniq_fail,mean_fail),.N,keyby= .(Symbol,Status)])
+
+rmse_fail <- unique(excel_wgs_table[!Case_ID %in% c(lt5m_fail,uniq_fail,mean_fail) & RMSE>0.01]$Case_ID)
+callable_sum <- unique(excel_wgs_table[!Case_ID %in% c(lt5m_fail,uniq_fail,mean_fail,rmse_fail),.N,keyby=.(Symbol,Status)])
+
+fail <- unique(c(lt5m,uniq_fail,cds_fail, mean_fail,rmse_fail))
+
+
+
 fwrite(pair, file = paste(output_dir,"pair.txt",sep = "/"),
        col.names = T, row.names = F, quote = F, sep = "\t")
 #   excel_wgs_table %>%
