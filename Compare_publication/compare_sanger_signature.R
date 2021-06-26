@@ -22,7 +22,7 @@ xangle <- 45;
 xaxis_just <- ifelse(xangle > 0, 1, 0.5);
 
 ### add extra parameter (use 1. a+b-a&b 2. min of a or b, 3. average a or b)
-create_overlap_summary <- function(our_data,publis_data,intercet_sample, method = 'min'){
+create_overlap_summary <- function(our_data,publis_data,intercet_sample, method ){
   
   total_uniq_num_to_them <- NULL
   total_uniq_num_to_us <- NULL
@@ -261,7 +261,7 @@ total_three_intercet <- intersect(intersect(OM_before_intercet_sample,OM_after_i
 png(file = paste(base,"04_26","include_indel_5steps_only_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 5000, height =2700, units = "px", res = 500)
 
-data_5setps <- create_overlap_summary(our_OM_after,clean_sanger,total_three_intercet,method = 'average')
+data_5setps <- create_overlap_summary(our_OM_after,clean_sanger,total_three_intercet,method = 'union')
 after_5steps_data_sum <- create_overlap_summary_for_each(our_OM_after,clean_sanger,total_three_intercet)
 
 # fwrite(after_5steps_data_sum$unique_to_them_sum, file = paste(base,"unique_to_them.txt",sep = "/"),
@@ -334,7 +334,7 @@ dev.off()
 png(file = paste(base,"04_26","include_indel_Before_5_steps_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 5000, height =2700, units = "px", res = 500)
 
-data_before_5setps <- create_overlap_summary(our_OM_before,clean_sanger,total_three_intercet,method = 'average')
+data_before_5setps <- create_overlap_summary(our_OM_before,clean_sanger,total_three_intercet,method = 'union')
 
 count_data <- melt(data_before_5setps, id.vars = c("sample"),
                    measure.vars= c("Unique_to_our_study","Unique_to_original_publication","Shared"),
@@ -354,7 +354,7 @@ plot_data <- data.frame(x=x, y=y, fill=fill);
 fill_colors <- c("cyan","black","red");
 
 p <- my_bar_function(plot_data,fill_colors = fill_colors,
-                     title="Somatic base substitutions\nvia Mutect alone",fontsize=35)
+                     title="Somatic base substitutions\nvia MuTect alone",fontsize=35)
 
 p <- p+theme(legend.position="none",
              axis.text=regular.text, 
@@ -401,7 +401,7 @@ dev.off()
 png(file = paste(base,"04_26","Burair_filtering_Mutect1_Mutation_number_compare_with_OM_publication_03_29.png",sep =seperator),
     width = 5000, height =2700, units = "px", res = 500)
 
-Burair_filtering_data <- create_overlap_summary(our_OM,clean_sanger,total_three_intercet, method = 'average')
+Burair_filtering_data <- create_overlap_summary(our_OM,clean_sanger,total_three_intercet, method = 'union')
 
 count_data <- melt(Burair_filtering_data, id.vars = c("sample"),
                    measure.vars= c("Unique_to_our_study","Unique_to_original_publication","Shared"),

@@ -90,6 +90,11 @@ target_column <- c("Case_ID","Sample_ID",'Total_pairs','Unique_mapped_rate',
                    'RMSE',"SelfMatch",
                    "Tumor_Type","Status"	,"Symbol"	,"Bioproject")
 fail <- c()
+unique(excel_wgs_table[Total_pairs>=5000000 & Unique_mapped_rate>=0.6 & total_mean_coverage<30 & Tumor_Type=="GLM"
+                & Status=='Tumor']$Case_ID)
+
+
+lt5m_sum<- unique(excel_wgs_table[,.N,keyby =.(Symbol,Status)])
 ## info about uniq
 lt5m_fail<- unique(excel_wgs_table[Total_pairs <5000000]$Case_ID)
 uniq_sum <- unique(excel_wgs_table[ !Case_ID %in% c(lt5m_fail),.N,keyby =.(Symbol,Status)])
